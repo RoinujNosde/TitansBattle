@@ -1,0 +1,63 @@
+#This is a general configuration, for Game specific settings open the games folder
+
+#Language used in plugin's message
+language: en
+
+#Send more output to the console?
+debug: false
+
+#Change the commands
+commands:
+    join: "join"
+    exit: "exit"
+    start: "start"
+    cancel: "cancel"
+    setdestination: "setdestination"
+    setinventory: "setinventory"
+    help: "help"
+    reload: "reload"
+    watch: "watch"
+    winners: "winners"
+
+#List here commands that the plugin will not block in battle phase
+allowed_commands: ["/tb exit", "/tb winners"]
+
+#On /tb winners, for instance, you have to insert the game mode as in: "/tb winners GROUPS_FUN", but, if you only use one of the 4 modes,
+#you can set this as false and set the mode you use on "default-game-mode".
+ask-for-game-mode: true
+
+#Game modes: GROUPS_FUN | GROUPS_REAL | FREEFORALL_FUN | FREEFORALL_REAL
+default-game-mode: "FREEFORALL_REAL"
+
+#Destinations
+destinations:
+    general_exit:
+    
+#Will the game begin automatically? Which game? When?
+#Game modes: GROUPS_FUN | GROUPS_REAL | FREEFORALL_FUN | FREEFORALL_REAL
+#Day: 1 = Sunday
+#In GROUPS, players must be part of a SimpleClans' Clan or a Factions' Faction
+#There is not for that in FREEFORALL
+#In REAL, players will use their own items in the game
+#In FUN, the server will provide the temporary items
+#Hour format: 0 to 24
+#Minute format: 0 to 59
+#If you want more schedulers, just follow the example below, copy them and change the number
+scheduler:
+  enabled: true
+  schedulers:
+    1:
+      game: GROUPS_FUN
+      day: 1
+      hour: 18
+      minute: 30
+    2:
+      game: FREEFORALL_REAL
+      day: 2
+      hour: 10
+      minute: 30
+          
+#Data used by the plugin, don't edit it.
+data:
+    respawn: []
+    clear_inv: []

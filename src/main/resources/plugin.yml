@@ -1,0 +1,52 @@
+main: "me.roinujnosde.titansbattle.TitansBattle"
+name: "TitansBattle"
+author: "RoinujNosde"
+version: 2.0.3
+softdepend:
+  - "SimpleClans"
+  - "Factions"
+  - "Legendchat"
+  - "Vault"
+commands:
+  tb:
+    usage: "§cUse /tb help to know the correct syntax."
+permissions:
+  titansbattle.admin:
+    description: "Gives access to administrator commands"
+    default: op
+    children:
+      titansbattle.player: false
+      titansbattle.reload: false
+      titansbattle.cancel: false
+      titansbattle.start: false
+      titansbattle.setdestination: false
+      titansbattle.setinventory: false
+  titansbattle.player:
+    description: "Gives access to player commands"
+    default: false
+    children:
+      titansbattle.join: false
+      titansbattle.exit: false
+      titansbattle.watchroom: false
+      titansbattle.help: false
+      titansbattle.winners: false
+  titansbattle.join:
+    default: false
+  titansbattle.exit:
+    default: false
+  titansbattle.watchroom:
+    default: false
+  titansbattle.help:
+    default: false
+  titansbattle.reload:
+    default: false
+  titansbattle.cancel:
+    default: false
+  titansbattle.start:
+    default: false
+  titansbattle.setdestination:
+    default: false
+  titansbattle.winners:
+    default: false
+  titansbattle.setinventory:
+    default: false
