@@ -23,9 +23,8 @@
  */
 package me.roinujnosde.titansbattle.events;
 
-import com.massivecraft.factions.entity.Faction;
 import me.roinujnosde.titansbattle.TitansBattle;
-import net.sacredlabyrinth.phaed.simpleclans.Clan;
+import me.roinujnosde.titansbattle.types.Group;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
@@ -36,23 +35,23 @@ import org.bukkit.event.HandlerList;
 public class GroupWinEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
-    private Object group;
+    private Group group;
 
     private GroupWinEvent() {
     }
 
-    public GroupWinEvent(Object group) {
-        if (group == null ||
-                ((TitansBattle.isSimpleClans() &&
-                !(group instanceof Clan)) ||
-                (TitansBattle.isFactions() &&
-                !(group instanceof Faction)))) {
+    public GroupWinEvent(Group group) {
+        if (group == null) {
             throw new IllegalArgumentException("Group must be an instance of Clan or Faction and cannot be null.");
         }
         this.group = group;
     }
 
-    public Object getGroup() {
+    /**
+     * Returns the Group
+     * @return the Group
+     */
+    public Group getGroup() {
         return group;
     }
 

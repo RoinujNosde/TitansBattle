@@ -24,6 +24,7 @@
 package me.roinujnosde.titansbattle.events;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
@@ -56,12 +57,20 @@ public class PlayerWinEvent extends Event {
         players.add(player);
     }
 
+    /**
+     * Returns the winner of the event (or the first of the list, if there are more than one winner)
+     * @return the winner of the event
+     */
     public Player getPlayer() {
         return players.get(0);
     }
 
+    /**
+     * Returns an Unmodifiable List of the Winners
+     * @return an Unmodifiable List of the Winners
+     */
     public List<Player> getPlayers() {
-        return players;
+        return Collections.unmodifiableList(players);
     }
 
     @Override

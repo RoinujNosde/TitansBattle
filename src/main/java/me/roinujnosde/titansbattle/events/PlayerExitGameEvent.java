@@ -47,6 +47,22 @@ public class PlayerExitGameEvent extends Event implements Cancellable {
         this.player = player;
         this.game = game;
     }
+
+    /**
+     * Returns the Game
+     * @return the Game
+     */
+    public Game getGame() {
+        return game;
+    }
+
+    /**
+     * Returns the Player
+     * @return the Player
+     */
+    public Player getPlayer() {
+        return player;
+    }
     
     @Override
     public HandlerList getHandlers() {
@@ -58,6 +74,10 @@ public class PlayerExitGameEvent extends Event implements Cancellable {
         return cancelled;
     }
 
+    /**
+     * Prevents the player from joining the Game
+     * @param cancel should the player be prevented?
+     */
     @Override
     public void setCancelled(boolean cancel) {
         cancelled = cancel;

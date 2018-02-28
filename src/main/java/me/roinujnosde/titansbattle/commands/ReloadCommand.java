@@ -1,14 +1,11 @@
 package me.roinujnosde.titansbattle.commands;
 
-import java.io.Console;
 import java.text.MessageFormat;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
 import org.bukkit.command.CommandSender;
-import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.permissions.Permission;
 
 /**
  *
@@ -23,19 +20,22 @@ public class ReloadCommand {
 
     public ReloadCommand() {
         plugin = TitansBattle.getInstance();
-        gm = TitansBattle.getGameManager();
-        cm = TitansBattle.getConfigManager();
+        gm = plugin.getGameManager();
+        cm = plugin.getConfigManager();
     }
 
     public void execute(CommandSender sender) {
         if (sender instanceof Player && !sender.hasPermission(permission)) {
-            sender.sendMessage(MessageFormat.format(TitansBattle.getLang("no-permission"), permission));
+            plugin.debug("" + sender.getName() + " tried to use the "
+                    + getClass().getName() + " without permission", true);
+            sender.sendMessage(MessageFormat.format(
+                    plugin.getLang("no-permission"), permission));
             return;
         }
         gm.finishGame(gm.getCurrentGame());
         plugin.saveDefaultConfig();
         cm.load();
-        TitansBattle.getLanguageManager().reload();
-        sender.sendMessage(TitansBattle.getLang("configuration-reloaded"));
+        plugin.getLanguageManager().reload();
+        sender.sendMessage(plugin.getLang("configuration-reloaded"));
     }
 }

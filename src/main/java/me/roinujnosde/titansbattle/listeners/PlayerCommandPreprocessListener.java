@@ -27,7 +27,6 @@ import java.text.MessageFormat;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -41,11 +40,12 @@ public class PlayerCommandPreprocessListener implements Listener {
 
     private final GameManager gm;
     private final ConfigManager cm;
+    private final TitansBattle plugin;
 
     public PlayerCommandPreprocessListener() {
-
-        gm = TitansBattle.getGameManager();
-        cm = TitansBattle.getConfigManager();
+        plugin = TitansBattle.getInstance();
+        gm = plugin.getGameManager();
+        cm = plugin.getConfigManager();
     }
 
     @EventHandler
@@ -62,7 +62,7 @@ public class PlayerCommandPreprocessListener implements Listener {
                 return;
             }
         }
-        player.sendMessage(MessageFormat.format(TitansBattle.getLang("command-not-allowed", gm.getCurrentGame()), event.getMessage()));
+        player.sendMessage(MessageFormat.format(plugin.getLang("command-not-allowed", gm.getCurrentGame()), event.getMessage()));
         event.setCancelled(true);
     }
 

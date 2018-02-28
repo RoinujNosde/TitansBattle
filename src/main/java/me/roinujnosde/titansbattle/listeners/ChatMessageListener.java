@@ -38,7 +38,7 @@ public class ChatMessageListener implements Listener {
     private final Helper helper;
 
     public ChatMessageListener() {
-        helper = TitansBattle.getHelper();
+        helper = TitansBattle.getInstance().getHelper();
     }
 
     @EventHandler

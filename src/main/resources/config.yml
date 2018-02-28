@@ -1,5 +1,16 @@
 #This is a general configuration, for Game specific settings open the games folder
 
+#SQL database settings
+sql:
+    #Set this as false if you want to use a flatfile instead.
+    use-mysql: false
+    database: "titansbattle"
+    mysql:
+        hostname: "localhost"
+        port: 3306
+        username: "root"
+        password: "thepassword"
+
 #Language used in plugin's message
 language: en
 
@@ -18,7 +29,16 @@ commands:
     reload: "reload"
     watch: "watch"
     winners: "winners"
+    ranking: "ranking"
+    
+#Date format used on /tb winners command
+date-format: "dd/MM/yyyy"
 
+#Set how many lines should be displayed on those commands
+page-limit:
+    help: 7
+    ranking: 10
+    
 #List here commands that the plugin will not block in battle phase
 allowed_commands: ["/tb exit", "/tb winners"]
 

@@ -23,14 +23,10 @@
  */
 package me.roinujnosde.titansbattle.managers;
 
-import com.massivecraft.factions.entity.Faction;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import me.roinujnosde.titansbattle.Helper;
 import me.roinujnosde.titansbattle.TitansBattle;
-import net.sacredlabyrinth.phaed.simpleclans.Clan;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -45,7 +41,6 @@ public class TaskManager {
 
     private TitansBattle plugin;
     private GameManager gm;
-    private ConfigManager cm;
     private Helper helper;
 
     BukkitTask lobbyAnnouncementTask;
@@ -57,9 +52,8 @@ public class TaskManager {
 
     public void load() {
         plugin = TitansBattle.getInstance();
-        gm = TitansBattle.getGameManager();
-        cm = TitansBattle.getConfigManager();
-        helper = TitansBattle.getHelper();
+        gm = plugin.getGameManager();
+        helper = plugin.getHelper();
     }
 
     public void setGiveItemsTask(BukkitTask giveItemsTask) {
@@ -131,7 +125,7 @@ public class TaskManager {
                                 helper.getItemsNotGiven().remove(player);
                             } else {
                                 helper.getItemsNotGiven().replace(player, remainingItems);
-                                player.sendMessage(MessageFormat.format(TitansBattle.getLang("items_to_receive"), Integer.toString(remainingItems.size())));
+                                player.sendMessage(MessageFormat.format(plugin.getLang("items_to_receive"), Integer.toString(remainingItems.size())));
                             }
                         }
                     } else {
@@ -150,7 +144,7 @@ public class TaskManager {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    Bukkit.getServer().broadcastMessage(TitansBattle.getLang("preparation_over", gm.getCurrentGame()));
+                    Bukkit.getServer().broadcastMessage(plugin.getLang("preparation_over", gm.getCurrentGame()));
                     gm.setStarting(false);
                     gm.setHappening(true);
                 }
@@ -179,7 +173,7 @@ public class TaskManager {
                 public void run() {
                     seconds = times * interval;
                     if (times > 0) {
-                        Bukkit.getServer().broadcastMessage(MessageFormat.format(TitansBattle.getLang("starting_game", gm.getCurrentGame()),
+                        Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("starting_game", gm.getCurrentGame()),
                                 Long.toString(seconds),
                                 Integer.toString(gm.getCurrentGame().getMinimumGroups()),
                                 Integer.toString(gm.getCurrentGame().getMinimumPlayers()),
@@ -187,7 +181,7 @@ public class TaskManager {
                                 Integer.toString(gm.getPlayersParticipatingCount())));
                         times--;
                     } else {
-                        gm.startGame(gm.getCurrentGame());
+                        gm.startBattle(gm.getCurrentGame());
                         lobbyAnnouncementTask.cancel();
                     }
                 }
@@ -202,16 +196,8 @@ public class TaskManager {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    String groupsText = null;
-                    if (plugin.isSimpleClans()) {
-                        List<Clan> clanList = new ArrayList<>(gm.getClans().keySet());
-                        groupsText = helper.getStringFromClanList(clanList);
-                    }
-                    if (plugin.isFactions()) {
-                        List<Faction> factionList = new ArrayList<>(gm.getFactions().keySet());
-                        groupsText = new Helper().getStringFromFactionList(factionList);
-                    }
-                    Bukkit.getServer().broadcastMessage(MessageFormat.format(TitansBattle.getLang("game_info", gm.getCurrentGame()),
+                    String groupsText = helper.getStringFromGroupSet(gm.getGroups().keySet());
+                    Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("game_info", gm.getCurrentGame()),
                             Integer.toString(gm.getPlayersParticipatingCount()),
                             Integer.toString(gm.getGroupsParticipatingCount()),
                             groupsText));
@@ -228,7 +214,7 @@ public class TaskManager {
                 @Override
                 public void run() {
                     if (gm.isHappening()) {
-                        Bukkit.broadcastMessage(TitansBattle.getLang("game_expired", gm.getCurrentGame()));
+                        Bukkit.broadcastMessage(plugin.getLang("game_expired", gm.getCurrentGame()));
                         gm.finishGame(gm.getCurrentGame());
                         gameExpirationTask.cancel();
                     } else {

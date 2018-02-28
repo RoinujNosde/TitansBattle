@@ -1,7 +1,7 @@
 main: "me.roinujnosde.titansbattle.TitansBattle"
 name: "TitansBattle"
 author: "RoinujNosde"
-version: 2.0.3
+version: 3.0.0
 softdepend:
   - "SimpleClans"
   - "Factions"
@@ -30,6 +30,7 @@ permissions:
       titansbattle.watchroom: false
       titansbattle.help: false
       titansbattle.winners: false
+      titansbattle.ranking: false
   titansbattle.join:
     default: false
   titansbattle.exit:
@@ -49,4 +50,6 @@ permissions:
   titansbattle.winners:
     default: false
   titansbattle.setinventory:
+    default: false
+  titansbattle.ranking:
     default: false

@@ -47,6 +47,10 @@ public class GameStartEvent extends Event implements Cancellable {
         this.game = game;
     }
     
+    /**
+     * Returns the Game
+     * @return the Game
+     */
     public Game getGame() {
         return game;
     }
@@ -61,6 +65,10 @@ public class GameStartEvent extends Event implements Cancellable {
         return cancelled;
     }
 
+    /**
+     * Cancels the starting game
+     * @param cancel should the game be cancelled?
+     */
     @Override
     public void setCancelled(boolean cancel) {
         cancelled = cancel;

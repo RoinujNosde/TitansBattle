@@ -23,9 +23,7 @@
  */
 package me.roinujnosde.titansbattle.events;
 
-import com.massivecraft.factions.entity.Faction;
-import me.roinujnosde.titansbattle.TitansBattle;
-import net.sacredlabyrinth.phaed.simpleclans.Clan;
+import me.roinujnosde.titansbattle.types.Group;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -37,39 +35,35 @@ import org.bukkit.event.HandlerList;
 public class GroupDefeatedEvent extends Event {
 
     private final static HandlerList HANDLERS = new HandlerList();
-    private TitansBattle plugin;
-    private Object group;
+    private Group group;
     private Player lastParticipant;
 
     private GroupDefeatedEvent() {
     }
 
-    public GroupDefeatedEvent(Object group, Player lastParticipant) {
-        plugin = TitansBattle.getInstance();
+    public GroupDefeatedEvent(Group group, Player lastParticipant) {
         if (lastParticipant == null) {
             throw new IllegalArgumentException("Player cannot be null.");
         }
         if (group == null) {
             throw new IllegalArgumentException("Group must be an instance of Clan or Faction and cannot be null.");
         }
-        if (plugin.isSimpleClans()) {
-            if (!(group instanceof Clan)) {
-                throw new IllegalArgumentException("Group must be an instance of Clan or Faction and cannot be null.");
-            }
-        }
-        if (plugin.isFactions()) {
-            if (!(group instanceof Faction)) {
-                throw new IllegalArgumentException("Group must be an instance of Clan or Faction and cannot be null.");
-            }
-        }
         this.group = group;
         this.lastParticipant = lastParticipant;
     }
-
-    public Object getGroup() {
+    
+    /**
+     * Returns the Group
+     * @return the Group
+     */
+    public Group getGroup() {
         return group;
     }
 
+    /**
+     * Returns the Last Participant
+     * @return the Last Participant
+     */
     public Player getLastParticipant() {
         return lastParticipant;
     }

@@ -50,6 +50,8 @@ public final class ConfigManager {
 
     private TitansBattle plugin;
     private Helper helper;
+    private FileConfiguration config;
+
     private final String groupsFunPath = "games" + File.separator + "GROUPS_FUN.yml";
     private final String groupsRealPath = "games" + File.separator + "GROUPS_REAL.yml";
     private final String freeforallFunPath = "games" + File.separator + "FREEFORALL_FUN.yml";
@@ -85,8 +87,18 @@ public final class ConfigManager {
     private String commandReload;
     private String commandWatch;
     private String commandWinners;
+    private String commandRanking;
+    private boolean sqlUseMysql;
+    private String sqlHostname;
+    private int sqlPort;
+    private String sqlDatabase;
+    private String sqlUsername;
+    private String sqlPassword;
+    private int pageLimitHelp;
+    private int pageLimitRanking;
+    private String dateFormat;
 
-    void setupGameFiles() {
+    private void loadGameFiles() {
         groupsFunFile = new File(plugin.getDataFolder(), groupsFunPath);
         if (!groupsFunFile.exists()) {
             plugin.saveResource(groupsFunPath, false);
@@ -190,9 +202,6 @@ public final class ConfigManager {
             boolean winnerQuitMessage = file.getBoolean("winner-quit-message");
             String killerPrefix = file.getString("hooks.legendchat.killer.prefix");
             String winnerPrefix = file.getString("hooks.legendchat.winner.prefix");
-            List<UUID> winners = helper.stringListToUuidList(file.getStringList("data.winners"));
-            UUID killer = UUID.fromString(file.getString("data.killer", UUID.randomUUID().toString()));
-            String winnerGroup = file.getString("data.winner_group");
             long preparationTime = file.getLong("preparation_time");
             List<ItemStack> kit = (List<ItemStack>) file.getList("kit");
             Game game = new Game(mode,
@@ -214,12 +223,12 @@ public final class ConfigManager {
                     killerQuitMessage,
                     winnerQuitMessage,
                     killerPrefix,
-                    winnerPrefix, winners, killer, winnerGroup, preparationTime, kit);
+                    winnerPrefix, preparationTime, kit);
             filesAndGames.replace(file, game);
         }
     }
 
-    void saveGameFiles() {
+    private void saveGameFiles() {
         for (FileConfiguration file : filesAndGames.keySet()) {
             Game g = filesAndGames.get(file);
             Prizes p = g.getPrizes();
@@ -274,9 +283,6 @@ public final class ConfigManager {
             file.set("winner-quit-message", g.isWinnerQuitMessage());
             file.set("hooks.legendchat.killer.prefix", g.getKillerPrefix());
             file.set("hooks.legendchat.winner.prefix", g.getWinnerPrefix());
-            file.set("data.winners", helper.uuidListToStringList(g.getWinners()));
-            file.set("data.killer", g.getKiller().toString());
-            file.set("data.winner_group", g.getWinnerGroup());
             file.set("preparation_time", g.getPreparationTime());
             file.set("kit", g.getKit());
         }
@@ -292,78 +298,100 @@ public final class ConfigManager {
 
     public void save() {
         saveGameFiles();
-        plugin.getConfig().set("allowed_commands", allowedCommands);
-        plugin.getConfig().set("language", language);
-        plugin.getConfig().set("debug", debug);
-        plugin.getConfig().set("scheduler.enabled", scheduler);
+        config.set("allowed_commands", allowedCommands);
+        config.set("language", language);
+        config.set("debug", debug);
+        config.set("scheduler.enabled", scheduler);
         if (scheduler) {
             for (Scheduler a : schedulers) {
                 String id = Integer.toString(a.getId());
-                plugin.getConfig().set("scheduler.schedulers." + id + "game", a.getMode().toString());
-                plugin.getConfig().set("scheduler.schedulers." + id + "day", a.getDay());
-                plugin.getConfig().set("scheduler.schedulers." + id + "hour", a.getHour());
-                plugin.getConfig().set("scheduler.schedulers." + id + "minute", a.getMinute());
+                config.set("scheduler.schedulers." + id + "game", a.getMode().toString());
+                config.set("scheduler.schedulers." + id + "day", a.getDay());
+                config.set("scheduler.schedulers." + id + "hour", a.getHour());
+                config.set("scheduler.schedulers." + id + "minute", a.getMinute());
             }
         }
-        plugin.getConfig().set("destinations.general_exit", getGeneralExit());
-        plugin.getConfig().set("data.respawn", helper.uuidListToStringList(respawn));
-        plugin.getConfig().set("data.clear_inv", helper.uuidListToStringList(clearInventory));
-        plugin.getConfig().set("ask-for-game-mode", askForGameMode);
-        plugin.getConfig().set("default-game-mode", defaultGameMode.toString());
-        plugin.getConfig().set("commands.join", commandJoin);
-        plugin.getConfig().set("commands.exit", commandExit);;
-        plugin.getConfig().set("commands.start", commandStart);
-        plugin.getConfig().set("commands.cancel", commandCancel);
-        plugin.getConfig().set("commands.setdestination", commandSetDestination);
-        plugin.getConfig().set("commands.setinventory", commandSetInventory);
-        plugin.getConfig().set("commands.help", commandHelp);
-        plugin.getConfig().set("commands.reload", commandReload);
-        plugin.getConfig().set("commands.watch", commandWatch);
-        plugin.getConfig().set("commands.winners", commandWinners);
+        config.set("destinations.general_exit", getGeneralExit());
+        config.set("data.respawn", helper.uuidListToStringList(respawn));
+        config.set("data.clear_inv", helper.uuidListToStringList(clearInventory));
+        config.set("ask-for-game-mode", askForGameMode);
+        config.set("default-game-mode", defaultGameMode.toString());
+        config.set("commands.join", commandJoin);
+        config.set("commands.exit", commandExit);;
+        config.set("commands.start", commandStart);
+        config.set("commands.cancel", commandCancel);
+        config.set("commands.setdestination", commandSetDestination);
+        config.set("commands.setinventory", commandSetInventory);
+        config.set("commands.help", commandHelp);
+        config.set("commands.reload", commandReload);
+        config.set("commands.watch", commandWatch);
+        config.set("commands.winners", commandWinners);
+        config.set("commands.ranking", commandRanking);
+        config.set("sql.use-mysql", sqlUseMysql);
+        config.set("sql.mysql.hostname", sqlHostname);
+        config.set("sql.mysql.port", sqlPort);
+        config.set("sql.database", sqlDatabase);
+        config.set("sql.mysql.username", sqlUsername);
+        config.set("sql.mysql.password", sqlPassword);
+        config.set("page-limit.help", pageLimitHelp);
+        config.set("page-limit.ranking", pageLimitRanking);
+        config.set("date-format", dateFormat);
 
         plugin.saveConfig();
     }
 
     public void load() {
         plugin = TitansBattle.getInstance();
-        helper = TitansBattle.getHelper();
+        helper = plugin.getHelper();
         plugin.reloadConfig();
-        setupGameFiles();
+        config = plugin.getConfig();
 
-        allowedCommands = plugin.getConfig().getStringList("allowed_commands");
-        language = plugin.getConfig().getString("language");
-        debug = plugin.getConfig().getBoolean("debug");
-        scheduler = plugin.getConfig().getBoolean("scheduler.enabled", false);
+        loadGameFiles();
+
+        allowedCommands = config.getStringList("allowed_commands");
+        language = config.getString("language");
+        debug = config.getBoolean("debug");
+        scheduler = config.getBoolean("scheduler.enabled", false);
         if (scheduler) {
             schedulers.clear();
-            List<Integer> ids = (List<Integer>) plugin.getConfig().getList("scheduler.schedulers", new ArrayList<>());
+            List<Integer> ids = (List<Integer>) config.getList("scheduler.schedulers", new ArrayList<>());
             for (Integer id : ids) {
                 String idString = Integer.toString(id);
-                String game = plugin.getConfig().getString("scheduler.schedulers." + idString + "game");
-                int day = plugin.getConfig().getInt("scheduler.schedulers." + idString + "day");
-                int hour = plugin.getConfig().getInt("scheduler.schedulers." + idString + "hour");
-                int minute = plugin.getConfig().getInt("scheduler.schedulers." + idString + "minute");
+                String game = config.getString("scheduler.schedulers." + idString + "game");
+                int day = config.getInt("scheduler.schedulers." + idString + "day");
+                int hour = config.getInt("scheduler.schedulers." + idString + "hour");
+                int minute = config.getInt("scheduler.schedulers." + idString + "minute");
                 Scheduler s = new Scheduler(id, Game.Mode.valueOf(game.toUpperCase()), day, hour, minute);
                 schedulers.add(s);
             }
         }
-        generalExit = (Location) plugin.getConfig().get("destinations.general_exit");
+        generalExit = (Location) config.get("destinations.general_exit");
         clearInventory.clear();
         respawn.clear();
-        clearInventory = helper.stringListToUuidList(plugin.getConfig().getStringList("data.clear_inv"));
-        respawn = helper.stringListToUuidList(plugin.getConfig().getStringList("data.respawn"));
-        askForGameMode = plugin.getConfig().getBoolean("ask-for-game-mode");
-        defaultGameMode = Mode.valueOf(plugin.getConfig().getString("default-game-mode").toUpperCase());
-        commandJoin = plugin.getConfig().getString("commands.join");
-        commandExit = plugin.getConfig().getString("commands.exit");;
-        commandStart = plugin.getConfig().getString("commands.start");
-        commandCancel = plugin.getConfig().getString("commands.cancel");
-        commandSetDestination = plugin.getConfig().getString("commands.setdestination");
-        commandSetInventory = plugin.getConfig().getString("commands.setinventory");
-        commandHelp = plugin.getConfig().getString("commands.help");
-        commandReload = plugin.getConfig().getString("commands.reload");
-        commandWatch = plugin.getConfig().getString("commands.watch");
-        commandWinners = plugin.getConfig().getString("commands.winners");
+        clearInventory = helper.stringListToUuidList(config.getStringList("data.clear_inv"));
+        respawn = helper.stringListToUuidList(config.getStringList("data.respawn"));
+        askForGameMode = config.getBoolean("ask-for-game-mode");
+        defaultGameMode = Mode.valueOf(config.getString("default-game-mode").toUpperCase());
+        commandJoin = config.getString("commands.join");
+        commandExit = config.getString("commands.exit");;
+        commandStart = config.getString("commands.start");
+        commandCancel = config.getString("commands.cancel");
+        commandSetDestination = config.getString("commands.setdestination");
+        commandSetInventory = config.getString("commands.setinventory");
+        commandHelp = config.getString("commands.help");
+        commandReload = config.getString("commands.reload");
+        commandWatch = config.getString("commands.watch");
+        commandWinners = config.getString("commands.winners");
+        commandRanking = config.getString("commands.ranking");
+        sqlUseMysql = config.getBoolean("sql.use-mysql");
+        sqlHostname = config.getString("sql.mysql.hostname");
+        sqlPort = config.getInt("sql.mysql.port");
+        sqlDatabase = config.getString("sql.database");
+        sqlUsername = config.getString("sql.mysql.username");
+        sqlPassword = config.getString("sql.mysql.password");
+        pageLimitHelp = config.getInt("page-limit.help");
+        pageLimitRanking = config.getInt("page-limit.ranking");
+        dateFormat = config.getString("date-format");
     }
 
     public Mode getDefaultGameMode() {
@@ -380,6 +408,10 @@ public final class ConfigManager {
 
     public void setAskForGameMode(boolean askForGameMode) {
         this.askForGameMode = askForGameMode;
+    }
+
+    public void setGeneralExit(Location generalExit) {
+        this.generalExit = generalExit;
     }
 
     public HashMap<FileConfiguration, Game> getFilesAndGames() {
@@ -531,5 +563,45 @@ public final class ConfigManager {
 
     public List<UUID> getRespawn() {
         return respawn;
+    }
+
+    public String getSqlHostname() {
+        return sqlHostname;
+    }
+
+    public int getSqlPort() {
+        return sqlPort;
+    }
+
+    public String getSqlDatabase() {
+        return sqlDatabase;
+    }
+
+    public String getSqlUsername() {
+        return sqlUsername;
+    }
+
+    public String getSqlPassword() {
+        return sqlPassword;
+    }
+
+    public String getCommandRanking() {
+        return commandRanking;
+    }
+
+    public boolean isSqlUseMysql() {
+        return sqlUseMysql;
+    }
+
+    public int getPageLimitHelp() {
+        return pageLimitHelp;
+    }
+
+    public int getPageLimitRanking() {
+        return pageLimitRanking;
+    }
+
+    public String getDateFormat() {
+        return dateFormat;
     }
 }

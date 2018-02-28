@@ -22,9 +22,9 @@ public class EntityDamageListener implements Listener {
 
     public EntityDamageListener() {
         plugin = TitansBattle.getInstance();
-        cm = TitansBattle.getConfigManager();
-        gm = TitansBattle.getGameManager();
-        helper = TitansBattle.getHelper();
+        cm = plugin.getConfigManager();
+        gm = plugin.getGameManager();
+        helper = plugin.getHelper();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)

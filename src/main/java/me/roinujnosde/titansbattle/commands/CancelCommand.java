@@ -14,20 +14,24 @@ public class CancelCommand {
 
     private final GameManager gm;
     private final String permission = "titansbattle.cancel";
+    private final TitansBattle plugin;
 
     public CancelCommand() {
-        gm = TitansBattle.getGameManager();
-
+        plugin = TitansBattle.getInstance();
+        gm = plugin.getGameManager();
     }
 
     public void execute(CommandSender sender) {
         if (sender instanceof Player && !sender.hasPermission(permission)) {
-            sender.sendMessage(MessageFormat.format(TitansBattle.getLang("no-permission"), permission));
+            plugin.debug("" + sender.getName() + " tried to use the "
+                    + getClass().getName() + " without permission", true);
+            sender.sendMessage(MessageFormat.format(
+                    plugin.getLang("no-permission"), permission));
             return;
         }
         if (gm.isStarting() == false && gm.isHappening() == false) {
-            sender.sendMessage(TitansBattle.getLang("not-starting-or-started"));
-			return;
+            sender.sendMessage(plugin.getLang("not-starting-or-started"));
+            return;
         }
         gm.cancelGame(sender, gm.getCurrentGame());
     }

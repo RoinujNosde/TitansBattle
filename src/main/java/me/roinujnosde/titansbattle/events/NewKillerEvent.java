@@ -49,10 +49,18 @@ public class NewKillerEvent extends Event {
         this.oldKiller = oldKiller;
     }
 
+    /**
+     * Returns the new Killer
+     * @return the new Killer
+     */
     public Player getKiller() {
         return killer;
     }
 
+    /**
+     * Returns the old Killer, may be null
+     * @return the old Killer
+     */
     public OfflinePlayer getOldKiller() {
         return oldKiller;
     }

@@ -18,37 +18,44 @@ public class SetDestinationCommand {
     private final String permission = "titansbattle.setdestination";
     private final ConfigManager cm;
     private final Helper helper;
+    private final TitansBattle plugin;
 
     public SetDestinationCommand() {
-        cm = TitansBattle.getConfigManager();
-        helper = TitansBattle.getHelper();
+        plugin = TitansBattle.getInstance();
+        cm = plugin.getConfigManager();
+        helper = plugin.getHelper();
     }
 
     public boolean execute(CommandSender sender, String[] args) {
         if (!sender.hasPermission(permission)) {
-            sender.sendMessage(MessageFormat.format(TitansBattle.getLang("no-permission"), permission));
+            plugin.debug("" + sender.getName() + " tried to use the "
+                    + getClass().getName() + " without permission", true);
+            sender.sendMessage(MessageFormat.format(
+                    plugin.getLang("no-permission"), permission));
             return true;
         }
         if (args.length < 1) {
             return false;
         }
         Game game = null;
-        if (args.length == 1) {
-            if (cm.isAskForGameMode()) {
-                return false;
-            } else {
-                game = helper.getGame(cm.getDefaultGameMode());
+        if (!args[0].equalsIgnoreCase("generalexit")) {
+            if (args.length == 1) {
+                if (cm.isAskForGameMode()) {
+                    return false;
+                } else {
+                    game = helper.getGame(cm.getDefaultGameMode());
+                }
             }
-        }
-        if (args.length == 2) {
-            try {
-                game = helper.getGame(Mode.valueOf(args[1].toUpperCase()));
-            } catch (IllegalArgumentException e) {
+            if (args.length == 2) {
+                try {
+                    game = helper.getGame(Mode.valueOf(args[1].toUpperCase()));
+                } catch (IllegalArgumentException e) {
+                    return false;
+                }
+            }
+            if (game == null) {
                 return false;
             }
-        }
-        if (game == null) {
-            return false;
         }
 
         if (sender instanceof Player) {
@@ -66,15 +73,17 @@ public class SetDestinationCommand {
                 case "lobby":
                     game.setLobby(player.getLocation());
                     break;
+                case "generalexit":
+                    cm.setGeneralExit(player.getLocation());
                 default:
-                    player.sendMessage(TitansBattle.getLang("invalid-destination"));
+                    player.sendMessage(plugin.getLang("invalid-destination"));
                     return true;
             }
-            player.sendMessage(MessageFormat.format(TitansBattle.getLang("destination_setted"), args[0]));
+            player.sendMessage(MessageFormat.format(plugin.getLang("destination_setted"), args[0]));
             cm.save();
             return true;
         } else {
-            sender.sendMessage(TitansBattle.getLang("player-command"));
+            sender.sendMessage(plugin.getLang("player-command"));
             return true;
         }
     }

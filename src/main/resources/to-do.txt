@@ -1,8 +1,8 @@
 - Add the tab complete feature
-- Store data using MySQL or SQLite
 - Add bar boss messages
 - Use spigot's sendMessage
 - Add title messages
 - Wait for AuthMe to log player in to clear the inv
 - Disable Faction's "You are in truce" message (http://wiki.vg/Protocol#Chat_Message_.28clientbound.29)
 - Check for teleport cause on TeleportEvent (Spectator mode) and set a "walk" range for the spectator
+- Play sounds when something important happens

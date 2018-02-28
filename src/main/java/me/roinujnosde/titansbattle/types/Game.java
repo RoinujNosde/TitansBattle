@@ -54,9 +54,6 @@ public class Game {
     boolean winnerQuitMessage;
     String killerPrefix;
     String winnerPrefix;
-    List<UUID> winners;
-    UUID killer;
-    String winnerGroup;
     long preparationTime;
     List<ItemStack> kit;
 
@@ -67,7 +64,7 @@ public class Game {
             long expirationTime, String joinOrQuitMessagePriority,
             boolean killerJoinMessage, boolean winnerJoinMessage,
             boolean killerQuitMessage, boolean winnerQuitMessage,
-            String killerPrefix, String winnerPrefix, List<UUID> winners, UUID killer, String winnerGroup, long preparationTime, List<ItemStack> kit) {
+            String killerPrefix, String winnerPrefix, long preparationTime, List<ItemStack> kit) {
         this.mode = mode;
         this.prizes = prizes;
         this.minimumPlayers = minimumPlayers;
@@ -88,9 +85,6 @@ public class Game {
         this.winnerQuitMessage = winnerQuitMessage;
         this.killerPrefix = killerPrefix;
         this.winnerPrefix = winnerPrefix;
-        this.winners = winners;
-        this.killer = killer;
-        this.winnerGroup = winnerGroup;
         this.preparationTime = preparationTime;
         this.kit = kit;
     }
@@ -113,33 +107,9 @@ public class Game {
     public void setKit(List<ItemStack> kit) {
         this.kit = Helper.removeNullItems(kit);
     }
-    
-    public void setWinnerGroup(String winnerGroup) {
-        this.winnerGroup = winnerGroup;
-    }
-    
-    public void setWinners(List<UUID> winners) {
-        this.winners = winners;
-    }
-
-    public void setKiller(UUID killer) {
-        this.killer = killer;
-    }
 
     public Location getExit() {
         return exit;
-    }
-
-    public List<UUID> getWinners() {
-        return winners;
-    }
-
-    public String getWinnerGroup() {
-        return winnerGroup;
-    }
-
-    public UUID getKiller() {
-        return killer;
     }
 
     public long getExpirationTime() {

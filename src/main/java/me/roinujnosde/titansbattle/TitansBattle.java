@@ -34,6 +34,7 @@ import me.roinujnosde.titansbattle.listeners.PlayerJoinListener;
 import me.roinujnosde.titansbattle.listeners.PlayerQuitListener;
 
 import me.roinujnosde.titansbattle.managers.ConfigManager;
+import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
 import me.roinujnosde.titansbattle.managers.LanguageManager;
 import me.roinujnosde.titansbattle.managers.TaskManager;
@@ -45,11 +46,8 @@ import net.sacredlabyrinth.phaed.simpleclans.managers.ClanManager;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 
-//TODO: Throw exceptions on methods
 //TODO: Javadoc
 //TODO: Add debug messages
-//todo: Insert comments in the code
-
 /**
  * @author RoinujNosde
  *
@@ -57,14 +55,15 @@ import org.bukkit.configuration.file.FileConfiguration;
 public final class TitansBattle extends JavaPlugin {
 
     private static TitansBattle instance;
-    private static GameManager gameManager;
-    private static ConfigManager configManager;
-    private static TaskManager taskManager;
-    private static LanguageManager languageManager;
-    private static Helper helper;
-    private static Economy economy;
-    private static SimpleClans simpleClans;
-    private static Factions factions;
+    private GameManager gameManager;
+    private ConfigManager configManager;
+    private TaskManager taskManager;
+    private LanguageManager languageManager;
+    private DatabaseManager databaseManager;
+    private Helper helper;
+    private Economy economy;
+    private SimpleClans simpleClans;
+    private Factions factions;
 
     @Override
     public void onEnable() {
@@ -73,6 +72,7 @@ public final class TitansBattle extends JavaPlugin {
         configManager = new ConfigManager();
         taskManager = new TaskManager();
         languageManager = new LanguageManager();
+        databaseManager = new DatabaseManager();
         helper = new Helper();
 
         configManager.load();
@@ -80,6 +80,7 @@ public final class TitansBattle extends JavaPlugin {
         taskManager.load();
         languageManager.setup();
         helper.load();
+        databaseManager.load();
 
         debug("Plugin by RoinujNosde", false);
         debug("Special thanks to Pedro Silva for helping me test it", false);
@@ -109,14 +110,17 @@ public final class TitansBattle extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new PlayerDeathListener(), this);
         Bukkit.getPluginManager().registerEvents(new EntityDamageListener(), this);
         getCommand("tb").setExecutor(new TbCommandExecutor());
+
+        databaseManager.loadDataToMemory();
         gameManager.startOrSchedule();
     }
 
     /**
+     * Checks if the server is using SimpleClans
      *
      * @return if the server is using SimpleClans
      */
-    public static boolean isSimpleClans() {
+    public boolean isSimpleClans() {
         if (simpleClans != null) {
             return true;
         }
@@ -124,6 +128,16 @@ public final class TitansBattle extends JavaPlugin {
     }
 
     /**
+     * Returns the DatabaseManager instance
+     *
+     * @return the DatabaseManager
+     */
+    public DatabaseManager getDatabaseManager() {
+        return databaseManager;
+    }
+
+    /**
+     * Returns the ClanManager if SimpleClans is installed, null otherwise
      *
      * @return the ClanManager if SimpleClans is installed, null otherwise
      */
@@ -135,25 +149,30 @@ public final class TitansBattle extends JavaPlugin {
     }
 
     /**
+     * Returns the Economy system, null if none found
      *
-     * @return the Economy system
+     * @return the Economy system, or null
      */
-    public static Economy getEconomy() {
+    public Economy getEconomy() {
         return economy;
     }
 
     /**
+     * Returns if the server is using Factions
      *
      * @return if the server is using Factions
      */
-    public static boolean isFactions() {
+    public boolean isFactions() {
         if (factions != null) {
             return true;
         }
         return false;
     }
-    
-    void setupEconomy() {
+
+    /**
+     * Sets up the Economy system (used internally)
+     */
+    private void setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
             return;
         }
@@ -168,9 +187,11 @@ public final class TitansBattle extends JavaPlugin {
     @Override
     public void onDisable() {
         gameManager.finishGame(gameManager.getCurrentGame());
+        databaseManager.close();
     }
 
     /**
+     * Returns the plugin instance
      *
      * @return the plugin instance
      */
@@ -179,46 +200,52 @@ public final class TitansBattle extends JavaPlugin {
     }
 
     /**
+     * Returns the GameManager instance
      *
      * @return the GameManager instance
      */
-    public static GameManager getGameManager() {
+    public GameManager getGameManager() {
         return gameManager;
     }
 
     /**
+     * Returns the TaskManager instance
      *
      * @return the TaskManager instance
      */
-    public static TaskManager getTaskManager() {
+    public TaskManager getTaskManager() {
         return taskManager;
     }
 
     /**
+     * Returns the ConfigManager instance
      *
      * @return the ConfigManager instance
      */
-    public static ConfigManager getConfigManager() {
+    public ConfigManager getConfigManager() {
         return configManager;
     }
 
     /**
+     * Returns the LanguageManager instance
      *
      * @return the LanguageManager instance
      */
-    public static LanguageManager getLanguageManager() {
+    public LanguageManager getLanguageManager() {
         return languageManager;
     }
 
     /**
+     * Returns the Helper instance
      *
      * @return the Helper instance
      */
-    public static Helper getHelper() {
+    public Helper getHelper() {
         return helper;
     }
 
     /**
+     * Returns the language for the path on the config
      *
      * @param path where the String is
      * @param config a FileConfiguration to access
@@ -233,21 +260,24 @@ public final class TitansBattle extends JavaPlugin {
     }
 
     /**
+     * Returns the language for the path
      *
      * @param path where the String is
      * @return the language from the default language file
      */
-    public static String getLang(String path) {
+    public String getLang(String path) {
         return getLang(path, getLanguageManager().getConfig());
     }
 
     /**
+     * Returns the language for the path on the Game config file
      *
      * @param path where the String is
      * @param game the Game to find the String
-     * @return the overrider language if found, or from the default language file
+     * @return the overrider language if found, or from the default language
+     * file
      */
-    public static String getLang(String path, Game game) {
+    public String getLang(String path, Game game) {
         for (FileConfiguration file : configManager.getFilesAndGames().keySet()) {
             if (configManager.getFilesAndGames().get(file).equals(game)) {
                 String language = getLang("language." + path, file);
@@ -265,7 +295,7 @@ public final class TitansBattle extends JavaPlugin {
      * @param message message to send
      * @param respectUserDecision should the message be sent if debug is false?
      */
-    public static void debug(String message, boolean respectUserDecision) {
+    public void debug(String message, boolean respectUserDecision) {
         if (respectUserDecision) {
             if (!configManager.isDebug()) {
                 return;

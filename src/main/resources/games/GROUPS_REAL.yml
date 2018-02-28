@@ -84,12 +84,6 @@ hooks:
           prefix: "[Killer] "
       winner:
           prefix: "[Winner] "
-        
-#Data used by the plugin, don't edit it.
-data:
-    killer:
-    winners: []
-    winner_group: ""
 
 #Use this to set a specific message for this game mode.
 language:

@@ -50,10 +50,18 @@ public class PlayerJoinGameEvent extends Event implements Cancellable {
         this.game = game;
     }
     
+    /**
+     * Returns the Game
+     * @return the Game
+     */
     public Game getGame() {
         return game;
     }
     
+    /**
+     * Returns the Player
+     * @return the Player
+     */
     public Player getPlayer() {
         return player;
     }
@@ -68,6 +76,10 @@ public class PlayerJoinGameEvent extends Event implements Cancellable {
         return cancelled;
     }
 
+    /**
+     * Prevents the player from joining the Game
+     * @param cancel should the player be prevented from joining?
+     */
     @Override
     public void setCancelled(boolean cancel) {
         cancelled = cancel;

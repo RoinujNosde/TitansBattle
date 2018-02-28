@@ -27,7 +27,6 @@ import java.text.MessageFormat;
 import me.roinujnosde.titansbattle.Helper;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
-import me.roinujnosde.titansbattle.types.Game;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -42,18 +41,19 @@ public class PlayerJoinListener implements Listener {
 
     private final ConfigManager cm;
     private final Helper helper;
+    private final TitansBattle plugin;
 
     public PlayerJoinListener() {
-        cm = TitansBattle.getConfigManager();
-        helper = TitansBattle.getHelper();
+        plugin = TitansBattle.getInstance();
+        cm = plugin.getConfigManager();
+        helper = plugin.getHelper();
     }
 
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
         if (cm.getRespawn().contains(player.getUniqueId())) {
-            //TODO: Implementar o local General Exit
-            //player.teleport(cm.getGeneralExit());
+            player.teleport(cm.getGeneralExit());
             cm.getRespawn().remove(player.getUniqueId());
             cm.save();
         }
@@ -69,17 +69,17 @@ public class PlayerJoinListener implements Listener {
         if (helper.isWinner(player) || helper.isKiller(player)) {
             if (helper.isKiller(player) && helper.isWinner(player)) {
                 if (helper.isKillerPriority(player)) {
-                    Bukkit.broadcastMessage(MessageFormat.format(TitansBattle.getLang("killer-has-joined", helper.getGameFromWinnerOrKiller(player)), player.getName()));
+                    Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("killer-has-joined", helper.getGameFromWinnerOrKiller(player)), player.getName()));
                 } else {
-                    Bukkit.broadcastMessage(MessageFormat.format(TitansBattle.getLang("winner-has-joined", helper.getGameFromWinnerOrKiller(player)), player.getName()));
+                    Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("winner-has-joined", helper.getGameFromWinnerOrKiller(player)), player.getName()));
                 }
             }
             if (helper.isKiller(player) && helper.isKillerJoinMessageEnabled(player)) {
-                Bukkit.broadcastMessage(MessageFormat.format(TitansBattle.getLang("killer-has-joined", helper.getGameFromWinnerOrKiller(player)), player.getName()));
+                Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("killer-has-joined", helper.getGameFromWinnerOrKiller(player)), player.getName()));
 
             }
             if (helper.isWinner(player) && helper.isWinnerJoinMessageEnabled(player)) {
-                Bukkit.broadcastMessage(MessageFormat.format(TitansBattle.getLang("winner-has-joined", helper.getGameFromWinnerOrKiller(player)), player.getName()));
+                Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("winner-has-joined", helper.getGameFromWinnerOrKiller(player)), player.getName()));
 
             }
         }

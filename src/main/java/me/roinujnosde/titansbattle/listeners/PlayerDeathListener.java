@@ -23,12 +23,9 @@
  */
 package me.roinujnosde.titansbattle.listeners;
 
-import java.text.MessageFormat;
 import me.roinujnosde.titansbattle.Helper;
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.events.NewKillerEvent;
 import me.roinujnosde.titansbattle.events.ParticipantDeathEvent;
-import me.roinujnosde.titansbattle.managers.ConfigManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -43,13 +40,13 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 public class PlayerDeathListener implements Listener {
 
     private final GameManager gm;
-    private final ConfigManager cm;
     private final Helper helper;
+    private final TitansBattle plugin;
 
     public PlayerDeathListener() {
-        gm = TitansBattle.getGameManager();
-        cm = TitansBattle.getConfigManager();
-        helper = TitansBattle.getHelper();
+        plugin = TitansBattle.getInstance();
+        gm = plugin.getGameManager();
+        helper = plugin.getHelper();
     }
 
     @EventHandler
@@ -59,15 +56,13 @@ public class PlayerDeathListener implements Listener {
 
         if (!gm.isHappening() && !gm.isStarting() && killer != null) {
             if (helper.isKiller(victim)) {
-                NewKillerEvent nke = new NewKillerEvent(killer, victim);
-                Bukkit.getPluginManager().callEvent(nke);
-                gm.setKiller(helper.getGameFromWinnerOrKiller(victim), killer);
+                gm.setKiller(helper.getGameFromWinnerOrKiller(victim), killer, victim);
+                plugin.getDatabaseManager().saveAll();
             }
         }
 
         if (gm.getParticipants().contains(victim.getUniqueId())) {
-            ParticipantDeathEvent pde = new ParticipantDeathEvent(victim);
-            Bukkit.getPluginManager().callEvent(pde);
+            Bukkit.getPluginManager().callEvent(new ParticipantDeathEvent(victim));
             if (gm.isStarting()) {
                 gm.removeParticipant(gm.getCurrentGame(), victim);
             }
@@ -77,18 +72,8 @@ public class PlayerDeathListener implements Listener {
                     victim.getInventory().clear();
                     victim.getInventory().setArmorContents(null);
                 }
-                gm.getCasualties().add(victim);
-                victim.sendMessage(TitansBattle.getLang("watch_to_the_end", gm.getCurrentGame()));
-                if (killer != null) {
-                    helper.increaseKillsCount(killer);
-                    Bukkit.broadcastMessage(MessageFormat.format(TitansBattle.getLang("killed_by", gm.getCurrentGame()), victim.getName(), killer.getName()));
-                    Bukkit.broadcastMessage(MessageFormat.format(TitansBattle.getLang("has_killed_times", gm.getCurrentGame()), killer.getName(), Integer.toString(gm.getPlayerKillsCount(killer))));
-                } else {
-                    Bukkit.broadcastMessage(MessageFormat.format(TitansBattle.getLang("died_by_himself", gm.getCurrentGame()), victim.getName()));
-                }
-                gm.removeParticipant(gm.getCurrentGame(), victim);
+                gm.addCasualty(victim, killer);
             }
         }
-
     }
 }

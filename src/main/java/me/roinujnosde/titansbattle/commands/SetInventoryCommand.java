@@ -44,17 +44,22 @@ public class SetInventoryCommand {
     private final ConfigManager cm;
     private final String permission = "titansbattle.setinventory";
     private final Helper helper;
+    private final TitansBattle plugin;
 
     public SetInventoryCommand() {
-        cm = TitansBattle.getConfigManager();
-        helper = TitansBattle.getHelper();
+        plugin = TitansBattle.getInstance();
+        cm = plugin.getConfigManager();
+        helper = plugin.getHelper();
     }
 
     public boolean execute(CommandSender sender, String[] args) {
         if (sender instanceof Player) {
             Player player = (Player) sender;
             if (!player.hasPermission(permission)) {
-                sender.sendMessage(MessageFormat.format(TitansBattle.getLang("no-permission"), permission));
+                plugin.debug("" + sender.getName() + " tried to use the "
+                        + getClass().getName() + " without permission", true);
+                sender.sendMessage(MessageFormat.format(
+                        plugin.getLang("no-permission"), permission));
                 return true;
             }
             //Digitou apenas /tb setinventory
@@ -74,20 +79,18 @@ public class SetInventoryCommand {
                         return false;
                     }
                     if (helper.isReal(helper.getGame(mode))) {
-                        sender.sendMessage(TitansBattle.getLang("game-does-not-accept-kits"));
+                        sender.sendMessage(plugin.getLang("game-does-not-accept-kits"));
                         return true;
                     }
                 } else {
                     mode = cm.getDefaultGameMode();
                     if (helper.isReal(helper.getGame(mode))) {
-                        sender.sendMessage(TitansBattle.getLang("game-does-not-accept-kits"));
+                        sender.sendMessage(plugin.getLang("game-does-not-accept-kits"));
                         return true;
                     }
                 }
-                List<ItemStack> items = new ArrayList<>();
-                items.addAll(Arrays.asList(player.getInventory().getContents()));
-                helper.getGame(mode).setKit(items);
-                player.sendMessage(TitansBattle.getLang("inventory-set"));
+                helper.getGame(mode).setKit(helper.getInventoryAsList(player));
+                player.sendMessage(plugin.getLang("inventory-set"));
                 cm.save();
                 return true;
             }
@@ -113,24 +116,20 @@ public class SetInventoryCommand {
                     mode = cm.getDefaultGameMode();
                 }
                 if (args[1].equalsIgnoreCase("leaders")) {
-                    List<ItemStack> items = new ArrayList<>();
-                    items.addAll(Arrays.asList(player.getInventory().getContents()));
-                    helper.getGame(mode).getPrizes().setLeaderItems(items);
+                    helper.getGame(mode).getPrizes().setLeaderItems(helper.getInventoryAsList(player));
                     cm.save();
-                    player.sendMessage(TitansBattle.getLang("inventory-set"));
+                    player.sendMessage(plugin.getLang("inventory-set"));
                     return true;
                 }
                 if (args[1].equalsIgnoreCase("members")) {
-                    List<ItemStack> items = new ArrayList<>();
-                    items.addAll(Arrays.asList(player.getInventory().getContents()));
-                    helper.getGame(mode).getPrizes().setMemberItems(items);
+                    helper.getGame(mode).getPrizes().setMemberItems(helper.getInventoryAsList(player));
                     cm.save();
-                    player.sendMessage(TitansBattle.getLang("inventory-set"));
+                    player.sendMessage(plugin.getLang("inventory-set"));
                     return true;
                 }
             }
         } else {
-            sender.sendMessage(TitansBattle.getLang("player-command"));
+            sender.sendMessage(plugin.getLang("player-command"));
             return true;
         }
         return true;

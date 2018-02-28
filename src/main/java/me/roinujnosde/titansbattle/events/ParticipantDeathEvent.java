@@ -46,6 +46,10 @@ public class ParticipantDeathEvent extends Event {
         this.player = player;
     }
     
+    /**
+     * Returns the Player
+     * @return the Player
+     */
     public Player getPlayer() {
         return player;
     }
