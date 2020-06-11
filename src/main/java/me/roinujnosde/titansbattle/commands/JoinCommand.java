@@ -38,13 +38,11 @@ public class JoinCommand {
 
     private final TitansBattle plugin;
     private final GameManager gm;
-    private final Helper helper;
     private final String permission = "titansbattle.join";
 
     public JoinCommand() {
         plugin = TitansBattle.getInstance();
         gm = plugin.getGameManager();
-        helper = plugin.getHelper();
     }
 
     public void execute(CommandSender sender) {

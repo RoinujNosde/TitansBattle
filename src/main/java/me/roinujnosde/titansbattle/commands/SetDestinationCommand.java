@@ -75,6 +75,7 @@ public class SetDestinationCommand {
                     break;
                 case "generalexit":
                     cm.setGeneralExit(player.getLocation());
+                    break;
                 default:
                     player.sendMessage(plugin.getLang("invalid-destination"));
                     return true;

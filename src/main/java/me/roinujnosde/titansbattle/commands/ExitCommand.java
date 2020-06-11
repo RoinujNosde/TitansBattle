@@ -50,9 +50,9 @@ public class ExitCommand {
                 return;
             }
 
-            gm.removeParticipant(gm.getCurrentGame(), player);
-
-            sender.sendMessage(plugin.getLang("you-have-left", gm.getCurrentGame()));
+            if (gm.removeParticipant(gm.getCurrentGame(), player)) {
+                sender.sendMessage(plugin.getLang("you-have-left", gm.getCurrentGame()));
+            }
         } else {
             sender.sendMessage(plugin.getLang("player-command"));
         }

@@ -27,16 +27,14 @@ import me.roinujnosde.titansbattle.types.Winners;
 import net.milkbowl.vault.economy.EconomyResponse;
 import net.sacredlabyrinth.phaed.simpleclans.Clan;
 import net.sacredlabyrinth.phaed.simpleclans.ClanPlayer;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.*;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
+import org.jetbrains.annotations.NotNull;
 
 public class Helper {
 
@@ -821,14 +819,14 @@ public class Helper {
      * @param player the player
      * @return true if he has items
      */
-    public boolean inventoryHasItems(Player player) {
+    public boolean inventoryHasItems(@NotNull Player player) {
         for (ItemStack item : player.getInventory().getContents()) {
-            if (item != null) {
+            if (item != null && !item.getType().equals(Material.AIR)) {
                 return true;
             }
         }
         for (ItemStack item : player.getInventory().getArmorContents()) {
-            if (item != null) {
+            if (item != null && !item.getType().equals(Material.AIR)) {
                 return true;
             }
         }

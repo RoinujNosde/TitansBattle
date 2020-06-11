@@ -30,15 +30,15 @@ import java.util.UUID;
 import me.roinujnosde.titansbattle.TitansBattle;
 import net.sacredlabyrinth.phaed.simpleclans.Clan;
 import org.bukkit.Bukkit;
+import org.jetbrains.annotations.NotNull;
 
 /**
- *
  * @author Edson Passos <edsonpassosjr@outlook.com>
  */
 public class GroupWrapper {
 
-    private Object base;
-    private TitansBattle plugin;
+    private final Object base;
+    private final TitansBattle plugin;
 
     public GroupWrapper(Object base) {
         if (base == null) {
@@ -68,6 +68,7 @@ public class GroupWrapper {
             id = ((Faction) base).getId();
         }
         if (plugin.isSimpleClans()) {
+            //noinspection ConstantConditions
             id = ((Clan) base).getTag();
         }
         return id;
@@ -78,6 +79,7 @@ public class GroupWrapper {
             Bukkit.getServer().dispatchCommand(Bukkit.getConsoleSender(), "f disband " + ((Faction) base).getName());
         }
         if (plugin.isSimpleClans()) {
+            //noinspection ConstantConditions
             ((Clan) base).disband();
         }
     }
@@ -94,14 +96,13 @@ public class GroupWrapper {
         return false;
     }
 
-    public boolean isLeaderOrOfficer(UUID uuid) {
-        if (uuid != null) {
-            if (plugin.isSimpleClans()) {
-                return plugin.getClanManager().getClanPlayer(uuid).isLeader();
-            }
-            if (plugin.isFactions()) {
-                return MPlayer.get(uuid).getRole() == Rel.LEADER || MPlayer.get(uuid).getRole() == Rel.OFFICER;
-            }
+    public boolean isLeaderOrOfficer(@NotNull UUID uuid) {
+        if (plugin.isSimpleClans()) {
+            //noinspection ConstantConditions
+            return plugin.getClanManager().getClanPlayer(uuid).isLeader();
+        }
+        if (plugin.isFactions()) {
+            return MPlayer.get(uuid).getRole() == Rel.LEADER || MPlayer.get(uuid).getRole() == Rel.OFFICER;
         }
         return false;
     }

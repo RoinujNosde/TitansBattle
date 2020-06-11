@@ -30,6 +30,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class GameManager {
 
@@ -311,7 +313,7 @@ public class GameManager {
      * @param victim the victim
      * @param killer the killer
      */
-    public void addCasualty(Player victim, Player killer) {
+    public void addCasualty(@NotNull Player victim, @Nullable Player killer) {
         casualties.add(victim);
         victim.sendMessage(plugin.getLang("watch_to_the_end", getCurrentGame()));
         if (killer != null) {
@@ -323,19 +325,23 @@ public class GameManager {
         }
         Mode mode = getCurrentGame().getMode();
 
+        //Victim
         Warrior vWarrior = dm.getWarrior(victim.getUniqueId());
-        Warrior kWarrior = dm.getWarrior(killer.getUniqueId());
-
-        if (helper.isGroupBased(currentGame)) {
-            Group vGroup = vWarrior.getGroup();
-            Group kGroup = kWarrior.getGroup();
-
+        vWarrior.setDeaths(mode, vWarrior.getDeaths(mode) + 1);
+        Group vGroup = vWarrior.getGroup();
+        if (vGroup != null) {
             vGroup.setDeaths(mode, vGroup.getDeaths(mode) + 1);
-            kGroup.setKills(mode, kGroup.getKills(mode) + 1);
         }
 
-        kWarrior.setKills(mode, kWarrior.getKills(mode) + 1);
-        vWarrior.setDeaths(mode, vWarrior.getDeaths(mode) + 1);
+        //Killer
+        if (killer != null) {
+            Warrior kWarrior = dm.getWarrior(killer.getUniqueId());
+            kWarrior.setKills(mode, kWarrior.getKills(mode) + 1);
+            Group kGroup = kWarrior.getGroup();
+            if (kGroup != null) {
+                kGroup.setKills(mode, kGroup.getKills(mode) + 1);
+            }
+        }
 
         removeParticipant(getCurrentGame(), victim);
     }
@@ -524,9 +530,9 @@ public class GameManager {
      * @param game the game
      * @param player the player
      */
-    public void removeParticipant(Game game, Player player) {
+    public boolean removeParticipant(Game game, Player player) {
         if (!getParticipants().contains(player.getUniqueId())) {
-            return;
+            return false;
         }
         Warrior warrior = plugin.getDatabaseManager().getWarrior(player.getUniqueId());
 
@@ -543,7 +549,7 @@ public class GameManager {
         } catch (NullPointerException ex) {
             player.sendMessage(ChatColor.RED + "An error has ocurred while trying to teleport you! Contact the admin! :o");
             plugin.debug("You have not setted the Exit teleport destination!", false);
-            return;
+            return false;
         }
 
         participants.remove(player.getUniqueId());
@@ -555,7 +561,7 @@ public class GameManager {
             }
 
             if (!isHappening()) {
-                return;
+                return false;
             }
 
             if (members == 1) {
@@ -569,8 +575,7 @@ public class GameManager {
                 groups.replace(group, members);
             }
 
-            List<Group> remainingClans = new ArrayList<>();
-            remainingClans.addAll(groups.keySet());
+            List<Group> remainingClans = new ArrayList<>(groups.keySet());
             Player killer = null;
             if (remainingClans.size() == 1) {
                 int mostKills = 0;
@@ -595,6 +600,7 @@ public class GameManager {
                 addWinner(Bukkit.getPlayer(getParticipants().get(0)), killerPlayer);
             }
         }
+        return true;
     }
 
     /**

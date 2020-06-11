@@ -185,7 +185,7 @@ public class DatabaseManager {
                 String player_winners;
                 JsonArray ja = new JsonArray();
                 if (winners.getPlayerWinners(mode) != null) {
-                    winners.getPlayerWinners(mode).stream().map(UUID::toString).forEach(uuid -> ja.add(uuid));
+                    winners.getPlayerWinners(mode).stream().map(UUID::toString).forEach(ja::add);
                 }
                 player_winners = new Gson().toJson(ja);
                 String winner_group = null;
@@ -219,7 +219,7 @@ public class DatabaseManager {
                     String player_winners;
                     JsonArray ja = new JsonArray();
                     if (winners.getPlayerWinners(mode) != null) {
-                        winners.getPlayerWinners(mode).stream().map(UUID::toString).forEach(uuid -> ja.add(uuid));
+                        winners.getPlayerWinners(mode).stream().map(UUID::toString).forEach(ja::add);
                     }
                     player_winners = new Gson().toJson(ja);
                     String winner_group = null;
@@ -493,21 +493,17 @@ public class DatabaseManager {
                 }
                 Mode mode = Mode.valueOf(rs.getString("mode"));
 
-                if (winnersData.get(date) == null) {
-                    winnersData.put(date, new HashMap<>());
-                }
+                winnersData.computeIfAbsent(date, k -> new HashMap<>());
                 Map<WinnerType, Map<Mode, Object>> data = winnersData.get(date);
                 for (WinnerType wt : WinnerType.values()) {
-                    if (data.get(wt) == null) {
-                        data.put(wt, new HashMap<>());
-                    }
+                    data.computeIfAbsent(wt, k -> new HashMap<>());
                     final Map<Mode, Object> innerData = data.get(wt);
                     switch (wt) {
                         case KILLER:
                             UUID k = null;
                             try {
                                 k = UUID.fromString(rs.getString("killer"));
-                            } catch (NullPointerException ex) {
+                            } catch (NullPointerException ignored) {
                             }
                             innerData.put(mode, k);
                             break;
@@ -574,6 +570,7 @@ public class DatabaseManager {
             });
         }
         if (plugin.isSimpleClans()) {
+            //noinspection ConstantConditions
             plugin.getClanManager().getClans().forEach(clan -> {
                 getGroup(new GroupWrapper(clan));
                 clan.getMembers().forEach(
@@ -585,9 +582,9 @@ public class DatabaseManager {
     }
 
     public void saveAll() {
-        getGroups().forEach(group -> update(group));
-        getWarriors().forEach(warrior -> update(warrior));
-        getWinners().forEach(winners -> update(winners));
+        getGroups().forEach(this::update);
+        getWarriors().forEach(this::update);
+        getWinners().forEach(this::update);
     }
 
     public Winners getLatestWinners() {
