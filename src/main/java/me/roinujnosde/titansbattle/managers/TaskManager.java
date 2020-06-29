@@ -145,8 +145,8 @@ public class TaskManager {
                 @Override
                 public void run() {
                     Bukkit.getServer().broadcastMessage(plugin.getLang("preparation_over", gm.getCurrentGame()));
-                    gm.setStarting(false);
-                    gm.setHappening(true);
+                    gm.setPreparation(false);
+                    gm.setBattle(true);
                 }
             }.runTask(plugin);
         }
@@ -156,9 +156,6 @@ public class TaskManager {
 
         int times;
         long interval, seconds;
-
-        private LobbyAnnouncementTask() {
-        }
 
         public LobbyAnnouncementTask(int times, long interval) {
             times--;
@@ -181,7 +178,7 @@ public class TaskManager {
                                 Integer.toString(gm.getPlayersParticipatingCount())));
                         times--;
                     } else {
-                        gm.startBattle(gm.getCurrentGame());
+                        gm.startBattle();
                         lobbyAnnouncementTask.cancel();
                     }
                 }
@@ -193,6 +190,10 @@ public class TaskManager {
 
         @Override
         public void run() {
+            if (gm.getCurrentGame() == null) {
+                this.cancel();
+                return;
+            }
             new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -215,7 +216,7 @@ public class TaskManager {
                 public void run() {
                     if (gm.isHappening()) {
                         Bukkit.broadcastMessage(plugin.getLang("game_expired", gm.getCurrentGame()));
-                        gm.finishGame(gm.getCurrentGame());
+                        gm.finishGame(null, null, null);
                         gameExpirationTask.cancel();
                     } else {
                         gameExpirationTask.cancel();

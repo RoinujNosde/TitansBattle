@@ -1,6 +1,7 @@
 package me.roinujnosde.titansbattle.commands;
 
 import java.text.MessageFormat;
+
 import me.roinujnosde.titansbattle.Helper;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
@@ -10,7 +11,6 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
 /**
- *
  * @author RoinujNosde
  */
 public class SetDestinationCommand {
@@ -37,29 +37,35 @@ public class SetDestinationCommand {
         if (args.length < 1) {
             return false;
         }
-        Game game = null;
-        if (!args[0].equalsIgnoreCase("generalexit")) {
-            if (args.length == 1) {
-                if (cm.isAskForGameMode()) {
-                    return false;
-                } else {
-                    game = helper.getGame(cm.getDefaultGameMode());
-                }
-            }
-            if (args.length == 2) {
-                try {
-                    game = helper.getGame(Mode.valueOf(args[1].toUpperCase()));
-                } catch (IllegalArgumentException e) {
-                    return false;
-                }
-            }
-            if (game == null) {
-                return false;
-            }
-        }
-
         if (sender instanceof Player) {
             Player player = (Player) sender;
+            Game game = null;
+            if (!args[0].equalsIgnoreCase("generalexit")) {
+                if (args.length == 1) {
+                    if (cm.isAskForGameMode()) {
+                        return false;
+                    } else {
+                        game = helper.getGame(cm.getDefaultGameMode());
+                    }
+                }
+                //- "&c- /tb setdestination <EXIT | ARENA | LOBBY | WATCHROOM> <MODO DE JOGO> - define seu local atual como um destino do jogo"
+                if (args.length == 2) {
+                    try {
+                        game = helper.getGame(Mode.valueOf(args[1].toUpperCase()));
+                    } catch (IllegalArgumentException e) {
+                        return false;
+                    }
+                }
+                if (game == null) {
+                    return false;
+                }
+            } else {
+                cm.setGeneralExit(player.getLocation());
+                player.sendMessage(MessageFormat.format(plugin.getLang("destination_setted"), args[0]));
+                cm.save();
+                return true;
+            }
+
             switch (args[0].toLowerCase()) {
                 case "exit":
                     game.setExit(player.getLocation());
@@ -72,9 +78,6 @@ public class SetDestinationCommand {
                     break;
                 case "lobby":
                     game.setLobby(player.getLocation());
-                    break;
-                case "generalexit":
-                    cm.setGeneralExit(player.getLocation());
                     break;
                 default:
                     player.sendMessage(plugin.getLang("invalid-destination"));

@@ -14,7 +14,6 @@ import org.bukkit.entity.Player;
  */
 public class ExitCommand {
 
-    private final String permission = "titansbattle.exit";
     private final GameManager gm;
     private final TitansBattle plugin;
 
@@ -24,6 +23,7 @@ public class ExitCommand {
     }
 
     public void execute(CommandSender sender) {
+        String permission = "titansbattle.exit";
         if (!sender.hasPermission(permission)) {
             plugin.debug("" + sender.getName() + " tried to use the "
                     + getClass().getName() + " without permission", true);
@@ -38,7 +38,7 @@ public class ExitCommand {
                 return;
             }
 
-            if (gm.isHappening() == false && gm.isStarting() == false) {
+            if (!gm.isHappening()) {
                 sender.sendMessage(plugin.getLang("not-starting-or-started"));
                 return;
             }
@@ -50,7 +50,7 @@ public class ExitCommand {
                 return;
             }
 
-            if (gm.removeParticipant(gm.getCurrentGame(), player)) {
+            if (gm.removeParticipant(player)) {
                 sender.sendMessage(plugin.getLang("you-have-left", gm.getCurrentGame()));
             }
         } else {

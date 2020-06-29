@@ -27,6 +27,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.NotNull;
 
 /**
  *
@@ -41,10 +42,7 @@ public class NewKillerEvent extends Event {
     private NewKillerEvent() {
     }
 
-    public NewKillerEvent(Player killer, OfflinePlayer oldKiller) {
-        if (killer == null) {
-            throw new IllegalArgumentException("Killer cannot be null.");
-        }
+    public NewKillerEvent(@NotNull Player killer, OfflinePlayer oldKiller) {
         this.killer = killer;
         this.oldKiller = oldKiller;
     }
@@ -53,6 +51,7 @@ public class NewKillerEvent extends Event {
      * Returns the new Killer
      * @return the new Killer
      */
+    @NotNull
     public Player getKiller() {
         return killer;
     }

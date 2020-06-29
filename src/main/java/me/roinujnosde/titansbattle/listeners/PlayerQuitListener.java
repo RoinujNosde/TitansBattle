@@ -41,7 +41,6 @@ import org.bukkit.event.player.PlayerQuitEvent;
 public class PlayerQuitListener implements Listener {
 
     private final GameManager gm;
-    private final ConfigManager cm;
     private final Helper helper;
     private final TitansBattle plugin;
 
@@ -49,7 +48,6 @@ public class PlayerQuitListener implements Listener {
         plugin = TitansBattle.getInstance();
         helper = plugin.getHelper();
         gm = plugin.getGameManager();
-        cm = plugin.getConfigManager();
     }
 
     @EventHandler

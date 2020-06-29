@@ -33,7 +33,7 @@ public class StartCommand {
                     plugin.getLang("no-permission"), permission));
             return true;
         }
-        if (gm.isHappening() || gm.isStarting()) {
+        if (gm.isHappening()) {
             sender.sendMessage(plugin.getLang("starting-or-started", gm.getCurrentGame()));
             return true;
         }

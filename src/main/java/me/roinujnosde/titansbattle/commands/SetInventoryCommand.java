@@ -42,7 +42,6 @@ import org.bukkit.inventory.ItemStack;
 public class SetInventoryCommand {
 
     private final ConfigManager cm;
-    private final String permission = "titansbattle.setinventory";
     private final Helper helper;
     private final TitansBattle plugin;
 
@@ -55,6 +54,7 @@ public class SetInventoryCommand {
     public boolean execute(CommandSender sender, String[] args) {
         if (sender instanceof Player) {
             Player player = (Player) sender;
+            String permission = "titansbattle.setinventory";
             if (!player.hasPermission(permission)) {
                 plugin.debug("" + sender.getName() + " tried to use the "
                         + getClass().getName() + " without permission", true);
@@ -108,7 +108,7 @@ public class SetInventoryCommand {
                         return false;
                     }
                     try {
-                        mode = Mode.valueOf(args[1].toUpperCase());
+                        mode = Mode.valueOf(args[2].toUpperCase());
                     } catch (IllegalArgumentException ex) {
                         return false;
                     }

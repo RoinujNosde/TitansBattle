@@ -55,6 +55,8 @@ import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.types.Winners;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
  *
@@ -340,6 +342,7 @@ public class DatabaseManager {
         }
     }
 
+    @Nullable
     private Group getGroup(String identification) {
         if (identification != null) {
             plugin.debug("Trying to load a group...", true);
@@ -354,7 +357,8 @@ public class DatabaseManager {
         return null;
     }
 
-    public Group getGroup(GroupWrapper wrapper) {
+    @Nullable
+    public Group getGroup(@Nullable GroupWrapper wrapper) {
         plugin.debug("Trying to load a group...", true);
         if (wrapper != null) {
             String id = wrapper.getId();
@@ -392,18 +396,15 @@ public class DatabaseManager {
             }
             Group group = new Group(wrapper, victories, defeats, kills, deaths);
             groups.add(group);
-            plugin.debug("Group " + group.getWrapper().getName() + "loaded!", true);
+            plugin.debug("Group " + group.getWrapper().getName() + " loaded!", true);
             return group;
         }
         plugin.debug("Group not found", true);
         return null;
     }
 
-    public Warrior getWarrior(UUID uuid) {
-        if (uuid == null) {
-            return null;
-        }
-
+    @NotNull
+    public Warrior getWarrior(@NotNull UUID uuid) {
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
 
         for (Warrior warrior : warriors) {
@@ -435,7 +436,7 @@ public class DatabaseManager {
         } catch (SQLException ex) {
             plugin.debug("Error while getting a Warrior: " + ex.getMessage(), false);
         }
-        Warrior warrior = new Warrior(player, getGroup(helper.getGroupWrapper(player)), kills, deaths, victories);
+        Warrior warrior = new Warrior(player, kills, deaths, victories);
         warriors.add(warrior);
         return warrior;
     }
@@ -450,24 +451,19 @@ public class DatabaseManager {
             while (rs.next()) {
                 UUID uuid = UUID.fromString(rs.getString("uuid"));
                 Mode mode = Mode.valueOf(rs.getString("mode"));
-                if (players.get(uuid) == null) {
-                    players.put(uuid, new HashMap<>());
-                }
+                players.computeIfAbsent(uuid, k -> new HashMap<>());
                 final HashMap<CountType, HashMap<Mode, Integer>> playerData = players.get(uuid);
                 for (CountType t : CountType.values()) {
-                    if (playerData.get(t) == null) {
-                        playerData.put(t, new HashMap<>());
-                    }
+                    playerData.computeIfAbsent(t, k -> new HashMap<>());
                     playerData.get(t).put(mode, rs.getInt(t.name()));
                 }
             }
 
             for (UUID uuid : players.keySet()) {
                 OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-                Group group = getGroup(helper.getGroupWrapper(player));
                 HashMap<CountType, HashMap<Mode, Integer>> playerData = players.get(uuid);
 
-                Warrior warrior = new Warrior(player, group, playerData.get(CountType.KILLS), playerData.get(CountType.DEATHS), playerData.get(CountType.VICTORIES));
+                Warrior warrior = new Warrior(player, playerData.get(CountType.KILLS), playerData.get(CountType.DEATHS), playerData.get(CountType.VICTORIES));
                 warriors.add(warrior);
             }
 
@@ -501,9 +497,10 @@ public class DatabaseManager {
                     switch (wt) {
                         case KILLER:
                             UUID k = null;
-                            try {
-                                k = UUID.fromString(rs.getString("killer"));
-                            } catch (NullPointerException ignored) {
+
+                            String killer = rs.getString("killer");
+                            if (killer != null) {
+                                k = UUID.fromString(killer);
                             }
                             innerData.put(mode, k);
                             break;

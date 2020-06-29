@@ -1,37 +1,21 @@
 package me.roinujnosde.titansbattle.managers;
 
-import java.text.MessageFormat;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 import me.roinujnosde.titansbattle.Helper;
-import me.roinujnosde.titansbattle.types.Scheduler;
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.events.GameStartEvent;
-import me.roinujnosde.titansbattle.events.GroupDefeatedEvent;
-import me.roinujnosde.titansbattle.events.GroupWinEvent;
-import me.roinujnosde.titansbattle.events.LobbyStartEvent;
-import me.roinujnosde.titansbattle.events.NewKillerEvent;
-import me.roinujnosde.titansbattle.events.PlayerJoinGameEvent;
-import me.roinujnosde.titansbattle.events.PlayerWinEvent;
-import me.roinujnosde.titansbattle.types.Game;
+import me.roinujnosde.titansbattle.events.*;
+import me.roinujnosde.titansbattle.types.*;
 import me.roinujnosde.titansbattle.types.Game.Mode;
-import me.roinujnosde.titansbattle.types.Group;
-import me.roinujnosde.titansbattle.types.Prizes;
-import me.roinujnosde.titansbattle.types.Warrior;
-import me.roinujnosde.titansbattle.types.Winners;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+
+import java.text.MessageFormat;
+import java.util.*;
 
 public class GameManager {
 
@@ -42,8 +26,10 @@ public class GameManager {
 
     private Helper helper;
 
-    private boolean starting = false;
-    private boolean happening = false;
+    private boolean happening;
+    private boolean lobby;
+    private boolean battle;
+    private boolean preparation;
 
     private Map<Group, Integer> groups;
 
@@ -74,13 +60,11 @@ public class GameManager {
         return currentGame;
     }
 
-    private void addWinner(Player winner, Player killer) {
-        //Finaliza o jogo atual
-        finishGame(getCurrentGame());
+    private void processWinner(@NotNull Player winner, Player killer) {
+
         //Chama os eventos de Novo Killer e Novo Vencedor
         Bukkit.getPluginManager().callEvent(new PlayerWinEvent(winner));
-        //Dá os prêmios para o vencedor
-        givePrizes(winner);
+
         //Define o novo killer
         setKiller(getCurrentGame(), killer, null);
         //Anuncia
@@ -89,25 +73,27 @@ public class GameManager {
         helper.increaseVictories(dm.getWarrior(winner.getUniqueId()));
 
         setWinner(winner);
+
+        //Finaliza o jogo atual
+        finishGame(null, null, winner);
     }
 
-    private void setWinner(Player winner) {
+    private void setWinner(@NotNull Player winner) {
         Set<UUID> uuids = new HashSet<>();
         uuids.add(winner.getUniqueId());
         plugin.getDatabaseManager().getTodaysWinners().setWinners(getCurrentGame().getMode(), uuids);
     }
 
-    private void addWinners(Game game, Group group, Player killerPlayer) {
+    private void processWinners(@NotNull Group group, Player killerPlayer) {
         //Chama os eventos
         Bukkit.getPluginManager().callEvent(new NewKillerEvent(killerPlayer, null));
         Bukkit.getPluginManager().callEvent(new GroupWinEvent(group));
 
-        List<UUID> currentWinners = new ArrayList<>();
         List<Player> leaders = new ArrayList<>();
         List<Player> members = new ArrayList<>();
 
         //Adiciona os participantes restantes à lista de vencedores
-        currentWinners.addAll(participants);
+        List<UUID> currentWinners = new ArrayList<>(participants);
 
         //Filtra os membros e líderes da lista de participantes
         participants.stream().map(Bukkit::getPlayer).forEach(player -> {
@@ -135,41 +121,28 @@ public class GameManager {
         Winners today = db.getTodaysWinners();
         today.setWinnerGroup(mode, group);
         today.setWinners(mode, new HashSet<>(currentWinners));
-        setKiller(game, killerPlayer, null);
+        setKiller(getCurrentGame(), killerPlayer, null);
 
         group.setVictories(mode, (group.getVictories(mode) + 1));
 
         currentWinners.stream().map(Bukkit::getOfflinePlayer).forEach(player
-                -> {
-            helper.increaseVictories(dm.getWarrior(player.getUniqueId()));
-        });
+                -> helper.increaseVictories(dm.getWarrior(player.getUniqueId())));
 
         //Faz o anuncio
-        Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("who_won", getCurrentGame()), group.getWrapper().getName()));
+        Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("who_won", getCurrentGame()),
+                group.getWrapper().getName()));
 
-        //Dá os prêmios
-        givePrizesToMembersAndLeaders(game, leaders, members);
-
-        //TODO: Fazer este som ser configuravel
-//        Bukkit.getOnlinePlayers().forEach(player -> {
-//            player.getLocation().getWorld().playSound(player.getLocation(), Sound.UI_TOAST_CHALLENGE_COMPLETE, 1F, 1F);
-//        });
         members.addAll(leaders);
         Bukkit.getPluginManager().callEvent(new PlayerWinEvent(members));
         //Salva as alterações
         cm.save();
         //Finaliza o jogo
-        finishGame(game);
+        finishGame(leaders, members, null);
+        //Dá os prêmios
     }
 
-    private void givePrizes(Player winner) {
-        ArrayList<Player> list = new ArrayList<>();
-        list.add(winner);
-
-        givePrizesToMembersAndLeaders(currentGame, null, list);
-    }
-
-    private void givePrizesToMembersAndLeaders(Game game, List<Player> leaders, List<Player> members) {
+    private void givePrizesToMembersAndLeaders(List<Player> leaders, List<Player> members) {
+        Game game = getCurrentGame();
         Prizes prizes = game.getPrizes();
         if (prizes.isTreatLeadersAsMembers()) {
             members.addAll(leaders);
@@ -201,10 +174,13 @@ public class GameManager {
      * Initiates the schedule task or starts the game
      */
     public void startOrSchedule() {
-        if (cm.isScheduler()) {
+        if (!cm.isScheduler()) {
+            plugin.debug("Scheduler disabled", true);
             return;
         }
-        if (isHappening() || isStarting()) {
+        plugin.debug("Scheduler enabled", true);
+        if (isHappening()) {
+            plugin.debug("Already happening or starting", true);
             tm.startSchedulerTask(300);
             return;
         }
@@ -213,16 +189,20 @@ public class GameManager {
 
         Scheduler nextScheduler = helper.getNextSchedulerOfDay();
         if (nextScheduler == null) {
+            plugin.debug("No next scheduler today", true);
             tm.startSchedulerTask(oneDay - currentTimeInSeconds);
             return;
         }
         int nextHour = nextScheduler.getHour();
         int nextMinute = nextScheduler.getMinute();
         int nextTimeInSeconds = (nextHour * 60 * 60) + (nextMinute * 60);
+        plugin.debug(String.format("Scheduler Time: %s:%s", nextHour, nextMinute), true);
 
         if (currentTimeInSeconds == nextTimeInSeconds) {
+            plugin.debug("It's time!", true);
             start(nextScheduler.getMode());
         } else {
+            plugin.debug("It's not time yet!", true);
             tm.startSchedulerTask(nextTimeInSeconds - currentTimeInSeconds);
         }
     }
@@ -233,7 +213,7 @@ public class GameManager {
      * @param mode the mode
      */
     public void start(Mode mode) {
-        if (isStarting() || isHappening()) {
+        if (isHappening()) {
             return;
         }
         if (helper.isGroupBased(helper.getGame(mode))) {
@@ -247,7 +227,8 @@ public class GameManager {
         if (event.isCancelled()) {
             return;
         }
-        setStarting(true);
+        setLobby(true);
+        setHappening(true);
         int times = currentGame.getAnnouncementStartingTimes();
         long interval = currentGame.getAnnouncementStartingInterval();
         long seconds = times * interval;
@@ -263,30 +244,33 @@ public class GameManager {
     /**
      * Initiates the battle
      *
-     * @param game the game
      */
-    void startBattle(Game game) {
-        if (isHappening()) {
+    void startBattle() {
+        Game game = getCurrentGame();
+        if (isBattle()) {
             return;
         }
         GameStartEvent event = new GameStartEvent(game);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
-            cancelGame(Bukkit.getConsoleSender(), game);
+            cancelGame(Bukkit.getConsoleSender());
+            return;
         }
         if (helper.isGroupBased(game)) {
             if (getParticipants().size() < getMinimumPlayers() || groups.size() < getMinimumGroups()) {
                 Bukkit.broadcastMessage(plugin.getLang("not_enough_participants", getCurrentGame()));
-                finishGame(game);
+                finishGame(null, null, null);
                 return;
             }
         } else {
             if (getParticipants().size() < getMinimumPlayers()) {
                 Bukkit.broadcastMessage(plugin.getLang("not_enough_participants", getCurrentGame()));
-                finishGame(game);
+                finishGame(null, null, null);
                 return;
             }
         }
+        setLobby(false);
+        setPreparation(true);
         tm.startPreparationTimeTask(game.getPreparationTime());
         Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("game_started", getCurrentGame()), Long.toString(game.getPreparationTime())));
         helper.teleportAll(game.getArena());
@@ -343,7 +327,7 @@ public class GameManager {
             }
         }
 
-        removeParticipant(getCurrentGame(), victim);
+        removeParticipant(victim);
     }
 
     /**
@@ -352,21 +336,18 @@ public class GameManager {
      * @param player the quitter
      */
     public void addQuitter(Player player) {
-        if (isHappening()) {
+        if (!isLobby()) {
             if (helper.isFun(getCurrentGame())) {
                 cm.getClearInventory().add(player.getUniqueId());
             }
             cm.getRespawn().add(player.getUniqueId());
             cm.save();
-            removeParticipant(getCurrentGame(), player);
         }
-        if (isStarting()) {
-            removeParticipant(getCurrentGame(), player);
-        }
+        removeParticipant(player);
     }
 
-    private boolean tryToAdd(Player player) {
-        if (!isHappening() && !isStarting()) {
+    private boolean tryToAddParticipant(Player player) {
+        if (!isLobby()) {
             player.sendMessage(plugin.getLang("not-starting-or-started"));
         } else {
             if (getParticipants().contains(player.getUniqueId())) {
@@ -379,11 +360,11 @@ public class GameManager {
                     return false;
                 }
             }
-            if (isHappening()) {
+            if (isBattle() || isPreparation()) {
                 player.sendMessage(plugin.getLang("game_is_happening", getCurrentGame()));
                 return false;
             }
-            if (isStarting()) {
+            if (isLobby()) {
                 if (helper.isFun(getCurrentGame())) {
                     if (helper.inventoryHasItems(player)) {
                         player.sendMessage(plugin.getLang("clear-your-inventory", getCurrentGame()));
@@ -393,10 +374,7 @@ public class GameManager {
 
                 PlayerJoinGameEvent event = new PlayerJoinGameEvent(player, getCurrentGame());
                 Bukkit.getPluginManager().callEvent(event);
-                if (event.isCancelled()) {
-                    return false;
-                }
-                return true;
+                return !event.isCancelled();
             }
         }
         return false;
@@ -408,22 +386,45 @@ public class GameManager {
      * @param player the player
      */
     public void addParticipant(Player player) {
-        if (!tryToAdd(player)) {
+        if (!tryToAddParticipant(player)) {
             return;
         }
 
-        try {
-            player.teleport(getCurrentGame().getLobby());
-        } catch (NullPointerException ex) {
+        Location lobby = currentGame.getLobby();
+        if (lobby != null) {
+            player.teleport(lobby);
+        } else {
             player.sendMessage(ChatColor.RED + "An error has ocurred while trying to teleport you! Contact the admin! :o");
             plugin.debug("You have not setted the Lobby teleport destination!", false);
             return;
         }
 
         Warrior warrior = plugin.getDatabaseManager().getWarrior(player.getUniqueId());
+        if (helper.isGroupBased(currentGame)) {
+            Group group = warrior.getGroup();
+            if (group == null) {
+                plugin.debug("Player not in group", true);
+                return;
+            }
+            String groupName = group.getWrapper().getName();
+            if (groups.containsKey(group)) {
+                //Adiciona mais um jogador na contagem
+                plugin.debug(String.format("The group %s is already in the game. Increasing player count.", groupName),
+                        true);
+                groups.replace(group, groups.get(group) + 1);
+            } else {
+                plugin.debug(String.format("Adding group %s to the game for the first time", groupName), true);
+                //Adiciona o grupo na lista
+                groups.put(group, 1);
+            }
+            plugin.debug(String.format("Group %s member count %d", groupName, groups.get(group)), true);
+        }
 
         if (helper.isFun(getCurrentGame())) {
-            player.getInventory().addItem(getCurrentGame().getKit().toArray(new ItemStack[0]));
+            List<ItemStack> kit = getCurrentGame().getKit();
+            if (kit != null && !kit.isEmpty()) {
+                player.getInventory().addItem(kit.toArray(new ItemStack[0]));
+            }
         }
 
         killsCount.put(player, 0);
@@ -432,42 +433,35 @@ public class GameManager {
             Player p = Bukkit.getPlayer(uuid);
             p.sendMessage(MessageFormat.format(plugin.getLang("player_joined", getCurrentGame()), player.getName()));
         }
-        if (helper.isGroupBased(currentGame)) {
-            Group group = warrior.getGroup();
-            if (groups.containsKey(group)) {
-                //Adiciona mais um jogador na contagem
-                groups.replace(group, groups.get(group) + 1);
-            } else {
-                //Adiciona o grupo na lista
-                groups.put(group, 1);
-            }
-        }
     }
 
-    public void setKiller(Game game, Player killer, Player victim) {
+    public void setKiller(@NotNull Game game, @NotNull Player killer, Player victim) {
         Bukkit.getPluginManager().callEvent(new NewKillerEvent(killer, victim));
         Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("new_killer", game), killer.getName()));
         plugin.getDatabaseManager().getTodaysWinners().setKiller(game.getMode(), killer.getUniqueId());
     }
 
-    public void cancelGame(CommandSender cs, Game game) {
+    public void cancelGame(CommandSender cs) {
         String sender = "Console";
         if (cs instanceof Player) {
             sender = cs.getName();
         }
         Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("cancelled", getCurrentGame()), sender));
-        finishGame(game);
+        finishGame(null, null, null);
     }
 
-    public void finishGame(Game game) {
-        if (!isStarting() && !isHappening()) {
+    public void finishGame(@Nullable List<Player> leaders, @Nullable List<Player> members,
+                           @Nullable Player winner) {
+        if (!isHappening()) {
             return;
         }
-        setStarting(false);
+        Game game = getCurrentGame();
+        setLobby(false);
+        setBattle(false);
+        setPreparation(false);
         setHappening(false);
         helper.teleportAll(game.getExit());
         tm.killAllTasks();
-        currentGame = null;
         if (helper.isGroupBased(game)) {
             groups.clear();
             killsCount.clear();
@@ -478,14 +472,23 @@ public class GameManager {
                 helper.clearInventory(player);
             }
         }
+        if (winner != null) {
+            givePrizesToMembersAndLeaders(null, Collections.singletonList(winner));
+        }
+        if (leaders != null && members != null) {
+            givePrizesToMembersAndLeaders(leaders, members);
+        }
+
         participants.clear();
         dm.saveAll();
+        currentGame = null;
     }
 
     public List<UUID> getParticipants() {
         return Collections.unmodifiableList(participants);
     }
 
+    @SuppressWarnings("unused")
     public List<Player> getCasualties() {
         return Collections.unmodifiableList(casualties);
     }
@@ -494,12 +497,20 @@ public class GameManager {
         return Collections.unmodifiableMap(groups);
     }
 
-    void setHappening(boolean happening) {
-        this.happening = happening;
+    void setPreparation(boolean preparation) {
+        this.preparation = preparation;
     }
 
-    void setStarting(boolean starting) {
-        this.starting = starting;
+    private void setLobby(boolean lobby) {
+        this.lobby = lobby;
+    }
+
+    void setBattle(boolean battle) {
+        this.battle = battle;
+    }
+
+    private void setHappening(boolean happening) {
+        this.happening = happening;
     }
 
     public HashMap<Player, Integer> getKillsCount() {
@@ -519,7 +530,8 @@ public class GameManager {
      * @param game the game
      * @return the killer UUID
      */
-    public UUID getKiller(Game game) {
+    @SuppressWarnings("unused")
+    public UUID getKiller(@NotNull Game game) {
         return plugin.getDatabaseManager().getLatestWinners().getKiller(game.getMode());
     }
 
@@ -527,86 +539,114 @@ public class GameManager {
      * Removes a player from the game and clears his inventory if the mode is
      * FUN
      *
-     * @param game the game
      * @param player the player
      */
-    public boolean removeParticipant(Game game, Player player) {
+    public boolean removeParticipant(@NotNull Player player) {
         if (!getParticipants().contains(player.getUniqueId())) {
             return false;
         }
-        Warrior warrior = plugin.getDatabaseManager().getWarrior(player.getUniqueId());
+        Game game = getCurrentGame();
 
-        if (helper.isFun(game)) {
-            player.getInventory().clear();
-            player.getInventory().setHelmet(null);
-            player.getInventory().setChestplate(null);
-            player.getInventory().setLeggings(null);
-            player.getInventory().setBoots(null);
+        if (helper.isGroupBased(game)) {
+            if (!processGroupMemberLeaving(player)) return false;
         }
-
-        try {
-            player.teleport(game.getExit());
-        } catch (NullPointerException ex) {
-            player.sendMessage(ChatColor.RED + "An error has ocurred while trying to teleport you! Contact the admin! :o");
-            plugin.debug("You have not setted the Exit teleport destination!", false);
-            return false;
-        }
+        if (!teleportToExit(player)) return false;
 
         participants.remove(player.getUniqueId());
-        if (helper.isGroupBased(game)) {
-            Group group = warrior.getGroup();
-            int members = groups.get(group);
-            if (members == 1 && isStarting()) {
-                groups.remove(group);
-            }
 
-            if (!isHappening()) {
-                return false;
-            }
+        if (helper.isFun(game)) {
+            clearInventory(player);
+            processRemainingParticipants();
+        }
 
-            if (members == 1) {
-                Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("group_defeated", getCurrentGame()), group.getWrapper().getName()));
-                Bukkit.getPluginManager().callEvent(new GroupDefeatedEvent(group, player));
-                groups.remove(group);
-                final Mode mode = getCurrentGame().getMode();
-                group.setDefeats(mode, group.getDefeats(mode) + 1);
-            } else {
-                members--;
-                groups.replace(group, members);
-            }
+        return true;
+    }
 
-            List<Group> remainingClans = new ArrayList<>(groups.keySet());
-            Player killer = null;
-            if (remainingClans.size() == 1) {
-                int mostKills = 0;
-                for (Player p : killsCount.keySet()) {
-                    if (killsCount.get(p) >= mostKills) {
-                        mostKills = killsCount.get(p);
-                        killer = p;
-                    }
-                }
-                addWinners(game, remainingClans.get(0), killer);
+    private boolean processGroupMemberLeaving(@NotNull Player player) {
+        Warrior warrior = plugin.getDatabaseManager().getWarrior(player.getUniqueId());
+
+        Group group = warrior.getGroup();
+        if (group == null) {
+            plugin.debug(String.format("Player %s is not in a group", player.getName()), false);
+            return false;
+        }
+        int members = groups.get(group);
+        groups.replace(group, --members);
+
+        if (members < 1) {
+            groups.remove(group);
+
+            if (!isBattle()) {
+                return true;
             }
-        } else {
-            if (getParticipants().size() == 1) {
-                Player killerPlayer = null;
-                int mostKills = 0;
-                for (Player p : killsCount.keySet()) {
-                    if (killsCount.get(p) > mostKills) {
-                        mostKills = killsCount.get(p);
-                        killerPlayer = p;
-                    }
-                }
-                addWinner(Bukkit.getPlayer(getParticipants().get(0)), killerPlayer);
-            }
+            Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("group_defeated",
+                    getCurrentGame()), group.getWrapper().getName()));
+            Bukkit.getPluginManager().callEvent(new GroupDefeatedEvent(group, player));
+            increaseDefeats(group);
+
+            processRemainingGroups();
         }
         return true;
     }
 
+    private void processRemainingParticipants() {
+        if (getParticipants().size() == 1) {
+            Player killerPlayer = null;
+            int mostKills = 0;
+            for (Player p : killsCount.keySet()) {
+                if (killsCount.get(p) > mostKills) {
+                    mostKills = killsCount.get(p);
+                    killerPlayer = p;
+                }
+            }
+            processWinner(Bukkit.getPlayer(getParticipants().get(0)), killerPlayer);
+        }
+    }
+
+    private void processRemainingGroups() {
+        List<Group> remainingClans = new ArrayList<>(groups.keySet());
+        Player killer = null;
+        if (remainingClans.size() == 1) {
+            int mostKills = 0;
+            for (Player p : killsCount.keySet()) {
+                if (killsCount.get(p) >= mostKills) {
+                    mostKills = killsCount.get(p);
+                    killer = p;
+                }
+            }
+            processWinners(remainingClans.get(0), killer);
+        }
+    }
+
+    private void increaseDefeats(@NotNull Group group) {
+        final Mode mode = getCurrentGame().getMode();
+        group.setDefeats(mode, group.getDefeats(mode) + 1);
+    }
+
+    private boolean teleportToExit(@NotNull Player player) {
+        Location exit = getCurrentGame().getExit();
+        if (exit != null) {
+            player.teleport(exit);
+        } else {
+            player.sendMessage(ChatColor.RED + "An error has ocurred while trying to teleport you! Contact the admin! :o");
+            plugin.debug("You have not setted the Exit teleport destination!", false);
+            return false;
+        }
+        return true;
+    }
+
+    private void clearInventory(@NotNull Player player) {
+        player.getInventory().clear();
+        player.getInventory().setHelmet(null);
+        player.getInventory().setChestplate(null);
+        player.getInventory().setLeggings(null);
+        player.getInventory().setBoots(null);
+    }
+
     /**
-     * Checks if the game has started
+     * Checks if the game is happening
      *
-     * @return if it has started (true) or not (false)
+     * @return if it the game is happening (lobby, preparation or battle)
      */
     public boolean isHappening() {
         return happening;
@@ -615,10 +655,28 @@ public class GameManager {
     /**
      * Checks if the game is starting
      *
-     * @return if it is starting (true) or not (false)
+     * @return if it is starting
      */
-    public boolean isStarting() {
-        return starting;
+    public boolean isLobby() {
+        return lobby;
+    }
+
+    /**
+     * Checks if the battle has started
+     *
+     * @return if the battle has started
+     */
+    public boolean isBattle() {
+        return battle;
+    }
+
+    /**
+     * Checks if the game is in preparation mode
+     *
+     * @return if it is in preparation
+     */
+    public boolean isPreparation() {
+        return preparation;
     }
 
     /**
@@ -666,7 +724,7 @@ public class GameManager {
      * Returns the amount of groups that are in the game
      */
     int getGroupsParticipatingCount() {
-        if (isHappening() == false && isStarting() == false) {
+        if (!isHappening()) {
             return 0;
         }
         return groups.size();

@@ -13,7 +13,6 @@ import org.bukkit.entity.Player;
 public class CancelCommand {
 
     private final GameManager gm;
-    private final String permission = "titansbattle.cancel";
     private final TitansBattle plugin;
 
     public CancelCommand() {
@@ -22,6 +21,7 @@ public class CancelCommand {
     }
 
     public void execute(CommandSender sender) {
+        String permission = "titansbattle.cancel";
         if (sender instanceof Player && !sender.hasPermission(permission)) {
             plugin.debug("" + sender.getName() + " tried to use the "
                     + getClass().getName() + " without permission", true);
@@ -29,10 +29,10 @@ public class CancelCommand {
                     plugin.getLang("no-permission"), permission));
             return;
         }
-        if (gm.isStarting() == false && gm.isHappening() == false) {
+        if (!gm.isHappening()) {
             sender.sendMessage(plugin.getLang("not-starting-or-started"));
             return;
         }
-        gm.cancelGame(sender, gm.getCurrentGame());
+        gm.cancelGame(sender);
     }
 }

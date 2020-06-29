@@ -28,6 +28,7 @@ import java.util.UUID;
 import me.roinujnosde.titansbattle.Helper;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.types.Game.Mode;
+import org.jetbrains.annotations.NotNull;
 
 /**
  *
@@ -35,22 +36,16 @@ import me.roinujnosde.titansbattle.types.Game.Mode;
  */
 public class Group {
 
-    private GroupWrapper base;
-    private Map<Game.Mode, Integer> victories;
-    private Map<Mode, Integer> defeats;
-    private Map<Game.Mode, Integer> kills;
-    private Map<Game.Mode, Integer> deaths;
+    private final GroupWrapper base;
+    private final Map<Game.Mode, Integer> victories;
+    private final Map<Mode, Integer> defeats;
+    private final Map<Game.Mode, Integer> kills;
+    private final Map<Game.Mode, Integer> deaths;
 
-    private final TitansBattle plugin;
-    private final Helper helper;
-
-    public Group(GroupWrapper base, Map<Game.Mode, Integer> victories, Map<Mode, Integer> defeats, Map<Game.Mode, Integer> kills, Map<Game.Mode, Integer> deaths) {
-        if (base == null || victories == null || kills == null || deaths == null || defeats == null) {
-            throw new IllegalArgumentException("None of the parametres may be null");
-        }
-
-        plugin = TitansBattle.getInstance();
-        helper = plugin.getHelper();
+    public Group(@NotNull GroupWrapper base, @NotNull Map<Game.Mode, Integer> victories, @NotNull Map<Mode,
+            @NotNull Integer> defeats, @NotNull Map<Game.Mode, Integer> kills, @NotNull Map<Game.Mode, Integer> deaths) {
+        TitansBattle plugin = TitansBattle.getInstance();
+        Helper helper = plugin.getHelper();
         
         helper.fillEmptyCountMaps(defeats);
         helper.fillEmptyCountMaps(victories);
@@ -65,6 +60,7 @@ public class Group {
 
     }
 
+    @NotNull
     public GroupWrapper getWrapper() {
         return base;
     }

@@ -24,6 +24,7 @@
 package me.roinujnosde.titansbattle.types;
 
 import me.roinujnosde.titansbattle.types.Game.Mode;
+import org.jetbrains.annotations.NotNull;
 
 /**
  *
@@ -31,16 +32,16 @@ import me.roinujnosde.titansbattle.types.Game.Mode;
  */
 public class Scheduler {
 
-    int id = 0;
-    Mode mode;
-    int day = 0;
-    int hour = 0;
-    int minute = 0;
+    private String id;
+    private Mode mode;
+    private int day;
+    private int hour;
+    private int minute;
 
     private Scheduler() {
     }
 
-    public Scheduler(int id, Mode mode, int day, int hour, int minute) {
+    public Scheduler(@NotNull String id, @NotNull Mode mode, int day, int hour, int minute) {
         if (day < 0 || day > 7) {
             throw new IllegalArgumentException();
         }
@@ -57,10 +58,12 @@ public class Scheduler {
         this.minute = minute;
     }
 
-    public int getId() {
+    @NotNull
+    public String getId() {
         return id;
     }
 
+    @NotNull
     public Mode getMode() {
         return mode;
     }

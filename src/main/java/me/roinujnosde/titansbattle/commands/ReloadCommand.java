@@ -32,7 +32,7 @@ public class ReloadCommand {
                     plugin.getLang("no-permission"), permission));
             return;
         }
-        gm.finishGame(gm.getCurrentGame());
+        gm.finishGame(null, null, null);
         plugin.saveDefaultConfig();
         cm.load();
         plugin.getLanguageManager().reload();

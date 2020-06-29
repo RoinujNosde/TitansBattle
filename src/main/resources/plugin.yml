@@ -15,22 +15,22 @@ permissions:
     description: "Gives access to administrator commands"
     default: op
     children:
-      titansbattle.player: false
-      titansbattle.reload: false
-      titansbattle.cancel: false
-      titansbattle.start: false
-      titansbattle.setdestination: false
-      titansbattle.setinventory: false
+      titansbattle.player: true
+      titansbattle.reload: true
+      titansbattle.cancel: true
+      titansbattle.start: true
+      titansbattle.setdestination: true
+      titansbattle.setinventory: true
   titansbattle.player:
     description: "Gives access to player commands"
     default: false
     children:
-      titansbattle.join: false
-      titansbattle.exit: false
-      titansbattle.watchroom: false
-      titansbattle.help: false
-      titansbattle.winners: false
-      titansbattle.ranking: false
+      titansbattle.join: true
+      titansbattle.exit: true
+      titansbattle.watchroom: true
+      titansbattle.help: true
+      titansbattle.winners: true
+      titansbattle.ranking: true
   titansbattle.join:
     default: false
   titansbattle.exit:

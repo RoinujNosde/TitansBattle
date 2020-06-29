@@ -28,6 +28,7 @@ import java.util.UUID;
 import me.roinujnosde.titansbattle.Helper;
 import org.bukkit.Location;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Nullable;
 
 /**
  *
@@ -64,7 +65,7 @@ public class Game {
             long expirationTime, String joinOrQuitMessagePriority,
             boolean killerJoinMessage, boolean winnerJoinMessage,
             boolean killerQuitMessage, boolean winnerQuitMessage,
-            String killerPrefix, String winnerPrefix, long preparationTime, List<ItemStack> kit) {
+            String killerPrefix, String winnerPrefix, long preparationTime, @Nullable List<ItemStack> kit) {
         this.mode = mode;
         this.prizes = prizes;
         this.minimumPlayers = minimumPlayers;
@@ -89,9 +90,6 @@ public class Game {
         this.kit = kit;
     }
 
-    private Game() {
-    }
-
     public long getPreparationTime() {
         return preparationTime;
     }
@@ -100,6 +98,7 @@ public class Game {
         this.preparationTime = preparationTime;
     }
 
+    @Nullable
     public List<ItemStack> getKit() {
         return kit;
     }    

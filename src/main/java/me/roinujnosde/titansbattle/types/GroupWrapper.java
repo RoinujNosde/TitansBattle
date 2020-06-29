@@ -116,4 +116,15 @@ public class GroupWrapper {
         }
         return null;
     }
+
+    public boolean equals(Object other) {
+        if (other instanceof GroupWrapper) {
+            return getId().equals(((GroupWrapper) other).getId());
+        }
+        return false;
+    }
+
+    public int hashCode() {
+        return getId().hashCode();
+    }
 }

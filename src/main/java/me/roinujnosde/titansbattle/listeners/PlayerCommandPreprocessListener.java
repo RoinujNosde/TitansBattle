@@ -51,7 +51,7 @@ public class PlayerCommandPreprocessListener implements Listener {
     @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
-        if (!gm.isHappening() && !gm.isStarting()) {
+        if (!gm.isHappening()) {
             return;
         }
         if (!gm.getParticipants().contains(player.getUniqueId())) {

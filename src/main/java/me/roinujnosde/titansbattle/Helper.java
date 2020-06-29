@@ -35,6 +35,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class Helper {
 
@@ -429,10 +430,9 @@ public class Helper {
         }
         List<String> playerNameList = new ArrayList<>();
         for (UUID uuid : list) {
-            try {
-                playerNameList.add(Bukkit.getOfflinePlayer(uuid).getName());
-            } catch (NullPointerException ex) {
-                plugin.debug("UUID " + uuid + " is not a valid player", true);
+            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+            if (offlinePlayer.getName() != null) {
+                playerNameList.add(offlinePlayer.getName());
             }
         }
         return playerNameList;
@@ -775,16 +775,36 @@ public class Helper {
      * @param player the player
      * @return the GroupWrapper, or null
      */
-    public GroupWrapper getGroupWrapper(OfflinePlayer player) {
+    @Nullable
+    @Deprecated
+    public GroupWrapper getGroupWrapper(@NotNull OfflinePlayer player) {
+        return getGroupWrapper(player.getUniqueId());
+    }
+
+    /**
+     * Gets a GroupWrapper for this OfflinePlayer, or null if he is not a member
+     *
+     * @param uuid the player's uuid
+     * @return the GroupWrapper, or null
+     */
+    @Nullable
+    @Deprecated
+    public GroupWrapper getGroupWrapper(@NotNull UUID uuid) {
         if (plugin.isFactions()) {
-            MPlayer mp = MPlayer.get(player);
+            MPlayer mp = MPlayer.get(uuid);
             if (mp == null) {
+                plugin.debug(String.format("Player data not found for %s", uuid), true);
                 return null;
             }
-            return new GroupWrapper(mp.getFaction());
+            if (mp.hasFaction()) {
+                plugin.debug(String.format("Player %s is in the Faction %s", uuid, mp.getFactionName()), true);
+                return new GroupWrapper(mp.getFaction());
+            }
+            plugin.debug(String.format("Player %s is not in a Faction", uuid), true);
         }
         if (plugin.isSimpleClans()) {
-            ClanPlayer cp = plugin.getClanManager().getClanPlayer(player.getUniqueId());
+            @SuppressWarnings("ConstantConditions")
+            ClanPlayer cp = plugin.getClanManager().getClanPlayer(uuid);
             if (cp == null) {
                 return null;
             }
@@ -799,7 +819,7 @@ public class Helper {
      * @param player the player
      * @return true if he is a member
      */
-    public boolean isMemberOfAGroup(Player player) {
+    public boolean isMemberOfAGroup(@NotNull Player player) {
         if (plugin.isFactions()) {
             if (MPlayer.get(player).hasFaction()) {
                 return true;

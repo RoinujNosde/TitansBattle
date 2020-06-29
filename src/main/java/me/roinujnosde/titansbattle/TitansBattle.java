@@ -1,4 +1,4 @@
-/** *****************************************************************************
+/* *****************************************************************************
  * Copyright (C) 2017 Edson Passos - edsonpassosjr@outlook.com
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -46,8 +46,6 @@ import net.sacredlabyrinth.phaed.simpleclans.managers.ClanManager;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
 
-//TODO: Javadoc
-//TODO: Add debug messages
 /**
  * @author RoinujNosde
  *
@@ -121,10 +119,7 @@ public final class TitansBattle extends JavaPlugin {
      * @return if the server is using SimpleClans
      */
     public boolean isSimpleClans() {
-        if (simpleClans != null) {
-            return true;
-        }
-        return false;
+        return simpleClans != null;
     }
 
     /**
@@ -163,10 +158,7 @@ public final class TitansBattle extends JavaPlugin {
      * @return if the server is using Factions
      */
     public boolean isFactions() {
-        if (factions != null) {
-            return true;
-        }
-        return false;
+        return factions != null;
     }
 
     /**
@@ -186,7 +178,7 @@ public final class TitansBattle extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        gameManager.finishGame(gameManager.getCurrentGame());
+        gameManager.finishGame(null, null, null);
         databaseManager.close();
     }
 

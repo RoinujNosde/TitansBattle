@@ -2,6 +2,7 @@ package me.roinujnosde.titansbattle.listeners;
 
 import me.roinujnosde.titansbattle.Helper;
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.managers.GameManager;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -9,20 +10,13 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 
-import me.roinujnosde.titansbattle.managers.ConfigManager;
-import me.roinujnosde.titansbattle.managers.GameManager;
-import me.roinujnosde.titansbattle.types.Game.Mode;
-
 public class EntityDamageListener implements Listener {
 
-    private final TitansBattle plugin;
-    private final ConfigManager cm;
     private final GameManager gm;
     private final Helper helper;
 
     public EntityDamageListener() {
-        plugin = TitansBattle.getInstance();
-        cm = plugin.getConfigManager();
+        TitansBattle plugin = TitansBattle.getInstance();
         gm = plugin.getGameManager();
         helper = plugin.getHelper();
     }
@@ -32,12 +26,13 @@ public class EntityDamageListener implements Listener {
         if (!(event.getEntity() instanceof Player)) {
             return;
         }
-        Player defendor = (Player) event.getEntity();
-        if (gm.getParticipants().contains(defendor.getUniqueId())) {
-            if (gm.isStarting() && gm.isHappening() || gm.isStarting()) {
+        Player defender = (Player) event.getEntity();
+        if (gm.getParticipants().contains(defender.getUniqueId())) {
+            if (!gm.isBattle()) {
                 event.setCancelled(true);
+                return;
             }
-            if (event instanceof EntityDamageByEntityEvent && gm.isHappening()) {
+            if (event instanceof EntityDamageByEntityEvent && gm.isBattle()) {
                 EntityDamageByEntityEvent subEvent = (EntityDamageByEntityEvent) event;
                 Player attacker = helper.getPlayerAttackerOrKiller(subEvent.getDamager());
                 if (attacker == null || !gm.getParticipants().contains(attacker.getUniqueId())) {
@@ -48,7 +43,7 @@ public class EntityDamageListener implements Listener {
                         event.setCancelled(false);
                         return;
                     }
-                    if (helper.areAllied(defendor, attacker)) {
+                    if (helper.areAllied(defender, attacker)) {
                         event.setCancelled(false);
                     }
                 }

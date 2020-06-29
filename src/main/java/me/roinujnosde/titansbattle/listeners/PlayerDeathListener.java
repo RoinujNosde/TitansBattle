@@ -54,26 +54,29 @@ public class PlayerDeathListener implements Listener {
         Player victim = event.getEntity();
         Player killer = helper.getPlayerAttackerOrKiller(victim.getKiller());
 
-        if (!gm.isHappening() && !gm.isStarting() && killer != null) {
+        if (!gm.isHappening() && killer != null) {
             if (helper.isKiller(victim)) {
                 gm.setKiller(helper.getGameFromWinnerOrKiller(victim), killer, victim);
                 plugin.getDatabaseManager().saveAll();
             }
         }
 
+        if (!gm.isHappening()) {
+            return;
+        }
         if (gm.getParticipants().contains(victim.getUniqueId())) {
             Bukkit.getPluginManager().callEvent(new ParticipantDeathEvent(victim));
-            if (gm.isStarting()) {
-                gm.removeParticipant(gm.getCurrentGame(), victim);
+            if (!gm.isBattle()) {
+                gm.removeParticipant(victim);
+                return;
             }
-            if (gm.isHappening()) {
-                if (helper.isFun(gm.getCurrentGame())) {
-                    event.setKeepInventory(true);
-                    victim.getInventory().clear();
-                    victim.getInventory().setArmorContents(null);
-                }
-                gm.addCasualty(victim, killer);
+
+            if (helper.isFun(gm.getCurrentGame())) {
+                event.setKeepInventory(true);
+                victim.getInventory().clear();
+                victim.getInventory().setArmorContents(null);
             }
+            gm.addCasualty(victim, killer);
         }
     }
 }

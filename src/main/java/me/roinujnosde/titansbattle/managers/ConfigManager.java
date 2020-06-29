@@ -25,10 +25,7 @@ package me.roinujnosde.titansbattle.managers;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import me.roinujnosde.titansbattle.Helper;
@@ -38,6 +35,7 @@ import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.types.Game;
 import me.roinujnosde.titansbattle.types.Game.Mode;
 import org.bukkit.Location;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.inventory.ItemStack;
@@ -304,7 +302,7 @@ public final class ConfigManager {
         config.set("scheduler.enabled", scheduler);
         if (scheduler) {
             for (Scheduler a : schedulers) {
-                String id = Integer.toString(a.getId());
+                String id = a.getId();
                 config.set("scheduler.schedulers." + id + "game", a.getMode().toString());
                 config.set("scheduler.schedulers." + id + "day", a.getDay());
                 config.set("scheduler.schedulers." + id + "hour", a.getHour());
@@ -354,22 +352,27 @@ public final class ConfigManager {
         scheduler = config.getBoolean("scheduler.enabled", false);
         if (scheduler) {
             schedulers.clear();
-            List<Integer> ids = (List<Integer>) config.getList("scheduler.schedulers", new ArrayList<>());
-            for (Integer id : ids) {
-                String idString = Integer.toString(id);
-                String game = config.getString("scheduler.schedulers." + idString + "game");
-                int day = config.getInt("scheduler.schedulers." + idString + "day");
-                int hour = config.getInt("scheduler.schedulers." + idString + "hour");
-                int minute = config.getInt("scheduler.schedulers." + idString + "minute");
-                Scheduler s = new Scheduler(id, Game.Mode.valueOf(game.toUpperCase()), day, hour, minute);
-                schedulers.add(s);
+            ConfigurationSection schedulersSection = config.getConfigurationSection("scheduler.schedulers");
+            if (schedulersSection == null) {
+                plugin.debug("Couldn't find the schedulers section in the config file!", false);
+            } else {
+                Set<String> ids = schedulersSection.getKeys(false);
+                plugin.debug(String.format("Scheduler IDs: %s", ids.size()), true);
+                for (String id : ids) {
+                    String game = config.getString("scheduler.schedulers." + id + ".game");
+                    int day = config.getInt("scheduler.schedulers." + id + ".day");
+                    int hour = config.getInt("scheduler.schedulers." + id + ".hour");
+                    int minute = config.getInt("scheduler.schedulers." + id + ".minute");
+                    Scheduler s = new Scheduler(id, Game.Mode.valueOf(game.toUpperCase()), day, hour, minute);
+                    schedulers.add(s);
+                }
             }
         }
         generalExit = (Location) config.get("destinations.general_exit");
         clearInventory.clear();
         respawn.clear();
-        clearInventory = helper.stringListToUuidList(config.getStringList("data.clear_inv"));
-        respawn = helper.stringListToUuidList(config.getStringList("data.respawn"));
+        clearInventory = Helper.stringListToUuidList(config.getStringList("data.clear_inv"));
+        respawn = Helper.stringListToUuidList(config.getStringList("data.respawn"));
         askForGameMode = config.getBoolean("ask-for-game-mode");
         defaultGameMode = Mode.valueOf(config.getString("default-game-mode").toUpperCase());
         commandJoin = config.getString("commands.join");
