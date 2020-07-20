@@ -534,6 +534,27 @@ public class Helper {
     }
 
     /**
+     * Checks if the two players are in the same group
+     * @param player1 player1's uuid
+     * @param player2 player2's uuid
+     * @return if they are in the same group
+     */
+    public boolean areInSameGroup(@NotNull UUID player1, @NotNull UUID player2) {
+        if (plugin.isSimpleClans()) {
+            Clan clan1 = plugin.getClanManager().getClanPlayer(player1).getClan();
+            return clan1.isMember(player2);
+        }
+
+        if (plugin.isFactions()) {
+            Faction faction1 = MPlayer.get(player1).getFaction();
+            Faction faction2 = MPlayer.get(player2).getFaction();
+            return faction1.equals(faction2);
+        }
+
+        return false;
+    }
+
+    /**
      * Increases this player's kills count
      * @param player the killer
      */
@@ -916,9 +937,19 @@ public class Helper {
      *
      * @param warrior the warrior
      */
+    @Deprecated
     public void increaseVictories(Warrior warrior) {
         Mode mode = gm.getCurrentGame().getMode();
         warrior.setVictories(mode, warrior.getVictories(mode) + 1);
+    }
+
+    /**
+     * Increases the victories of a Warrior
+     *
+     * @param uuid the warrior
+     */
+    public void increaseVictories(@NotNull UUID uuid, @NotNull Mode mode) {
+        plugin.getDatabaseManager().getWarrior(uuid, w -> w.setVictories(mode, w.getVictories(mode) + 1));
     }
 
     /**

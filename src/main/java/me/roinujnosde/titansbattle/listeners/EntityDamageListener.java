@@ -38,15 +38,12 @@ public class EntityDamageListener implements Listener {
                 if (attacker == null || !gm.getParticipants().contains(attacker.getUniqueId())) {
                     return;
                 }
-                if (event.isCancelled()) {
-                    if (helper.isFun(gm.getCurrentGame())) {
-                        event.setCancelled(false);
-                        return;
-                    }
-                    if (helper.areAllied(defender, attacker)) {
-                        event.setCancelled(false);
-                    }
+                if (helper.isFun(gm.getCurrentGame())) {
+                    event.setCancelled(false);
+                    return;
                 }
+                boolean sameGroup = helper.areInSameGroup(defender.getUniqueId(), attacker.getUniqueId());
+                event.setCancelled(sameGroup);
             }
         }
     }

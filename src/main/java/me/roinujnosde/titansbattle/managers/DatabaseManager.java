@@ -38,7 +38,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -55,6 +54,7 @@ import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.types.Winners;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.util.Consumer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -403,6 +403,13 @@ public class DatabaseManager {
         return null;
     }
 
+    public void getWarrior(@NotNull UUID uuid, @NotNull Consumer<Warrior> consumer) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            Warrior warrior = getWarrior(uuid);
+            Bukkit.getScheduler().runTask(plugin, () -> consumer.accept(warrior));
+        });
+    }
+
     @NotNull
     public Warrior getWarrior(@NotNull UUID uuid) {
         OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
@@ -579,9 +586,11 @@ public class DatabaseManager {
     }
 
     public void saveAll() {
-        getGroups().forEach(this::update);
-        getWarriors().forEach(this::update);
-        getWinners().forEach(this::update);
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            getGroups().forEach(this::update);
+            getWarriors().forEach(this::update);
+            getWinners().forEach(this::update);
+        });
     }
 
     public Winners getLatestWinners() {

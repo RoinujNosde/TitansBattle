@@ -26,7 +26,6 @@ package me.roinujnosde.titansbattle.listeners;
 import java.text.MessageFormat;
 import me.roinujnosde.titansbattle.Helper;
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.managers.ConfigManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -56,21 +55,33 @@ public class PlayerQuitListener implements Listener {
         if (gm.getParticipants().contains(player.getUniqueId())) {
             gm.addQuitter(player);
         }
+        sendQuitMessage(player);
+    }
+
+    private void sendQuitMessage(Player player) {
         if (helper.isWinner(player) || helper.isKiller(player)) {
+            boolean killerQuitMessageEnabled = helper.isKillerQuitMessageEnabled(player);
+            boolean winnerQuitMessageEnabled = helper.isWinnerQuitMessageEnabled(player);
             if (helper.isKiller(player) && helper.isWinner(player)) {
-                if (helper.isKillerPriority(player)) {
-                    Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("killer-has-left", helper.getGameFromWinnerOrKiller(player)), player.getName()));
-                } else {
-                    Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("winner-has-left", helper.getGameFromWinnerOrKiller(player)), player.getName()));
+                if (helper.isKillerPriority(player) && killerQuitMessageEnabled) {
+                    Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("killer-has-left",
+                            helper.getGameFromWinnerOrKiller(player)), player.getName()));
+                    return;
                 }
+                if (winnerQuitMessageEnabled) {
+                    Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("winner-has-left",
+                            helper.getGameFromWinnerOrKiller(player)), player.getName()));
+                }
+                return;
             }
-            if (helper.isKiller(player) && helper.isKillerQuitMessageEnabled(player)) {
-                Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("killer-has-left", helper.getGameFromWinnerOrKiller(player)), player.getName()));
+            if (helper.isKiller(player) && killerQuitMessageEnabled) {
+                Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("killer-has-left",
+                        helper.getGameFromWinnerOrKiller(player)), player.getName()));
 
             }
-            if (helper.isWinner(player) && helper.isWinnerQuitMessageEnabled(player)) {
-                Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("winner-has-left", helper.getGameFromWinnerOrKiller(player)), player.getName()));
-
+            if (helper.isWinner(player) && winnerQuitMessageEnabled) {
+                Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("winner-has-left",
+                        helper.getGameFromWinnerOrKiller(player)), player.getName()));
             }
         }
     }

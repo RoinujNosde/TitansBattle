@@ -21,17 +21,12 @@
  ***************************************************************************** */
 package me.roinujnosde.titansbattle;
 
-import me.roinujnosde.titansbattle.listeners.EntityDamageListener;
+import me.roinujnosde.titansbattle.listeners.*;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import com.massivecraft.factions.Factions;
-import me.roinujnosde.titansbattle.listeners.ChatMessageListener;
-import me.roinujnosde.titansbattle.listeners.PlayerCommandPreprocessListener;
-import me.roinujnosde.titansbattle.listeners.PlayerDeathListener;
-import me.roinujnosde.titansbattle.listeners.PlayerJoinListener;
-import me.roinujnosde.titansbattle.listeners.PlayerQuitListener;
 
 import me.roinujnosde.titansbattle.managers.ConfigManager;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
@@ -83,8 +78,7 @@ public final class TitansBattle extends JavaPlugin {
         debug("Plugin by RoinujNosde", false);
         debug("Special thanks to Pedro Silva for helping me test it", false);
         debug("Like this plugin? Leave a review on Spigot, please ;)", false);
-        debug("If you need help, contact me on:", false);
-        debug("Discord/Spigot: RoinujNosde - Email: edsonpassosjr@outlook.com", false);
+
         if ((simpleClans = (SimpleClans) Bukkit.getPluginManager().getPlugin("SimpleClans")) != null) {
             debug("SimpleClans found.", false);
         }
@@ -108,7 +102,12 @@ public final class TitansBattle extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new PlayerDeathListener(), this);
         Bukkit.getPluginManager().registerEvents(new EntityDamageListener(), this);
         getCommand("tb").setExecutor(new TbCommandExecutor());
-
+        if (isFactions()) {
+            Bukkit.getPluginManager().registerEvents(new CreateFactionListener(this), this);
+        }
+        if (isSimpleClans()) {
+            Bukkit.getPluginManager().registerEvents(new CreateClanListener(this), this);
+        }
         databaseManager.loadDataToMemory();
         gameManager.startOrSchedule();
     }

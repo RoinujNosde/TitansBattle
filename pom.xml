@@ -59,10 +59,6 @@
 
     <repositories>
         <repository>
-            <id>local-repo</id>
-            <url>file://${project.basedir}/repo</url>
-        </repository>
-        <repository>
             <id>jitpack.io</id>
             <url>https://jitpack.io</url>
         </repository>
@@ -90,13 +86,13 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.MassiveCraft</groupId>
+            <groupId>com.MassiveCraft.MassiveCore</groupId>
             <artifactId>MassiveCore</artifactId>
             <version>2.14.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>com.MassiveCraft</groupId>
+            <groupId>com.MassiveCraft.Factions</groupId>
             <artifactId>Factions</artifactId>
             <version>2.14.0</version>
             <scope>provided</scope>

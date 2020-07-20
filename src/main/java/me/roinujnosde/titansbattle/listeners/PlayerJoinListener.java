@@ -52,11 +52,39 @@ public class PlayerJoinListener implements Listener {
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        if (cm.getRespawn().contains(player.getUniqueId())) {
-            player.teleport(cm.getGeneralExit());
-            cm.getRespawn().remove(player.getUniqueId());
-            cm.save();
+        teleportToExit(player);
+        clearInventory(player);
+        sendJoinMessage(player);
+    }
+
+    private void sendJoinMessage(Player player) {
+        if (helper.isWinner(player) || helper.isKiller(player)) {
+            boolean killerJoinMessageEnabled = helper.isKillerJoinMessageEnabled(player);
+            boolean winnerJoinMessageEnabled = helper.isWinnerJoinMessageEnabled(player);
+            if (helper.isKiller(player) && helper.isWinner(player)) {
+                if (helper.isKillerPriority(player) && killerJoinMessageEnabled) {
+                    Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("killer-has-joined",
+                            helper.getGameFromWinnerOrKiller(player)), player.getName()));
+                    return;
+                }
+                if (winnerJoinMessageEnabled) {
+                    Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("winner-has-joined",
+                            helper.getGameFromWinnerOrKiller(player)), player.getName()));
+                }
+                return;
+            }
+            if (helper.isKiller(player) && killerJoinMessageEnabled) {
+                Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("killer-has-joined",
+                        helper.getGameFromWinnerOrKiller(player)), player.getName()));
+            }
+            if (helper.isWinner(player) && winnerJoinMessageEnabled) {
+                Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("winner-has-joined",
+                        helper.getGameFromWinnerOrKiller(player)), player.getName()));
+            }
         }
+    }
+
+    private void clearInventory(Player player) {
         if (cm.getClearInventory().contains(player.getUniqueId())) {
             player.getInventory().clear();
             player.getInventory().setHelmet(null);
@@ -66,22 +94,13 @@ public class PlayerJoinListener implements Listener {
             cm.getClearInventory().remove(player.getUniqueId());
             cm.save();
         }
-        if (helper.isWinner(player) || helper.isKiller(player)) {
-            if (helper.isKiller(player) && helper.isWinner(player)) {
-                if (helper.isKillerPriority(player)) {
-                    Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("killer-has-joined", helper.getGameFromWinnerOrKiller(player)), player.getName()));
-                } else {
-                    Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("winner-has-joined", helper.getGameFromWinnerOrKiller(player)), player.getName()));
-                }
-            }
-            if (helper.isKiller(player) && helper.isKillerJoinMessageEnabled(player)) {
-                Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("killer-has-joined", helper.getGameFromWinnerOrKiller(player)), player.getName()));
+    }
 
-            }
-            if (helper.isWinner(player) && helper.isWinnerJoinMessageEnabled(player)) {
-                Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("winner-has-joined", helper.getGameFromWinnerOrKiller(player)), player.getName()));
-
-            }
+    private void teleportToExit(Player player) {
+        if (cm.getRespawn().contains(player.getUniqueId())) {
+            player.teleport(cm.getGeneralExit());
+            cm.getRespawn().remove(player.getUniqueId());
+            cm.save();
         }
     }
 }
