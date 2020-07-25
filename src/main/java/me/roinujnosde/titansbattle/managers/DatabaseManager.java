@@ -35,16 +35,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.function.Consumer;
+
 import me.roinujnosde.titansbattle.Helper;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.types.Game.Mode;
@@ -54,7 +47,6 @@ import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.types.Winners;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
-import org.bukkit.util.Consumer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -84,7 +76,7 @@ public class DatabaseManager {
     }
 
     private enum WinnerType {
-        KILLER, WINNER_GROUP, PLAYER_WINNER;
+        KILLER, WINNER_GROUP, PLAYER_WINNER
     }
 
     public void load() {
@@ -487,7 +479,7 @@ public class DatabaseManager {
             Map<Date, Map<WinnerType, Map<Mode, Object>>> winnersData = new HashMap<>();
 
             while (rs.next()) {
-                Date date = null;
+                Date date;
                 try {
                     date = new SimpleDateFormat("dd/MM/yyyy").parse(rs.getString("date"));
                 } catch (ParseException ex) {
@@ -562,7 +554,7 @@ public class DatabaseManager {
     }
 
     private void sortWinners() {
-        winners.sort((w, w2) -> w.getDate().compareTo(w2.getDate()));
+        winners.sort(Comparator.comparing(Winners::getDate));
     }
 
     public void loadDataToMemory() {

@@ -3,6 +3,7 @@ package me.roinujnosde.titansbattle.listeners;
 import me.roinujnosde.titansbattle.Helper;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.GameManager;
+import me.roinujnosde.titansbattle.types.Game;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -26,6 +27,12 @@ public class EntityDamageListener implements Listener {
         if (!(event.getEntity() instanceof Player)) {
             return;
         }
+
+        Game currentGame = gm.getCurrentGame();
+        if (currentGame == null) {
+            return;
+        }
+
         Player defender = (Player) event.getEntity();
         if (gm.getParticipants().contains(defender.getUniqueId())) {
             if (!gm.isBattle()) {
@@ -38,7 +45,8 @@ public class EntityDamageListener implements Listener {
                 if (attacker == null || !gm.getParticipants().contains(attacker.getUniqueId())) {
                     return;
                 }
-                if (helper.isFun(gm.getCurrentGame())) {
+                Game.Mode mode = currentGame.getMode();
+                if (mode.equals(Game.Mode.FREEFORALL_FUN) || mode.equals(Game.Mode.FREEFORALL_REAL)) {
                     event.setCancelled(false);
                     return;
                 }

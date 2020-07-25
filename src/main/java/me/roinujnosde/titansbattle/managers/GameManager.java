@@ -584,7 +584,7 @@ public class GameManager {
                 plugin.debug(String.format("Player %s is not in a group", player.getName()), false);
                 return;
             }
-            int members = groups.get(group);
+            int members = groups.getOrDefault(group, 0);
             groups.replace(group, --members);
 
             if (members < 1) {

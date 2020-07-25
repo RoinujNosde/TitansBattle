@@ -544,13 +544,11 @@ public class Helper {
             Clan clan1 = plugin.getClanManager().getClanPlayer(player1).getClan();
             return clan1.isMember(player2);
         }
-
         if (plugin.isFactions()) {
             Faction faction1 = MPlayer.get(player1).getFaction();
             Faction faction2 = MPlayer.get(player2).getFaction();
             return faction1.equals(faction2);
         }
-
         return false;
     }
 
