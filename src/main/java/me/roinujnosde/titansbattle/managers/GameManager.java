@@ -63,13 +63,15 @@ public class GameManager {
         return currentGame;
     }
 
-    private void processWinner(@NotNull Game game, @NotNull Player winner, Player killer) {
+    private void processWinner(@NotNull Game game, @NotNull Player winner, @Nullable Player killer) {
 
         //Chama os eventos de Novo Killer e Novo Vencedor
         Bukkit.getPluginManager().callEvent(new PlayerWinEvent(winner));
 
         //Define o novo killer
-        setKiller(game, killer, null);
+        if (killer != null) {
+            setKiller(game, killer, null);
+        }
         //Anuncia
         Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("who_won", getCurrentGame()), winner.getName()));
 
@@ -87,9 +89,12 @@ public class GameManager {
         plugin.getDatabaseManager().getTodaysWinners().setWinners(mode, uuids);
     }
 
-    private void processWinners(@NotNull Game game, @NotNull Group group, Player killerPlayer) {
+    private void processWinners(@NotNull Game game, @NotNull Group group, @Nullable Player killerPlayer) {
         //Chama os eventos
-        Bukkit.getPluginManager().callEvent(new NewKillerEvent(killerPlayer, null));
+        if (killerPlayer != null) {
+            Bukkit.getPluginManager().callEvent(new NewKillerEvent(killerPlayer, null));
+            setKiller(game, killerPlayer, null);
+        }
         Bukkit.getPluginManager().callEvent(new GroupWinEvent(group));
 
         List<Player> leaders = new ArrayList<>();
@@ -125,7 +130,6 @@ public class GameManager {
         Winners today = db.getTodaysWinners();
         today.setWinnerGroup(mode, group);
         today.setWinners(mode, new HashSet<>(currentWinners));
-        setKiller(game, killerPlayer, null);
 
         group.setVictories(mode, (group.getVictories(mode) + 1));
 
@@ -562,16 +566,17 @@ public class GameManager {
             return false;
         }
 
+        participants.remove(player.getUniqueId());
+
         if (helper.isGroupBased(game)) {
             processGroupMemberLeaving(game, player);
+        } else {
+            processRemainingParticipants(game);
         }
         if (!teleportToExit(game, player)) return false;
 
-        participants.remove(player.getUniqueId());
-
         if (helper.isFun(game)) {
             clearInventory(player);
-            processRemainingParticipants(game);
         }
 
         return true;

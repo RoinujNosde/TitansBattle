@@ -303,10 +303,10 @@ public final class ConfigManager {
         if (scheduler) {
             for (Scheduler a : schedulers) {
                 String id = a.getId();
-                config.set("scheduler.schedulers." + id + "game", a.getMode().toString());
-                config.set("scheduler.schedulers." + id + "day", a.getDay());
-                config.set("scheduler.schedulers." + id + "hour", a.getHour());
-                config.set("scheduler.schedulers." + id + "minute", a.getMinute());
+                config.set("scheduler.schedulers." + id + ".game", a.getMode().toString());
+                config.set("scheduler.schedulers." + id + ".day", a.getDay());
+                config.set("scheduler.schedulers." + id + ".hour", a.getHour());
+                config.set("scheduler.schedulers." + id + ".minute", a.getMinute());
             }
         }
         config.set("destinations.general_exit", getGeneralExit());
