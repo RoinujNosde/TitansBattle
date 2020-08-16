@@ -120,7 +120,7 @@ public class DatabaseManager {
         statement.execute("CREATE TABLE IF NOT EXISTS tb_winners"
                 + "(date varchar(10) NOT NULL,"
                 + " killer varchar(255),"
-                + " player_winners varchar,"
+                + " player_winners text,"
                 + " winner_group varchar(255),"
                 + " mode varchar(20) NOT NULL);");
     }
