@@ -2,6 +2,7 @@ main: "me.roinujnosde.titansbattle.TitansBattle"
 name: "TitansBattle"
 author: "RoinujNosde"
 version: ${project.version}
+api-version: "1.13"
 softdepend:
   - "SimpleClans"
   - "Factions"
