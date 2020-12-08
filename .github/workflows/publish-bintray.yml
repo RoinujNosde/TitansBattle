@@ -18,7 +18,11 @@ jobs:
         server-id: bintray-roinujnosde-bukkit-plugins # Value of the distributionManagement/repository/id field of the pom.xml
         server-username: MAVEN_USERNAME
         server-password: MAVEN_PASSWORD
-
+    - name: Install MassiveCore
+      run: mvn install:install-file "-Dfile=./repo/com/MassiveCraft/MassiveCore/2.14.0/MassiveCore-2.14.0.jar" "-DgroupId=com.MassiveCraft.MassiveCore" "-DartifactId=MassiveCore" "-Dversion=2.14.0" "-Dpackaging=jar" "-DgeneratePom=true"
+    - name: Install Factions
+      run: mvn install:install-file "-Dfile=./repo/com/MassiveCraft/Factions/2.14.0/Factions-2.14.0.jar" "-DgroupId=com.MassiveCraft.Factions" "-DartifactId=Factions" "-Dversion=2.14.0" "-Dpackaging=jar" "-DgeneratePom=true"
+      
     - name: Build with Maven
       run: mvn -B package --file pom.xml
 
