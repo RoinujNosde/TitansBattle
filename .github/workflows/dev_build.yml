@@ -1,9 +1,10 @@
-name: Publish to Bintray
+# This workflow will build a Java project with Maven
+# For more information see: https://help.github.com/actions/language-and-framework-guides/building-and-testing-java-with-maven
 
-on:
-  release:
-    types: [created]
+name: Dev Build
 
+on: push
+  
 jobs:
   build:
 
@@ -15,19 +16,16 @@ jobs:
       uses: actions/setup-java@v1
       with:
         java-version: 1.8
-        server-id: bintray-roinujnosde-bukkit-plugins # Value of the distributionManagement/repository/id field of the pom.xml
-        server-username: MAVEN_USERNAME
-        server-password: MAVEN_PASSWORD
     - name: Install MassiveCore
       run: mvn install:install-file "-Dfile=./repo/com/MassiveCraft/MassiveCore/2.14.0/MassiveCore-2.14.0.jar" "-DgroupId=com.MassiveCraft.MassiveCore" "-DartifactId=MassiveCore" "-Dversion=2.14.0" "-Dpackaging=jar" "-DgeneratePom=true"
     - name: Install Factions
       run: mvn install:install-file "-Dfile=./repo/com/MassiveCraft/Factions/2.14.0/Factions-2.14.0.jar" "-DgroupId=com.MassiveCraft.Factions" "-DartifactId=Factions" "-Dversion=2.14.0" "-Dpackaging=jar" "-DgeneratePom=true"
-      
     - name: Build with Maven
       run: mvn -B package --file pom.xml
-
-    - name: Publish to Bintray
-      run: mvn -B deploy
-      env:
-        MAVEN_USERNAME: ${{ secrets.BINTRAY_USERNAME }}
-        MAVEN_PASSWORD: ${{ secrets.BINTRAY_TOKEN }}
+    - name: Create Staging
+      run: mkdir staging && cp target/TitansBattle*.jar staging
+    - name: Upload a Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: TitansBattle
+        path: staging
