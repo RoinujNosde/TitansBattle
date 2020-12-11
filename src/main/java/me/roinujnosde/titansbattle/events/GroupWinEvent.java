@@ -23,7 +23,6 @@
  */
 package me.roinujnosde.titansbattle.events;
 
-import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.types.Group;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;

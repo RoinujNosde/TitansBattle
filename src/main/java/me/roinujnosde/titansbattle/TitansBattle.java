@@ -21,25 +21,33 @@
  ***************************************************************************** */
 package me.roinujnosde.titansbattle;
 
+import co.aikar.commands.ConditionFailedException;
+import co.aikar.commands.InvalidCommandArgument;
+import co.aikar.commands.PaperCommandManager;
+import me.roinujnosde.titansbattle.commands.TBCommands;
+import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
 import me.roinujnosde.titansbattle.listeners.*;
-import org.bukkit.Bukkit;
-import org.bukkit.plugin.RegisteredServiceProvider;
-import org.bukkit.plugin.java.JavaPlugin;
-
-import com.massivecraft.factions.Factions;
-
-import me.roinujnosde.titansbattle.managers.ConfigManager;
-import me.roinujnosde.titansbattle.managers.DatabaseManager;
-import me.roinujnosde.titansbattle.managers.GameManager;
-import me.roinujnosde.titansbattle.managers.LanguageManager;
-import me.roinujnosde.titansbattle.managers.TaskManager;
-import me.roinujnosde.titansbattle.types.Game;
-
+import me.roinujnosde.titansbattle.managers.*;
+import me.roinujnosde.titansbattle.types.*;
+import me.roinujnosde.titansbattle.utils.ConfigUtils;
 import net.milkbowl.vault.economy.Economy;
-import net.sacredlabyrinth.phaed.simpleclans.SimpleClans;
-import net.sacredlabyrinth.phaed.simpleclans.managers.ClanManager;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.configuration.serialization.ConfigurationSerialization;
+import org.bukkit.plugin.RegisteredServiceProvider;
+import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 /**
  * @author RoinujNosde
@@ -48,121 +56,145 @@ import org.bukkit.configuration.file.FileConfiguration;
 public final class TitansBattle extends JavaPlugin {
 
     private static TitansBattle instance;
+    private PaperCommandManager pcm;
     private GameManager gameManager;
     private ConfigManager configManager;
     private TaskManager taskManager;
     private LanguageManager languageManager;
     private DatabaseManager databaseManager;
-    private Helper helper;
+    private @Nullable GroupManager groupManager;
+    private GameConfigurationDao gameConfigurationDao;
     private Economy economy;
-    private SimpleClans simpleClans;
-    private Factions factions;
 
     @Override
     public void onEnable() {
+        ConfigurationSerialization.registerClass(GameConfiguration.class);
+        ConfigurationSerialization.registerClass(Kit.class);
+        ConfigurationSerialization.registerClass(Prizes.class);
         instance = this;
         gameManager = new GameManager();
         configManager = new ConfigManager();
         taskManager = new TaskManager();
         languageManager = new LanguageManager();
         databaseManager = new DatabaseManager();
-        helper = new Helper();
+        gameConfigurationDao = GameConfigurationDao.getInstance(this);
 
         configManager.load();
-        gameManager.load();
-        taskManager.load();
         languageManager.setup();
-        helper.load();
-        databaseManager.load();
+        databaseManager.setup();
 
-        debug("Plugin by RoinujNosde", false);
-        debug("Special thanks to Pedro Silva for helping me test it", false);
-        debug("Like this plugin? Leave a review on Spigot, please ;)", false);
-
-        if ((simpleClans = (SimpleClans) Bukkit.getPluginManager().getPlugin("SimpleClans")) != null) {
-            debug("SimpleClans found.", false);
-        }
-        if ((factions = (Factions) (Bukkit.getPluginManager().getPlugin("Factions"))) != null) {
-            debug("Factions found.", false);
-        }
-        if (factions != null && simpleClans != null) {
-            debug("Factions and SimpleClans found. Disable one!", false);
-            Bukkit.getPluginManager().disablePlugin(this);
-            return;
-        }
+        loadGroupsPlugin();
         saveDefaultConfig();
         setupEconomy();
-        if (Bukkit.getPluginManager().getPlugin("Legendchat") != null) {
-            debug("Legendchat found.", false);
-            Bukkit.getPluginManager().registerEvents(new ChatMessageListener(), this);
+
+        pcm = new PaperCommandManager(this);
+        pcm.enableUnstableAPI("help");
+        configureCommands();
+        databaseManager.loadDataToMemory();
+        gameManager.startOrSchedule();
+    }
+
+    private void configureCommands() {
+        setDefaultLocale();
+        registerDependencies();
+        registerCompletions();
+        registerContexts();
+        registerCommands();
+        registerConditions();
+        registerEvents();
+    }
+
+    private void setDefaultLocale() {
+        String[] s = configManager.getLanguage().split("_");
+        pcm.getLocales().setDefaultLocale(new Locale(s[0]));
+    }
+
+    private void registerContexts() {
+        pcm.getCommandContexts().registerIssuerOnlyContext(Game.class, supplier -> gameManager.getCurrentGame());
+        pcm.getCommandContexts().registerContext(Date.class, supplier -> {
+            try {
+                return new SimpleDateFormat(configManager.getDateFormat()).parse(supplier.popFirstArg());
+            } catch (ParseException ex) {
+                supplier.getSender().sendMessage(getLang("invalid-date"));
+                throw new InvalidCommandArgument();
+            }
+        });
+    }
+
+    private void registerCommands() {
+        pcm.registerCommand(new TBCommands());
+    }
+
+    private void registerConditions() {
+        pcm.getCommandConditions().addCondition("happening", handler -> {
+            if (gameManager.getCurrentGame() == null) {
+                handler.getIssuer().sendMessage(getLang("not-starting-or-started"));
+                throw new ConditionFailedException();
+            }
+        });
+    }
+
+    private void registerCompletions() {
+        pcm.getCommandCompletions().registerCompletion("winners_dates", handler -> databaseManager.getWinners()
+                .stream().map(Winners::getDate).map(new SimpleDateFormat(configManager.getDateFormat())::format)
+                .collect(Collectors.toList()));
+        pcm.getCommandCompletions().registerCompletion("group_pages", handler -> {
+            int pages = databaseManager.getGroups().size() / configManager.getPageLimitRanking();
+            ArrayList<String> list = new ArrayList<>();
+            for (int i = 0; i < pages; i++) {
+                list.add(String.valueOf(i + 1));
+            }
+            return list;
+        });
+        pcm.getCommandCompletions().registerCompletion("warrior_pages", handler -> {
+            int pages = databaseManager.getWarriors().size() / configManager.getPageLimitRanking();
+            ArrayList<String> list = new ArrayList<>();
+            for (int i = 0; i < pages; i++) {
+                list.add(String.valueOf(i + 1));
+            }
+            return list;
+        });
+        pcm.getCommandCompletions().registerStaticCompletion("prizes_config_fields", ConfigUtils.getEditableFields(Prizes.class));
+        pcm.getCommandCompletions().registerStaticCompletion("game_config_fields", ConfigUtils.getEditableFields(GameConfiguration.class));
+        pcm.getCommandCompletions().registerStaticCompletion("warrior_order", Arrays.asList("kills", "deaths"));
+        pcm.getCommandCompletions().registerStaticCompletion("group_order", Arrays.asList("kills", "deaths", "defeats"));
+        pcm.getCommandCompletions().registerCompletion("games", handler -> gameConfigurationDao.getGameConfigurations()
+                .keySet());
+    }
+
+    private void registerDependencies() {
+        pcm.registerDependency(GameManager.class, gameManager);
+        pcm.registerDependency(GameConfigurationDao.class, gameConfigurationDao);
+        pcm.registerDependency(ConfigManager.class, configManager);
+        pcm.registerDependency(DatabaseManager.class, databaseManager);
+    }
+
+    private void loadGroupsPlugin() {
+        if (Bukkit.getPluginManager().getPlugin("SimpleClans") != null) {
+            groupManager = new SimpleClansGroupManager(this);
+            debug("SimpleClans found.", false);
+        } else if (Bukkit.getPluginManager().getPlugin("Factions") != null) {
+            groupManager = new FactionsGroupManager(this);
+            debug("Factions found.", false);
         }
+    }
+
+    private void registerEvents() {
         Bukkit.getPluginManager().registerEvents(new PlayerCommandPreprocessListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerDeathListener(), this);
         Bukkit.getPluginManager().registerEvents(new EntityDamageListener(), this);
-        getCommand("tb").setExecutor(new TbCommandExecutor());
-        if (isFactions()) {
-            Bukkit.getPluginManager().registerEvents(new CreateFactionListener(this), this);
-        }
-        if (isSimpleClans()) {
-            Bukkit.getPluginManager().registerEvents(new CreateClanListener(this), this);
-        }
-        databaseManager.loadDataToMemory();
-        gameManager.startOrSchedule();
     }
 
-    /**
-     * Checks if the server is using SimpleClans
-     *
-     * @return if the server is using SimpleClans
-     */
-    public boolean isSimpleClans() {
-        return simpleClans != null;
-    }
-
-    /**
-     * Returns the DatabaseManager instance
-     *
-     * @return the DatabaseManager
-     */
     public DatabaseManager getDatabaseManager() {
         return databaseManager;
     }
 
-    /**
-     * Returns the ClanManager if SimpleClans is installed, null otherwise
-     *
-     * @return the ClanManager if SimpleClans is installed, null otherwise
-     */
-    public ClanManager getClanManager() {
-        if (isSimpleClans()) {
-            return simpleClans.getClanManager();
-        }
-        return null;
-    }
-
-    /**
-     * Returns the Economy system, null if none found
-     *
-     * @return the Economy system, or null
-     */
-    public Economy getEconomy() {
+    public @Nullable Economy getEconomy() {
         return economy;
     }
 
-    /**
-     * Returns if the server is using Factions
-     *
-     * @return if the server is using Factions
-     */
-    public boolean isFactions() {
-        return factions != null;
-    }
-
-    /**
-     * Sets up the Economy system (used internally)
-     */
     private void setupEconomy() {
         if (getServer().getPluginManager().getPlugin("Vault") == null) {
             return;
@@ -181,58 +213,37 @@ public final class TitansBattle extends JavaPlugin {
         databaseManager.close();
     }
 
-    /**
-     * Returns the plugin instance
-     *
-     * @return the plugin instance
-     */
     public static TitansBattle getInstance() {
         return instance;
     }
 
+    public @Nullable GroupManager getGroupManager() {
+        return groupManager;
+    }
+
     /**
-     * Returns the GameManager instance
+     * Sets the GroupManager
      *
-     * @return the GameManager instance
+     * @param groupManager the GroupManager
      */
+    public void setGroupManager(@NotNull GroupManager groupManager) {
+        this.groupManager = groupManager;
+    }
+
     public GameManager getGameManager() {
         return gameManager;
     }
 
-    /**
-     * Returns the TaskManager instance
-     *
-     * @return the TaskManager instance
-     */
     public TaskManager getTaskManager() {
         return taskManager;
     }
 
-    /**
-     * Returns the ConfigManager instance
-     *
-     * @return the ConfigManager instance
-     */
     public ConfigManager getConfigManager() {
         return configManager;
     }
 
-    /**
-     * Returns the LanguageManager instance
-     *
-     * @return the LanguageManager instance
-     */
     public LanguageManager getLanguageManager() {
         return languageManager;
-    }
-
-    /**
-     * Returns the Helper instance
-     *
-     * @return the Helper instance
-     */
-    public Helper getHelper() {
-        return helper;
     }
 
     /**
@@ -242,10 +253,13 @@ public final class TitansBattle extends JavaPlugin {
      * @param config a FileConfiguration to access
      * @return the language from the config, with its color codes (&) translated
      */
-    public static String getLang(String path, FileConfiguration config) {
+    public @NotNull String getLang(String path, @Nullable FileConfiguration config) {
+        if (config == null) {
+            config = getLanguageManager().getConfig();
+        }
         String language = config.getString(path);
         if (language == null) {
-            return null;
+            return path;
         }
         return ChatColor.translateAlternateColorCodes('&', language);
     }
@@ -257,7 +271,7 @@ public final class TitansBattle extends JavaPlugin {
      * @return the language from the default language file
      */
     public String getLang(String path) {
-        return getLang(path, getLanguageManager().getConfig());
+        return getLang(path, (FileConfiguration) null);
     }
 
     /**
@@ -268,13 +282,11 @@ public final class TitansBattle extends JavaPlugin {
      * @return the overrider language if found, or from the default language
      * file
      */
-    public String getLang(String path, Game game) {
-        for (FileConfiguration file : configManager.getFilesAndGames().keySet()) {
-            if (configManager.getFilesAndGames().get(file).equals(game)) {
-                String language = getLang("language." + path, file);
-                if (language != null) {
-                    return language;
-                }
+    public String getLang(String path, @Nullable Game game) {
+        if (game != null) {
+            YamlConfiguration configFile = gameConfigurationDao.getConfigFile(game.getConfig());
+            if (configFile != null) {
+                getLang("language." + path, configFile);
             }
         }
         return getLang(path);

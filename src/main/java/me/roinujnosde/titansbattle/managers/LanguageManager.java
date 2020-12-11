@@ -12,15 +12,13 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 public class LanguageManager {
 
-    private TitansBattle plugin;
-    private ConfigManager cm;
     private FileConfiguration configFile;
     private File file;
     private String fileName;
 
     public void setup() {
-        plugin = TitansBattle.getInstance();
-        cm = plugin.getConfigManager(); 
+        TitansBattle plugin = TitansBattle.getInstance();
+        ConfigManager cm = plugin.getConfigManager();
         
         fileName = "language-" + cm.getLanguage() + ".yml";
         file = new File(plugin.getDataFolder(), fileName);
@@ -38,7 +36,8 @@ public class LanguageManager {
         try {
             configFile.save(file);
         } catch (IOException e) {
-            Bukkit.getServer().getLogger().log(Level.SEVERE, "{0}[TitansBattle] Could not save {1}!", new Object[]{ChatColor.RED, fileName});
+            Bukkit.getServer().getLogger().log(Level.SEVERE, "{0}[TitansBattle] Could not save {1}!",
+                    new Object[]{ChatColor.RED, fileName});
         }
     }
 

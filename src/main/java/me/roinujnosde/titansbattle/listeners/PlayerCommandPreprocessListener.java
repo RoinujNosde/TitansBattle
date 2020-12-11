@@ -27,6 +27,7 @@ import java.text.MessageFormat;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
+import me.roinujnosde.titansbattle.types.Game;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -51,10 +52,14 @@ public class PlayerCommandPreprocessListener implements Listener {
     @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
-        if (!gm.isHappening()) {
+        Game game = gm.getCurrentGame();
+        if (game == null) {
             return;
         }
-        if (!gm.getParticipants().contains(player.getUniqueId())) {
+        if (!game.isHappening()) {
+            return;
+        }
+        if (!game.getPlayerParticipants().contains(player.getUniqueId())) {
             return;
         }
         for (String command : cm.getAllowedCommands()) {

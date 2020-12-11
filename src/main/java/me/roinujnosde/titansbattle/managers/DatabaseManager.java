@@ -25,111 +25,92 @@ package me.roinujnosde.titansbattle.managers;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import com.massivecraft.factions.entity.FactionColl;
-import java.io.File;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.function.Consumer;
-
-import me.roinujnosde.titansbattle.Helper;
-import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.types.Game.Mode;
+import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
 import me.roinujnosde.titansbattle.types.Group;
-import me.roinujnosde.titansbattle.types.GroupWrapper;
+import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.types.GameConfiguration;
+import me.roinujnosde.titansbattle.types.GroupData;
 import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.types.Winners;
+import me.roinujnosde.titansbattle.utils.Helper;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
+
+import java.io.File;
+import java.sql.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.*;
+import java.util.function.Function;
 
 /**
- *
  * @author RoinujNosde
  */
 public class DatabaseManager {
 
-    private TitansBattle plugin;
-    private Helper helper;
-    private ConfigManager cm;
+    private final TitansBattle plugin = TitansBattle.getInstance();
+    private final Collection<GameConfiguration> games;
 
     private Connection connection;
-    private String hostname;
-    private int port;
-    private String database;
-    private String username;
-    private String password;
 
-    private Set<Group> groups;
-    private Set<Warrior> warriors;
-    private List<Winners> winners;
+    private final Map<String, GroupData> groups = new HashMap<>();
+    private final Set<Warrior> warriors = new HashSet<>();
+    private final List<Winners> winners = new ArrayList<>();
+
+    public DatabaseManager() {
+        games = GameConfigurationDao.getInstance(plugin).getGameConfigurations().values();
+    }
 
     private enum CountType {
-        KILLS, DEATHS, VICTORIES
+        KILLS, DEATHS, VICTORIES, DEFEATS
     }
 
     private enum WinnerType {
         KILLER, WINNER_GROUP, PLAYER_WINNER
     }
 
-    public void load() {
-        groups = new HashSet<>();
-        warriors = new HashSet<>();
-        winners = new ArrayList<>();
-
-        plugin = TitansBattle.getInstance();
-        helper = plugin.getHelper();
-        cm = plugin.getConfigManager();
-
-        hostname = cm.getSqlHostname();
-        port = cm.getSqlPort();
-        database = cm.getSqlDatabase();
-        username = cm.getSqlUsername();
-        password = cm.getSqlPassword();
-
+    public void setup() {
         try {
-            setup();
+            Statement statement = getConnection().createStatement();
+            statement.execute("CREATE TABLE IF NOT EXISTS tb_warriors "
+                    + "(displayname varchar(30) NOT NULL,"
+                    + " uuid varchar(255) NOT NULL,"
+                    + " kills int NOT NULL,"
+                    + " deaths int NOT NULL,"
+                    + " victories int NOT NULL,"
+                    + " game varchar(20) NOT NULL);");
+            statement.execute("CREATE TABLE IF NOT EXISTS tb_groups"
+                    + "(identification varchar(255) NOT NULL,"
+                    + " kills int NOT NULL,"
+                    + " deaths int NOT NULL,"
+                    + " victories int NOT NULL,"
+                    + " defeats int NOT NULL,"
+                    + " game varchar(20) NOT NULL);");
+            statement.execute("CREATE TABLE IF NOT EXISTS tb_winners"
+                    + "(date varchar(10) NOT NULL,"
+                    + " killer varchar(255),"
+                    + " player_winners text,"
+                    + " winner_group varchar(255),"
+                    + " game varchar(20) NOT NULL);");
         } catch (SQLException ex) {
             plugin.debug("Error while creating the tables: " + ex.getMessage(), false);
         }
     }
 
-    private void setup() throws SQLException {
-        Statement statement = getConnection().createStatement();
-        statement.execute("CREATE TABLE IF NOT EXISTS tb_warriors "
-                + "(displayname varchar(30) NOT NULL,"
-                + " uuid varchar(255) NOT NULL,"
-                + " kills int NOT NULL,"
-                + " deaths int NOT NULL,"
-                + " victories int NOT NULL,"
-                + " mode varchar(20) NOT NULL);");
-        statement.execute("CREATE TABLE IF NOT EXISTS tb_groups"
-                + "(identification varchar(255) NOT NULL,"
-                + " kills int NOT NULL,"
-                + " deaths int NOT NULL,"
-                + " victories int NOT NULL,"
-                + " defeats int NOT NULL,"
-                + " mode varchar(20) NOT NULL);");
-        statement.execute("CREATE TABLE IF NOT EXISTS tb_winners"
-                + "(date varchar(10) NOT NULL,"
-                + " killer varchar(255),"
-                + " player_winners text,"
-                + " winner_group varchar(255),"
-                + " mode varchar(20) NOT NULL);");
-    }
-
     private void start() throws SQLException {
+        ConfigManager cm = plugin.getConfigManager();
+        String hostname = cm.getSqlHostname();
+        int port = cm.getSqlPort();
+        String database = cm.getSqlDatabase();
+        String username = cm.getSqlUsername();
+        String password = cm.getSqlPassword();
         if (cm.isSqlUseMysql()) {
             try {
                 Class.forName("com.mysql.jdbc.Driver");
-                connection = DriverManager.getConnection("jdbc:mysql://" + hostname + ":" + port + "/" + database + "?useSSL=false", username, password);
+                connection = DriverManager.getConnection("jdbc:mysql://" + hostname + ":" + port + "/" + database +
+                        "?useSSL=false", username, password);
             } catch (ClassNotFoundException ex) {
                 plugin.debug("MySQL driver not found!", false);
             }
@@ -166,65 +147,61 @@ public class DatabaseManager {
     }
 
     private void update(Winners winners) {
-        ArrayList<Mode> modes = new ArrayList<>();
+        HashSet<GameConfiguration> updated = new HashSet<>();
         String date = new SimpleDateFormat("dd/MM/yyyy").format(winners.getDate());
 
-        String update = "UPDATE tb_winners SET killer=?, player_winners=?, winner_group=? WHERE date=? AND mode=?;";
+        String update = "UPDATE tb_winners SET killer=?, player_winners=?, winner_group=? WHERE date=? AND game=?;";
         try (PreparedStatement statement = getConnection().prepareStatement(update)) {
-            for (Mode mode : Mode.values()) {
+            for (GameConfiguration game : games) {
                 String killer = null;
-                if (winners.getKiller(mode) != null) {
-                    killer = winners.getKiller(mode).toString();
+                if (winners.getKiller(game.getName()) != null) {
+                    killer = winners.getKiller(game.getName()).toString();
                 }
                 String player_winners;
                 JsonArray ja = new JsonArray();
-                if (winners.getPlayerWinners(mode) != null) {
-                    winners.getPlayerWinners(mode).stream().map(UUID::toString).forEach(ja::add);
+                if (winners.getPlayerWinners(game.getName()) != null) {
+                    winners.getPlayerWinners(game.getName()).stream().map(UUID::toString).forEach(ja::add);
                 }
                 player_winners = new Gson().toJson(ja);
-                String winner_group = null;
-                if (winners.getWinnerGroup(mode) != null) {
-                    winner_group = winners.getWinnerGroup(mode).getWrapper().getId();
-                }
+                String winner_group = winners.getWinnerGroup(game.getName());
 
                 statement.setString(1, killer);
                 statement.setString(2, player_winners);
                 statement.setString(3, winner_group);
                 statement.setString(4, date);
-                statement.setString(5, mode.name());
+                statement.setString(5, game.getName());
 
                 int count = statement.executeUpdate();
                 if (count != 0) {
-                    modes.add(mode);
+                    updated.add(game);
                 }
             }
         } catch (SQLException ex) {
             plugin.debug("Error while saving the winners: " + ex.getMessage(), false);
         }
 
-        String insert = "INSERT INTO tb_winners (killer, player_winners, winner_group, date, mode) VALUES (?, ?, ?, ?, ?);";
+        String insert = "INSERT INTO tb_winners (killer, player_winners, winner_group, date, game) VALUES (?, ?, ?, ?, ?);";
         try (PreparedStatement statement = getConnection().prepareStatement(insert)) {
-            for (Mode mode : Mode.values()) {
-                if (!modes.contains(mode)) {
+            for (GameConfiguration game : games) {
+                if (!updated.contains(game)) {
+                    String gameName = game.getName();
                     String killer = null;
-                    if (winners.getKiller(mode) != null) {
-                        killer = winners.getKiller(mode).toString();
+                    if (winners.getKiller(gameName) != null) {
+                        killer = winners.getKiller(gameName).toString();
                     }
                     String player_winners;
                     JsonArray ja = new JsonArray();
-                    if (winners.getPlayerWinners(mode) != null) {
-                        winners.getPlayerWinners(mode).stream().map(UUID::toString).forEach(ja::add);
+                    if (winners.getPlayerWinners(gameName) != null) {
+                        winners.getPlayerWinners(gameName).stream().map(UUID::toString).forEach(ja::add);
                     }
                     player_winners = new Gson().toJson(ja);
-                    String winner_group = null;
-                    if (winners.getWinnerGroup(mode) != null) {
-                        winner_group = winners.getWinnerGroup(mode).getWrapper().getId();
-                    }
+                    String winner_group = winners.getWinnerGroup(gameName);
+
                     statement.setString(1, killer);
                     statement.setString(2, player_winners);
                     statement.setString(3, winner_group);
                     statement.setString(4, date);
-                    statement.setString(5, mode.name());
+                    statement.setString(5, gameName);
 
                     statement.execute();
                 }
@@ -234,46 +211,47 @@ public class DatabaseManager {
         }
     }
 
-    private void update(Group group) {
-        ArrayList<Mode> modes = new ArrayList<>();
-        String identification = group.getWrapper().getId();
+    private void update(@NotNull String id, @NotNull GroupData data) {
+        HashSet<GameConfiguration> updated = new HashSet<>();
 
         String update = "UPDATE tb_groups SET kills=?, deaths=?, victories=?,"
-                + " defeats=? WHERE identification=? AND mode=?;";
+                + " defeats=? WHERE identification=? AND game=?;";
         try (PreparedStatement statement = getConnection().prepareStatement(update)) {
-            for (Mode mode : Mode.values()) {
-                int kills = group.getKills(mode);
-                int deaths = group.getDeaths(mode);
-                int victories = group.getVictories(mode);
-                int defeats = group.getDefeats(mode);
+            for (GameConfiguration game : games) {
+                String gameName = game.getName();
+                int kills = data.getKills(gameName);
+                int deaths = data.getDeaths(gameName);
+                int victories = data.getVictories(gameName);
+                int defeats = data.getDefeats(gameName);
                 statement.setInt(1, kills);
                 statement.setInt(2, deaths);
                 statement.setInt(3, victories);
                 statement.setInt(4, defeats);
-                statement.setString(5, identification);
-                statement.setString(6, mode.name());
+                statement.setString(5, id);
+                statement.setString(6, gameName);
 
                 int count = statement.executeUpdate();
                 if (count != 0) {
-                    modes.add(mode);
+                    updated.add(game);
                 }
             }
         } catch (SQLException ex) {
             plugin.debug("Error while saving a Group: " + ex.getMessage(), false);
         }
-        String insert = "INSERT INTO tb_groups (identification, kills, deaths, victories, mode, defeats) VALUES (?,?,?,?,?,?);";
+        String insert = "INSERT INTO tb_groups (identification, kills, deaths, victories, game, defeats) VALUES (?,?,?,?,?,?);";
         try (PreparedStatement statement = getConnection().prepareStatement(insert)) {
-            for (Mode mode : Mode.values()) {
-                if (!modes.contains(mode)) {
-                    int kills = group.getKills(mode);
-                    int deaths = group.getDeaths(mode);
-                    int victories = group.getVictories(mode);
-                    int defeats = group.getDefeats(mode);
-                    statement.setString(1, identification);
+            for (GameConfiguration game : games) {
+                if (!updated.contains(game)) {
+                    String gameName = game.getName();
+                    int kills = data.getKills(gameName);
+                    int deaths = data.getDeaths(gameName);
+                    int victories = data.getVictories(gameName);
+                    int defeats = data.getDefeats(gameName);
+                    statement.setString(1, id);
                     statement.setInt(2, kills);
                     statement.setInt(3, deaths);
                     statement.setInt(4, victories);
-                    statement.setString(5, mode.toString());
+                    statement.setString(5, gameName);
                     statement.setInt(6, defeats);
 
                     statement.execute();
@@ -285,26 +263,27 @@ public class DatabaseManager {
     }
 
     private void update(Warrior warrior) {
-        ArrayList<Mode> modes = new ArrayList<>();
+        ArrayList<GameConfiguration> updated = new ArrayList<>();
         String uuid = warrior.toPlayer().getUniqueId().toString();
         String name = warrior.toPlayer().getName();
 
-        String update = "UPDATE tb_warriors SET kills=?, deaths=?, victories=?, displayname=? WHERE uuid=? AND mode=?;";
+        String update = "UPDATE tb_warriors SET kills=?, deaths=?, victories=?, displayname=? WHERE uuid=? AND game=?;";
         try (PreparedStatement statement = getConnection().prepareStatement(update)) {
-            for (Mode mode : Mode.values()) {
-                int kills = warrior.getKills(mode);
-                int deaths = warrior.getDeaths(mode);
-                int victories = warrior.getVictories(mode);
+            for (GameConfiguration game : games) {
+                String gameName = game.getName();
+                int kills = warrior.getKills(gameName);
+                int deaths = warrior.getDeaths(gameName);
+                int victories = warrior.getVictories(gameName);
                 statement.setInt(1, kills);
                 statement.setInt(2, deaths);
                 statement.setInt(3, victories);
                 statement.setString(4, name);
                 statement.setString(5, uuid);
-                statement.setString(6, mode.name());
+                statement.setString(6, gameName);
 
                 int count = statement.executeUpdate();
                 if (count != 0) {
-                    modes.add(mode);
+                    updated.add(game);
                 }
             }
 
@@ -312,18 +291,19 @@ public class DatabaseManager {
             plugin.debug("Error while saving a Warrior: " + ex.getMessage(), false);
         }
 
-        String insert = "INSERT INTO tb_warriors (uuid, kills, deaths, victories, mode, displayname) VALUES (?, ?, ?, ?, ?, ?)";
+        String insert = "INSERT INTO tb_warriors (uuid, kills, deaths, victories, game, displayname) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement statement = getConnection().prepareStatement(insert)) {
-            for (Mode mode : Mode.values()) {
-                if (!modes.contains(mode)) {
-                    int kills = warrior.getKills(mode);
-                    int deaths = warrior.getDeaths(mode);
-                    int victories = warrior.getVictories(mode);
+            for (GameConfiguration game : games) {
+                if (!updated.contains(game)) {
+                    String gameName = game.getName();
+                    int kills = warrior.getKills(gameName);
+                    int deaths = warrior.getDeaths(gameName);
+                    int victories = warrior.getVictories(gameName);
                     statement.setString(1, uuid);
                     statement.setInt(2, kills);
                     statement.setInt(3, deaths);
                     statement.setInt(4, victories);
-                    statement.setString(5, mode.toString());
+                    statement.setString(5, gameName);
                     statement.setString(6, name);
 
                     statement.execute();
@@ -334,72 +314,14 @@ public class DatabaseManager {
         }
     }
 
-    @Nullable
-    private Group getGroup(String identification) {
-        if (identification != null) {
-            plugin.debug("Trying to load a group...", true);
-            for (Group group : groups) {
-                if (group.getWrapper().getId().equals(identification)) {
-                    plugin.debug("Group " + group.getWrapper().getName() + "loaded!", true);
-                    return group;
-                }
-            }
-            plugin.debug("Group " + identification + " not found", true);
+    @NotNull
+    public GroupData getGroupData(@NotNull String id) {
+        GroupData groupData = groups.get(id);
+        if (groupData == null) {
+            groupData = new GroupData(new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>());
+            groups.put(id, groupData);
         }
-        return null;
-    }
-
-    @Nullable
-    public Group getGroup(@Nullable GroupWrapper wrapper) {
-        plugin.debug("Trying to load a group...", true);
-        if (wrapper != null) {
-            String id = wrapper.getId();
-
-            Group temp = getGroup(id);
-            if (temp != null) {
-                return temp;
-            }
-
-            HashMap<Mode, Integer> kills = new HashMap<>();
-            HashMap<Mode, Integer> deaths = new HashMap<>();
-            HashMap<Mode, Integer> victories = new HashMap<>();
-            HashMap<Mode, Integer> defeats = new HashMap<>();
-
-            String sql = "SELECT * FROM tb_groups WHERE identification = ?;";
-            try (PreparedStatement statement = getConnection().prepareStatement(sql)) {
-                statement.setString(1, id);
-                ResultSet query = statement.executeQuery();
-
-                while (query.next()) {
-                    Mode mode = Mode.valueOf(query.getString("mode"));
-                    int k = query.getInt("kills");
-                    int d = query.getInt("deaths");
-                    int v = query.getInt("victories");
-                    int d2 = query.getInt("defeats");
-
-                    kills.put(mode, k);
-                    deaths.put(mode, d);
-                    victories.put(mode, v);
-                    defeats.put(mode, d2);
-                }
-
-            } catch (SQLException ex) {
-                plugin.debug("Error while getting a Group: " + ex.getMessage(), false);
-            }
-            Group group = new Group(wrapper, victories, defeats, kills, deaths);
-            groups.add(group);
-            plugin.debug("Group " + group.getWrapper().getName() + " loaded!", true);
-            return group;
-        }
-        plugin.debug("Group not found", true);
-        return null;
-    }
-
-    public void getWarrior(@NotNull UUID uuid, @NotNull Consumer<Warrior> consumer) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            Warrior warrior = getWarrior(uuid);
-            Bukkit.getScheduler().runTask(plugin, () -> consumer.accept(warrior));
-        });
+        return groupData;
     }
 
     @NotNull
@@ -412,32 +334,44 @@ public class DatabaseManager {
             }
         }
 
-        HashMap<Mode, Integer> kills = new HashMap<>();
-        HashMap<Mode, Integer> deaths = new HashMap<>();
-        HashMap<Mode, Integer> victories = new HashMap<>();
-
-        String sql = "SELECT * FROM tb_warriors WHERE uuid = ?;";
-        try (PreparedStatement statement = getConnection().prepareStatement(sql)) {
-            statement.setString(1, uuid.toString());
-            ResultSet query = statement.executeQuery();
-
-            while (query.next()) {
-                Mode mode = Mode.valueOf(query.getString("mode"));
-                int k = query.getInt("kills");
-                int d = query.getInt("deaths");
-                int v = query.getInt("victories");
-
-                kills.put(mode, k);
-                deaths.put(mode, d);
-                victories.put(mode, v);
-            }
-
-        } catch (SQLException ex) {
-            plugin.debug("Error while getting a Warrior: " + ex.getMessage(), false);
+        Function<UUID, Group> getGroup = null;
+        GroupManager groupManager = plugin.getGroupManager();
+        if (groupManager != null) {
+            getGroup = groupManager::getGroup;
         }
-        Warrior warrior = new Warrior(player, kills, deaths, victories);
+        Warrior warrior = new Warrior(player, getGroup, new HashMap<>(), new HashMap<>(), new HashMap<>());
         warriors.add(warrior);
         return warrior;
+    }
+
+    private void loopThroughGroups() {
+        String sql = "SELECT * FROM tb_groups;";
+        try (PreparedStatement statement = getConnection().prepareStatement(sql)) {
+            ResultSet query = statement.executeQuery();
+
+            Map<String, HashMap<CountType, HashMap<String, Integer>>> dataMap = new HashMap<>();
+
+            while (query.next()) {
+                String id = query.getString("identification");
+                String game = String.valueOf(query.getString("game"));
+                dataMap.computeIfAbsent(id, k -> new HashMap<>());
+                final HashMap<CountType, HashMap<String, Integer>> groupData = dataMap.get(id);
+                for (CountType t : CountType.values()) {
+                    groupData.computeIfAbsent(t, k -> new HashMap<>());
+                    groupData.get(t).put(game, query.getInt(t.name()));
+                }
+            }
+
+            for (String id : dataMap.keySet()) {
+                HashMap<CountType, HashMap<String, Integer>> data = dataMap.get(id);
+
+                GroupData groupData = new GroupData(data.get(CountType.VICTORIES), data.get(CountType.DEFEATS),
+                        data.get(CountType.KILLS), data.get(CountType.DEATHS));
+                groups.put(id, groupData);
+            }
+        } catch (SQLException ex) {
+            plugin.debug("Error while getting a Group: " + ex.getMessage(), false);
+        }
     }
 
     private void loopThroughWarriors() {
@@ -445,38 +379,46 @@ public class DatabaseManager {
         try (Statement statement = getConnection().createStatement()) {
             ResultSet rs = statement.executeQuery(sql);
 
-            HashMap<UUID, HashMap<CountType, HashMap<Mode, Integer>>> players = new HashMap<>();
+            HashMap<UUID, HashMap<CountType, HashMap<String, Integer>>> players = new HashMap<>();
 
             while (rs.next()) {
                 UUID uuid = UUID.fromString(rs.getString("uuid"));
-                Mode mode = Mode.valueOf(rs.getString("mode"));
+                String game = String.valueOf(rs.getString("game"));
                 players.computeIfAbsent(uuid, k -> new HashMap<>());
-                final HashMap<CountType, HashMap<Mode, Integer>> playerData = players.get(uuid);
+                final HashMap<CountType, HashMap<String, Integer>> playerData = players.get(uuid);
                 for (CountType t : CountType.values()) {
+                    if (t == CountType.DEFEATS) {
+                        continue;
+                    }
                     playerData.computeIfAbsent(t, k -> new HashMap<>());
-                    playerData.get(t).put(mode, rs.getInt(t.name()));
+                    playerData.get(t).put(game, rs.getInt(t.name()));
                 }
             }
 
             for (UUID uuid : players.keySet()) {
                 OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-                HashMap<CountType, HashMap<Mode, Integer>> playerData = players.get(uuid);
+                HashMap<CountType, HashMap<String, Integer>> playerData = players.get(uuid);
 
-                Warrior warrior = new Warrior(player, playerData.get(CountType.KILLS), playerData.get(CountType.DEATHS), playerData.get(CountType.VICTORIES));
+                Function<UUID, Group> getGroup = plugin.getGroupManager() != null ? plugin.getGroupManager()::getGroup
+                        : null;
+                Warrior warrior = new Warrior(player, getGroup, playerData.get(CountType.KILLS),
+                        playerData.get(CountType.DEATHS), playerData.get(CountType.VICTORIES));
                 warriors.add(warrior);
             }
 
         } catch (SQLException ex) {
-            plugin.debug("An error ocurred while trying to load the players data! " + ex.getMessage(), false);
+            plugin.debug("An error ocurred while trying to load the players data! " + ex.getMessage(),
+                    false);
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void loopThroughWinners() {
         String sql = "SELECT * FROM tb_winners;";
         try (Statement statement = getConnection().createStatement()) {
             ResultSet rs = statement.executeQuery(sql);
 
-            Map<Date, Map<WinnerType, Map<Mode, Object>>> winnersData = new HashMap<>();
+            Map<Date, Map<WinnerType, Map<String, Object>>> winnersData = new HashMap<>();
 
             while (rs.next()) {
                 Date date;
@@ -486,13 +428,13 @@ public class DatabaseManager {
                     plugin.debug("Invalid date! " + ex.getMessage(), false);
                     continue;
                 }
-                Mode mode = Mode.valueOf(rs.getString("mode"));
+                String game = String.valueOf(rs.getString("game"));
 
                 winnersData.computeIfAbsent(date, k -> new HashMap<>());
-                Map<WinnerType, Map<Mode, Object>> data = winnersData.get(date);
+                Map<WinnerType, Map<String, Object>> data = winnersData.get(date);
                 for (WinnerType wt : WinnerType.values()) {
                     data.computeIfAbsent(wt, k -> new HashMap<>());
-                    final Map<Mode, Object> innerData = data.get(wt);
+                    final Map<String, Object> innerData = data.get(wt);
                     switch (wt) {
                         case KILLER:
                             UUID k = null;
@@ -501,11 +443,11 @@ public class DatabaseManager {
                             if (killer != null) {
                                 k = UUID.fromString(killer);
                             }
-                            innerData.put(mode, k);
+                            innerData.put(game, k);
                             break;
                         case WINNER_GROUP:
-                            Group wg = getGroup(rs.getString("winner_group"));
-                            innerData.put(mode, wg);
+                            String wg = rs.getString("winner_group");
+                            innerData.put(game, wg);
                             break;
                         case PLAYER_WINNER:
                             Set<UUID> pw = new HashSet<>();
@@ -513,31 +455,31 @@ public class DatabaseManager {
                             if (ja != null) {
                                 ja.forEach(uuid -> pw.add(UUID.fromString(uuid.getAsString())));
                             }
-                            innerData.put(mode, pw);
+                            innerData.put(game, pw);
                             break;
                     }
                 }
             }
 
             for (Date date : winnersData.keySet()) {
-                Map<WinnerType, Map<Mode, Object>> data = winnersData.get(date);
+                Map<WinnerType, Map<String, Object>> data = winnersData.get(date);
 
-                Map<Mode, UUID> killer = new HashMap<>();
-                Map<Mode, Set<UUID>> playerWinners = new HashMap<>();
-                Map<Mode, Group> winnerGroup = new HashMap<>();
+                Map<String, UUID> killer = new HashMap<>();
+                Map<String, Set<UUID>> playerWinners = new HashMap<>();
+                Map<String, String> winnerGroup = new HashMap<>();
 
                 for (WinnerType wt : data.keySet()) {
-                    for (Mode mode : data.get(wt).keySet()) {
-                        Object innerObject = data.get(wt).get(mode);
+                    for (String game : data.get(wt).keySet()) {
+                        Object innerObject = data.get(wt).get(game);
                         switch (wt) {
                             case KILLER:
-                                killer.put(mode, (UUID) innerObject);
+                                killer.put(game, (UUID) innerObject);
                                 break;
                             case WINNER_GROUP:
-                                winnerGroup.put(mode, (Group) innerObject);
+                                winnerGroup.put(game, (String) innerObject);
                                 break;
                             case PLAYER_WINNER:
-                                playerWinners.put(mode, (Set<UUID>) innerObject);
+                                playerWinners.put(game, (Set<UUID>) innerObject);
                         }
                     }
                 }
@@ -558,21 +500,7 @@ public class DatabaseManager {
     }
 
     public void loadDataToMemory() {
-        if (plugin.isFactions()) {
-            FactionColl.get().getAll().forEach(faction -> {
-                getGroup(new GroupWrapper(faction));
-                faction.getMPlayers().forEach(
-                        member -> getWarrior(member.getUuid()));
-            });
-        }
-        if (plugin.isSimpleClans()) {
-            //noinspection ConstantConditions
-            plugin.getClanManager().getClans().forEach(clan -> {
-                getGroup(new GroupWrapper(clan));
-                clan.getMembers().forEach(
-                        member -> getWarrior(member.getUniqueId()));
-            });
-        }
+        loopThroughGroups();
         loopThroughWarriors();
         loopThroughWinners();
     }
@@ -597,12 +525,12 @@ public class DatabaseManager {
             Date today = Calendar.getInstance().getTime();
             Date latest = getLatestWinners().getDate();
             if (latest != null) {
-                if (helper.equalDates(today, latest)) {
+                if (Helper.equalDates(today, latest)) {
                     return getLatestWinners();
                 }
             }
             for (Winners w : winners) {
-                if (helper.equalDates(w.getDate(), today)) {
+                if (Helper.equalDates(w.getDate(), today)) {
                     return w;
                 }
             }
@@ -614,9 +542,9 @@ public class DatabaseManager {
         if (date == null) {
             date = Calendar.getInstance().getTime();
         }
-        Map<Mode, UUID> killer = new HashMap<>();
-        Map<Mode, Set<UUID>> playerWinners = new HashMap<>();
-        Map<Mode, Group> winnerGroup = new HashMap<>();
+        Map<String, UUID> killer = new HashMap<>();
+        Map<String, Set<UUID>> playerWinners = new HashMap<>();
+        Map<String, String> winnerGroup = new HashMap<>();
 
         Winners w = new Winners(date, killer, playerWinners, winnerGroup);
         winners.add(w);
@@ -626,7 +554,7 @@ public class DatabaseManager {
 
     public Winners getWinners(Date date) {
         for (Winners w : winners) {
-            if (helper.equalDates(date, w.getDate())) {
+            if (Helper.equalDates(date, w.getDate())) {
                 return w;
             }
         }
@@ -637,8 +565,8 @@ public class DatabaseManager {
         return Collections.unmodifiableSet(warriors);
     }
 
-    public Set<Group> getGroups() {
-        return Collections.unmodifiableSet(groups);
+    public Map<String, GroupData> getGroups() {
+        return Collections.unmodifiableMap(groups);
     }
 
     public List<Winners> getWinners() {

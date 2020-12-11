@@ -23,15 +23,17 @@
  */
 package me.roinujnosde.titansbattle.listeners;
 
-import java.text.MessageFormat;
-import me.roinujnosde.titansbattle.Helper;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
+import me.roinujnosde.titansbattle.types.Kit;
+import me.roinujnosde.titansbattle.utils.Helper;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+
+import java.text.MessageFormat;
 
 /**
  *
@@ -40,13 +42,11 @@ import org.bukkit.event.player.PlayerJoinEvent;
 public class PlayerJoinListener implements Listener {
 
     private final ConfigManager cm;
-    private final Helper helper;
     private final TitansBattle plugin;
 
     public PlayerJoinListener() {
         plugin = TitansBattle.getInstance();
         cm = plugin.getConfigManager();
-        helper = plugin.getHelper();
     }
 
     @EventHandler
@@ -58,39 +58,35 @@ public class PlayerJoinListener implements Listener {
     }
 
     private void sendJoinMessage(Player player) {
-        if (helper.isWinner(player) || helper.isKiller(player)) {
-            boolean killerJoinMessageEnabled = helper.isKillerJoinMessageEnabled(player);
-            boolean winnerJoinMessageEnabled = helper.isWinnerJoinMessageEnabled(player);
-            if (helper.isKiller(player) && helper.isWinner(player)) {
-                if (helper.isKillerPriority(player) && killerJoinMessageEnabled) {
+        if (Helper.isWinner(player) || Helper.isKiller(player)) {
+            boolean killerJoinMessageEnabled = Helper.isKillerJoinMessageEnabled(player);
+            boolean winnerJoinMessageEnabled = Helper.isWinnerJoinMessageEnabled(player);
+            if (Helper.isKiller(player) && Helper.isWinner(player)) {
+                if (Helper.isKillerPriority(player) && killerJoinMessageEnabled) {
                     Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("killer-has-joined",
-                            helper.getGameFromWinnerOrKiller(player)), player.getName()));
+                            Helper.getConfigFromWinnerOrKiller(player)), player.getName()));
                     return;
                 }
                 if (winnerJoinMessageEnabled) {
                     Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("winner-has-joined",
-                            helper.getGameFromWinnerOrKiller(player)), player.getName()));
+                            Helper.getConfigFromWinnerOrKiller(player)), player.getName()));
                 }
                 return;
             }
-            if (helper.isKiller(player) && killerJoinMessageEnabled) {
+            if (Helper.isKiller(player) && killerJoinMessageEnabled) {
                 Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("killer-has-joined",
-                        helper.getGameFromWinnerOrKiller(player)), player.getName()));
+                        Helper.getConfigFromWinnerOrKiller(player)), player.getName()));
             }
-            if (helper.isWinner(player) && winnerJoinMessageEnabled) {
+            if (Helper.isWinner(player) && winnerJoinMessageEnabled) {
                 Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("winner-has-joined",
-                        helper.getGameFromWinnerOrKiller(player)), player.getName()));
+                        Helper.getConfigFromWinnerOrKiller(player)), player.getName()));
             }
         }
     }
 
     private void clearInventory(Player player) {
         if (cm.getClearInventory().contains(player.getUniqueId())) {
-            player.getInventory().clear();
-            player.getInventory().setHelmet(null);
-            player.getInventory().setChestplate(null);
-            player.getInventory().setLeggings(null);
-            player.getInventory().setBoots(null);
+            Kit.clearInventory(player);
             cm.getClearInventory().remove(player.getUniqueId());
             cm.save();
         }

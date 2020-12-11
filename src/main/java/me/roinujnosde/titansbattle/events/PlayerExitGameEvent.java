@@ -38,11 +38,9 @@ public class PlayerExitGameEvent extends Event implements Cancellable {
 
     private static final HandlerList HANDLERS = new HandlerList();
     private boolean cancelled = false;
-    private Player player;
-    private Game game;
-    
-    private PlayerExitGameEvent() {}
-    
+    private final Player player;
+    private final Game game;
+
     public PlayerExitGameEvent(Player player, Game game) {
         this.player = player;
         this.game = game;

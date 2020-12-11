@@ -23,16 +23,13 @@
  */
 package me.roinujnosde.titansbattle.types;
 
-import me.roinujnosde.titansbattle.Helper;
-import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.types.Game.Mode;
-import me.roinujnosde.titansbattle.utils.Groups;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
 /**
  *
@@ -41,34 +38,19 @@ import java.util.UUID;
 public class Warrior {
 
     private final OfflinePlayer player;
-    private final Map<Game.Mode, Integer> kills;
-    private final Map<Game.Mode, Integer> deaths;
-    private final Map<Game.Mode, Integer> victories;
+    // Using a Function here so the Group is always the current when needed
+    private final Function<UUID, Group> getGroup;
+    private final Map<String, Integer> kills;
+    private final Map<String, Integer> deaths;
+    private final Map<String, Integer> victories;
 
-    @Deprecated
-    public Warrior(@NotNull OfflinePlayer player, @Nullable Group group, @NotNull Map<Game.Mode, Integer> kills,
-                   @NotNull Map<Game.Mode, Integer> deaths, @NotNull Map<Game.Mode, Integer> victories) {
-        Helper helper = TitansBattle.getInstance().getHelper();
-
-        helper.fillEmptyCountMaps(victories);
-        helper.fillEmptyCountMaps(kills);
-        helper.fillEmptyCountMaps(deaths);
-        
+    public Warrior(@NotNull OfflinePlayer player,
+                   @Nullable Function<UUID, Group> getGroup,
+                   @NotNull Map<String, Integer> kills,
+                   @NotNull Map<String, Integer> deaths,
+                   @NotNull Map<String, Integer> victories) {
         this.player = player;
-        this.kills = kills;
-        this.deaths = deaths;
-        this.victories = victories;
-    }
-
-    public Warrior(@NotNull OfflinePlayer player, @NotNull Map<Game.Mode, Integer> kills,
-                   @NotNull Map<Game.Mode, Integer> deaths, @NotNull Map<Game.Mode, Integer> victories) {
-        Helper helper = TitansBattle.getInstance().getHelper();
-
-        helper.fillEmptyCountMaps(victories);
-        helper.fillEmptyCountMaps(kills);
-        helper.fillEmptyCountMaps(deaths);
-
-        this.player = player;
+        this.getGroup = getGroup;
         this.kills = kills;
         this.deaths = deaths;
         this.victories = victories;
@@ -96,30 +78,55 @@ public class Warrior {
 
     @Nullable
     public Group getGroup() {
-        return Groups.getGroup(player.getUniqueId());
+        if (getGroup == null) {
+            return null;
+        }
+        return getGroup.apply(player.getUniqueId());
     }
 
-    public int getKills(@NotNull Mode mode) {
-        return kills.get(mode);
+    public int getKills(@NotNull String game) {
+        return kills.getOrDefault(game, 0);
     }
 
-    public int getDeaths(@NotNull Mode mode) {
-        return deaths.get(mode);
+    public void increaseKills(@NotNull String game) {
+        setKills(game, getKills(game) + 1);
+        Group group = getGroup();
+        if (group != null) {
+            GroupData data = group.getData();
+            data.setKills(game, data.getKills(game) + 1);
+        }
     }
 
-    public int getVictories(@NotNull Mode mode) {
-        return victories.get(mode);
+    public int getDeaths(@NotNull String game) {
+        return deaths.getOrDefault(game, 0);
+    }
+
+    public void increaseDeaths(@NotNull String game) {
+        setDeaths(game, getDeaths(game) + 1);
+        Group group = getGroup();
+        if (group != null) {
+            GroupData data = group.getData();
+            data.setDeaths(game, data.getDeaths(game) + 1);
+        }
+    }
+
+    public int getVictories(@NotNull String game) {
+        return victories.getOrDefault(game, 0);
     }
     
-    public void setKills(@NotNull Mode mode, int newKills) {
-        kills.put(mode, newKills);
+    public void setKills(@NotNull String game, int newKills) {
+        kills.put(game, newKills);
     }
     
-    public void setDeaths(@NotNull Mode mode, int newDeaths) {
-        deaths.put(mode, newDeaths);
+    public void setDeaths(@NotNull String game, int newDeaths) {
+        deaths.put(game, newDeaths);
     }
 
-    public void setVictories(@NotNull Mode mode, int newVictories) {
-        victories.put(mode, newVictories);
+    public void setVictories(@NotNull String game, int newVictories) {
+        victories.put(game, newVictories);
+    }
+
+    public void increaseVictories(@NotNull String game) {
+        setVictories(game, getVictories(game) + 1);
     }
 }

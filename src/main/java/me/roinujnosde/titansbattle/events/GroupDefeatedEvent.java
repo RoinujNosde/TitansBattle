@@ -35,11 +35,8 @@ import org.bukkit.event.HandlerList;
 public class GroupDefeatedEvent extends Event {
 
     private final static HandlerList HANDLERS = new HandlerList();
-    private Group group;
-    private Player lastParticipant;
-
-    private GroupDefeatedEvent() {
-    }
+    private final Group group;
+    private final Player lastParticipant;
 
     public GroupDefeatedEvent(Group group, Player lastParticipant) {
         if (lastParticipant == null) {

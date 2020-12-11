@@ -36,10 +36,8 @@ public class GameStartEvent extends Event implements Cancellable {
     
     private static final HandlerList HANDLERS = new HandlerList();
     private boolean cancelled = false;
-    private Game game;
-    
-    private GameStartEvent() {}
-    
+    private final Game game;
+
     public GameStartEvent(Game game) {
         if (game == null) {
             throw new IllegalArgumentException("Game cannot be null!");

@@ -23,8 +23,11 @@
  */
 package me.roinujnosde.titansbattle.types;
 
-import me.roinujnosde.titansbattle.types.Game.Mode;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
 /**
  *
@@ -32,28 +35,27 @@ import org.jetbrains.annotations.NotNull;
  */
 public class Scheduler {
 
-    private String id;
-    private Mode mode;
-    private int day;
-    private int hour;
-    private int minute;
+    private static final List<Scheduler> SCHEDULERS = new ArrayList<>();
 
-    private Scheduler() {
-    }
+    private final String id;
+    private final String gameName;
+    private final int day;
+    private final int hour;
+    private final int minute;
 
-    public Scheduler(@NotNull String id, @NotNull Mode mode, int day, int hour, int minute) {
+    public Scheduler(@NotNull String id, @NotNull String gameName, int day, int hour, int minute) {
         if (day < 0 || day > 7) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("invalid day");
         }
         if (hour < 0 || hour > 24) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("invalid hour");
         }
         if (minute < 0 || minute > 59) {
-            throw new IllegalArgumentException();
+            throw new IllegalArgumentException("invalid minute");
         }
         this.day = day;
         this.id = id;
-        this.mode = mode;
+        this.gameName = gameName;
         this.hour = hour;
         this.minute = minute;
     }
@@ -63,9 +65,8 @@ public class Scheduler {
         return id;
     }
 
-    @NotNull
-    public Mode getMode() {
-        return mode;
+    public @NotNull String getGameName() {
+        return gameName;
     }
 
     public int getDay() {
@@ -78,5 +79,55 @@ public class Scheduler {
 
     public int getMinute() {
         return minute;
+    }
+
+    public static List<Scheduler> getSchedulers() {
+        return SCHEDULERS;
+    }
+
+    public static Scheduler getNextSchedulerOfDay() {
+        Calendar today = Calendar.getInstance();
+        int dayOfWeek = today.get(Calendar.DAY_OF_WEEK);
+        int hour = today.get(Calendar.HOUR_OF_DAY);
+        int minute = today.get(Calendar.MINUTE);
+
+        Scheduler nextScheduler = null;
+        boolean firstScheduler = true;
+        int nextHour = 0;
+        int nextMinute = 0;
+
+        for (Scheduler s : SCHEDULERS) {
+            //Is it the day of the Scheduler?
+            if (s.getDay() == dayOfWeek) {
+                //Is it the first Scheduler looped?
+                if (firstScheduler) {
+                    if (!(s.getHour() < hour) && !(s.getMinute() < minute)) {
+                        nextScheduler = s;
+                        nextHour = s.getHour();
+                        nextMinute = s.getMinute();
+                        firstScheduler = false;
+                    }
+                    continue;
+                }
+                if ((s.getHour() <= nextHour) && !(s.getHour() < hour)) {
+                    if (s.getHour() == nextHour) {
+                        if ((s.getMinute() < nextMinute) && !(s.getMinute() < minute)) {
+                            nextScheduler = s;
+                            nextHour = s.getHour();
+                            nextMinute = s.getMinute();
+                            continue;
+                        }
+                    }
+                    if (s.getHour() < nextHour) {
+                        if (s.getMinute() >= minute) {
+                            nextScheduler = s;
+                            nextHour = s.getHour();
+                            nextMinute = s.getMinute();
+                        }
+                    }
+                }
+            }
+        }
+        return nextScheduler;
     }
 }

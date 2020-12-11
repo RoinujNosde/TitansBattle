@@ -23,15 +23,19 @@
  */
 package me.roinujnosde.titansbattle.managers;
 
-import java.text.MessageFormat;
-import java.util.HashMap;
-import me.roinujnosde.titansbattle.Helper;
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.types.Game;
+import me.roinujnosde.titansbattle.types.Prizes;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map.Entry;
 
 /**
  *
@@ -39,9 +43,7 @@ import org.bukkit.scheduler.BukkitTask;
  */
 public class TaskManager {
 
-    private TitansBattle plugin;
-    private GameManager gm;
-    private Helper helper;
+    private final TitansBattle plugin = TitansBattle.getInstance();
 
     BukkitTask lobbyAnnouncementTask;
     BukkitTask arenaAnnouncementTask;
@@ -50,35 +52,6 @@ public class TaskManager {
     BukkitTask preparationTimeTask;
     BukkitTask giveItemsTask;
 
-    public void load() {
-        plugin = TitansBattle.getInstance();
-        gm = plugin.getGameManager();
-        helper = plugin.getHelper();
-    }
-
-    public void setGiveItemsTask(BukkitTask giveItemsTask) {
-        this.giveItemsTask = giveItemsTask;
-    }
-
-    public BukkitTask getLobbyAnnouncementTask() {
-        return lobbyAnnouncementTask;
-    }
-
-    public BukkitTask getArenaAnnouncementTask() {
-        return arenaAnnouncementTask;
-    }
-
-    public BukkitTask getGameExpirationTask() {
-        return gameExpirationTask;
-    }
-
-    public BukkitTask getPreparationTimeTask() {
-        return preparationTimeTask;
-    }
-
-    public BukkitTask getSchedulerTask() {
-        return schedulerTask;
-    }
 
     public void startArenaAnnouncementTask(long interval) {
         arenaAnnouncementTask = new ArenaAnnouncementTask().runTaskTimerAsynchronously(plugin, interval * 20, interval * 20);
@@ -90,7 +63,7 @@ public class TaskManager {
 
     public void startLobbyAnnouncementTask(int times, long interval) {
         lobbyAnnouncementTask = new LobbyAnnouncementTask(times, interval)
-                .runTaskTimerAsynchronously(plugin, (long) interval * 20, (long) interval * 20);
+                .runTaskTimerAsynchronously(plugin, 0, interval * 20);
     }
 
     public void startSchedulerTask(long interval) {
@@ -108,24 +81,29 @@ public class TaskManager {
 
     private class GiveItemsTask extends BukkitRunnable {
 
+        private ItemStack[] toArray(HashMap<Integer, ItemStack> map) {
+            return map.values().toArray(new ItemStack[0]);
+        }
+
         @Override
         public void run() {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    if (!helper.getPlayersWithItemsToReceive().isEmpty()) {
-                        for (Player player : helper.getPlayersWithItemsToReceive()) {
-                            if (!player.isOnline()) {
-                                helper.getItemsNotGiven().remove(player);
-                                continue;
-                            }
-                            HashMap<Integer, ItemStack> remainingItems = player.getInventory().addItem(
-                                    helper.getItemsNotGivenToPlayer(player));
+                    if (!Prizes.getPlayersWithItemsToReceive().isEmpty()) {
+                        Iterator<Entry<Player, HashMap<Integer, ItemStack>>> iterator =
+                                Prizes.getPlayersWithItemsToReceive().entrySet().iterator();
+                        while (iterator.hasNext()) {
+                            Entry<Player, HashMap<Integer, ItemStack>> entry = iterator.next();
+                            Player player = entry.getKey();
+                            HashMap<Integer, ItemStack> remainingItems = player.getInventory().
+                                    addItem(toArray(entry.getValue()));
                             if (remainingItems.isEmpty()) {
-                                helper.getItemsNotGiven().remove(player);
+                                iterator.remove();
                             } else {
-                                helper.getItemsNotGiven().replace(player, remainingItems);
-                                player.sendMessage(MessageFormat.format(plugin.getLang("items_to_receive"), Integer.toString(remainingItems.size())));
+                                entry.setValue(remainingItems);
+                                player.sendMessage(MessageFormat.format(plugin.getLang("items_to_receive"),
+                                        Integer.toString(remainingItems.size())));
                             }
                         }
                     } else {
@@ -144,9 +122,14 @@ public class TaskManager {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    Bukkit.getServer().broadcastMessage(plugin.getLang("preparation_over", gm.getCurrentGame()));
-                    gm.setPreparation(false);
-                    gm.setBattle(true);
+                    GameManager gm = plugin.getGameManager();
+                    Game currentGame = gm.getCurrentGame();
+                    if (currentGame == null) {
+                        return;
+                    }
+                    Bukkit.getServer().broadcastMessage(plugin.getLang("preparation_over", currentGame));
+                    currentGame.setPreparation(false);
+                    currentGame.setBattle(true);
                 }
             }.runTask(plugin);
         }
@@ -168,18 +151,24 @@ public class TaskManager {
             new BukkitRunnable() {
                 @Override
                 public void run() {
+                    GameManager gm = plugin.getGameManager();
                     seconds = times * interval;
                     if (times > 0) {
-                        Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("starting_game", gm.getCurrentGame()),
-                                Long.toString(seconds),
-                                Integer.toString(gm.getCurrentGame().getMinimumGroups()),
-                                Integer.toString(gm.getCurrentGame().getMinimumPlayers()),
-                                Integer.toString(gm.getGroupsParticipatingCount()),
-                                Integer.toString(gm.getPlayersParticipatingCount())));
+                        Game currentGame = gm.getCurrentGame();
+                        if (currentGame == null) {
+                            cancel();
+                            return;
+                        }
+                        Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("starting_game",
+                                currentGame), Long.toString(seconds),
+                                Integer.toString(currentGame.getConfig().getMinimumGroups()),
+                                Integer.toString(currentGame.getConfig().getMinimumPlayers()),
+                                Integer.toString(currentGame.getGroupsParticipatingCount()),
+                                Integer.toString(currentGame.getPlayersParticipatingCount())));
                         times--;
                     } else {
                         gm.startBattle();
-                        lobbyAnnouncementTask.cancel();
+                        cancel();
                     }
                 }
             }.runTask(plugin);
@@ -190,17 +179,25 @@ public class TaskManager {
 
         @Override
         public void run() {
-            if (gm.getCurrentGame() == null) {
+            GameManager gm = plugin.getGameManager();
+            final Game currentGame = gm.getCurrentGame();
+            if (currentGame == null) {
                 this.cancel();
                 return;
             }
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    String groupsText = helper.getStringFromGroupSet(gm.getGroups().keySet());
-                    Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("game_info", gm.getCurrentGame()),
-                            Integer.toString(gm.getPlayersParticipatingCount()),
-                            Integer.toString(gm.getGroupsParticipatingCount()),
+                    String groupsText;
+                    GroupManager groupManager = plugin.getGroupManager();
+                    if (groupManager != null) {
+                        groupsText = groupManager.buildStringFrom(currentGame.getGroups().keySet());
+                    } else {
+                        return;
+                    }
+                    Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("game_info", currentGame),
+                            Integer.toString(currentGame.getPlayersParticipatingCount()),
+                            Integer.toString(currentGame.getGroupsParticipatingCount()),
                             groupsText));
                 }
             }.runTask(plugin);
@@ -214,13 +211,13 @@ public class TaskManager {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    if (gm.isHappening()) {
-                        Bukkit.broadcastMessage(plugin.getLang("game_expired", gm.getCurrentGame()));
+                    GameManager gm = plugin.getGameManager();
+                    Game currentGame = gm.getCurrentGame();
+                    if (currentGame != null && currentGame.isHappening()) {
+                        Bukkit.broadcastMessage(plugin.getLang("game_expired", currentGame));
                         gm.finishGame(null, null, null);
-                        gameExpirationTask.cancel();
-                    } else {
-                        gameExpirationTask.cancel();
                     }
+                    gameExpirationTask.cancel();
                 }
             }.runTask(plugin);
         }
@@ -233,7 +230,7 @@ public class TaskManager {
             new BukkitRunnable() {
                 @Override
                 public void run() {
-                    gm.startOrSchedule();
+                    plugin.getGameManager().startOrSchedule();
                 }
             }.runTask(plugin);
         }
@@ -248,7 +245,7 @@ public class TaskManager {
         }
         if (schedulerTask != null) {
             schedulerTask.cancel();
-            gm.startOrSchedule();
+            plugin.getGameManager().startOrSchedule();
         }
         if (gameExpirationTask != null) {
             gameExpirationTask.cancel();

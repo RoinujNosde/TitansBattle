@@ -2,14 +2,11 @@ main: "me.roinujnosde.titansbattle.TitansBattle"
 name: "TitansBattle"
 author: "RoinujNosde"
 version: ${project.version}
+api-version: 1.13
 softdepend:
   - "SimpleClans"
   - "Factions"
-  - "Legendchat"
   - "Vault"
-commands:
-  tb:
-    usage: "§cUse /tb help to know the correct syntax."
 permissions:
   titansbattle.admin:
     description: "Gives access to administrator commands"

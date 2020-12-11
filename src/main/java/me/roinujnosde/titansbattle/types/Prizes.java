@@ -1,273 +1,163 @@
-/*
- * The MIT License
- *
- * Copyright 2017 Edson Passos - edsonpassosjr@outlook.com.
- *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
- */
 package me.roinujnosde.titansbattle.types;
 
-import java.util.List;
-import me.roinujnosde.titansbattle.Helper;
+import me.roinujnosde.titansbattle.utils.ConfigUtils;
+import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.utils.Path;
+import net.milkbowl.vault.economy.EconomyResponse;
+import org.bukkit.Bukkit;
+import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-/**
- *
- * @author RoinujNosde
- */
-public class Prizes {
+import java.util.*;
 
-    long itemsGiveInterval;
-    boolean treatLeadersAsMembers;
-    private boolean leaderItemsEnabled;
-    private List<ItemStack> leaderItems;
-    private boolean leaderCommandsEnabled;
-    private List<String> leaderCommands;
-    private double leaderCommandsSomeNumber;
-    private boolean leaderCommandsSomeNumberDivide;
-    private boolean leaderMoneyEnabled;
-    private boolean leaderMoneyDivide;
-    private double leaderMoneyAmount;
-    private boolean memberItemsEnabled;
-    private List<ItemStack> memberItems;
-    private boolean memberCommandsEnabled;
-    private List<String> memberCommands;
-    private double memberCommandsSomeNumber;
-    private boolean memberCommandsSomeNumberDivide;
-    private boolean memberMoneyEnabled;
-    private boolean memberMoneyDivide;
-    private double memberMoneyAmount;
+@SuppressWarnings({"FieldCanBeLocal", "unused", "FieldMayBeFinal"})
+public class Prizes implements ConfigurationSerializable {
+    private static final HashMap<Player, HashMap<Integer, ItemStack>> ITEMS_NOT_GIVEN = new HashMap<>();
 
-    private Prizes() {
+    private Integer itemsGiveInterval = 30;
+    private Boolean treatLeadersAsMembers = false;
+    @Path("leader.items.enabled")
+    private Boolean leaderItemsEnabled = false;
+    @Path("leader.items.item_list")
+    private @Nullable List<ItemStack> leaderItems;
+    @Path("leader.commands.enabled")
+    private Boolean leaderCommandsEnabled = false;
+    @Path("leader.commands.command_list")
+    private @Nullable List<String> leaderCommands = Arrays.asList("give %player% diamond_sword %some_number%",
+            "eco give %player% %some_number%");
+    @Path("leader.commands.some_number.value")
+    private Double leaderCommandsSomeNumber = 100D;
+    @Path("leader.commands.some_number.divided")
+    private Boolean leaderCommandsSomeNumberDivide = false;
+    @Path("leader.money.enabled")
+    private Boolean leaderMoneyEnabled = false;
+    @Path("leader.money.divided")
+    private Boolean leaderMoneyDivide = false;
+    @Path("leader.money.amount")
+    private Double leaderMoneyAmount = 10000D;
+    @Path("member.items.enabled")
+    private Boolean memberItemsEnabled = false;
+    @Path("member.items.item_list")
+    private @Nullable List<ItemStack> memberItems;
+    @Path("member.commands.enabled")
+    private Boolean memberCommandsEnabled = false;
+    @Path("member.commands.command_list")
+    private @Nullable List<String> memberCommands = Arrays.asList("give %player% diamond_sword %some_number%",
+            "eco give %player% %some_number%");
+    @Path("member.commands.some_number.value")
+    private Double memberCommandsSomeNumber = 100D;
+    @Path("member.commands.some_number.divided")
+    private Boolean memberCommandsSomeNumberDivide = false;
+    @Path("member.money.enabled")
+    private Boolean memberMoneyEnabled = false;
+    @Path("member.money.divided")
+    private Boolean memberMoneyDivide = false;
+    @Path("member.money.amount")
+    private Double memberMoneyAmount = 10000D;
+
+    public Prizes() {
     }
 
-    public Prizes(long itemsGiveInterval,
-            boolean treatLeadersAsMembers,
-            boolean leaderItemsEnabled,
-            List<ItemStack> leaderItems,
-            boolean leaderCommandsEnabled,
-            List<String> leaderCommands,
-            double leaderCommandsSomeNumber,
-            boolean leaderCommandsSomeNumberDivide,
-            boolean leaderMoneyEnabled,
-            boolean leaderMoneyDivide,
-            double leaderMoneyAmount,
-            boolean memberItemsEnabled,
-            List<ItemStack> memberItems,
-            boolean memberCommandsEnabled,
-            List<String> memberCommands,
-            double memberCommandsSomeNumber,
-            boolean memberCommandsSomeNumberDivide,
-            boolean memberMoneyEnabled,
-            boolean memberMoneyDivide,
-            double memberMoneyAmount) {
-        if (leaderItemsEnabled == true && leaderItems == null) {
-            throw new IllegalArgumentException("leaderItems must not be null if enabled.");
-        }
-        if (leaderCommandsEnabled == true && leaderCommands == null) {
-            throw new IllegalArgumentException("leaderCommands must not be null if enabled.");
-        }
-        if (memberItemsEnabled == true && memberItems == null) {
-            throw new IllegalArgumentException("memberItems must not be null if enabled.");
-        }
-        if (memberCommandsEnabled == true && memberCommands == null) {
-            throw new IllegalArgumentException("memberCommands must not be null if enabled.");
-        }
-        this.itemsGiveInterval = itemsGiveInterval;
-        this.treatLeadersAsMembers = treatLeadersAsMembers;
-        this.leaderItemsEnabled = leaderItemsEnabled;
-        this.leaderItems = leaderItems;
-        this.leaderCommandsEnabled = leaderCommandsEnabled;
-        this.leaderCommands = leaderCommands;
-        this.leaderCommandsSomeNumber = leaderCommandsSomeNumber;
-        this.leaderCommandsSomeNumberDivide = leaderCommandsSomeNumberDivide;
-        this.leaderMoneyEnabled = leaderMoneyEnabled;
-        this.leaderMoneyDivide = leaderMoneyDivide;
-        this.leaderMoneyAmount = leaderMoneyAmount;
-        this.memberItemsEnabled = memberItemsEnabled;
+    public Prizes(@NotNull Map<String, Object> data) {
+        ConfigUtils.deserialize(this, data);
+    }
+
+    @Override
+    public Map<String, Object> serialize() {
+        return ConfigUtils.serialize(this);
+    }
+
+    public void setMemberItems(@Nullable List<ItemStack> memberItems) {
         this.memberItems = memberItems;
-        this.memberCommandsEnabled = memberCommandsEnabled;
-        this.memberCommands = memberCommands;
-        this.memberCommandsSomeNumber = memberCommandsSomeNumber;
-        this.memberCommandsSomeNumberDivide = memberCommandsSomeNumberDivide;
-        this.memberMoneyEnabled = memberMoneyEnabled;
-        this.memberMoneyDivide = memberMoneyDivide;
-        this.memberMoneyAmount = memberMoneyAmount;
     }
 
-    public long getItemsGiveInterval() {
-        return itemsGiveInterval;
+    public void setLeaderItems(@Nullable List<ItemStack> leaderItems) {
+        this.leaderItems = leaderItems;
     }
 
-    public List<String> getLeaderCommands() {
-        return leaderCommands;
+    public void give(@NotNull TitansBattle plugin, @Nullable List<Player> leaders, @NotNull List<Player> members) {
+        if (treatLeadersAsMembers && leaders != null) {
+            members.addAll(leaders);
+            leaders.clear();
+        }
+        if (leaderItemsEnabled && leaderItems != null && leaders != null) {
+            giveItemsToPlayers(plugin, leaders, leaderItems);
+        }
+        if (memberItemsEnabled && memberItems != null) {
+            giveItemsToPlayers(plugin, members, memberItems);
+        }
+        if (leaderMoneyEnabled && leaders != null) {
+            giveMoneyToPlayers(plugin, leaders, leaderMoneyAmount, leaderMoneyDivide);
+        }
+        if (memberMoneyEnabled) {
+            giveMoneyToPlayers(plugin, members, memberMoneyAmount, memberMoneyDivide);
+        }
+        if (leaderCommandsEnabled) {
+            runCommandsOnPlayers(leaders, leaderCommands, leaderCommandsSomeNumber,
+                    leaderCommandsSomeNumberDivide);
+        }
+        if (memberCommandsEnabled) {
+            runCommandsOnPlayers(members, memberCommands, memberCommandsSomeNumber,
+                    memberCommandsSomeNumberDivide);
+        }
     }
 
-    public boolean isLeaderCommandsEnabled() {
-        return leaderCommandsEnabled;
+    private void giveItemsToPlayers(@NotNull TitansBattle plugin,
+                                    @NotNull List<Player> players,
+                                    @NotNull List<ItemStack> items) {
+        for (Player player : players) {
+            Inventory inventory = player.getInventory();
+            HashMap<Integer, ItemStack> remainingItems = inventory.addItem(items.toArray(new ItemStack[0]));
+            if (!remainingItems.isEmpty()) {
+                ITEMS_NOT_GIVEN.put(player, remainingItems);
+                plugin.getTaskManager().startGiveItemsTask(itemsGiveInterval);
+            }
+        }
     }
 
-    public boolean isLeaderCommandsSomeNumberDivide() {
-        return leaderCommandsSomeNumberDivide;
+    private void runCommandsOnPlayers(List<Player> players, List<String> commands, double someNumber, boolean divide) {
+        if (divide) {
+            someNumber = someNumber / players.size();
+        }
+        for (Player player : players) {
+            for (String command : commands) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
+                        command.replaceAll("%player%", player.getName()).replaceAll("%some_number%",
+                                Double.toString(someNumber)));
+            }
+        }
     }
 
-    public List<ItemStack> getMemberItems() {
-        return memberItems;
+    private void giveMoneyToPlayers(@NotNull TitansBattle plugin, @NotNull List<Player> players, double amount,
+                                    boolean share) {
+        if (plugin.getEconomy() == null) {
+            return;
+        }
+        if (share) {
+            //Share prize
+            amount = (amount / players.size());
+            for (Player player : players) {
+                EconomyResponse r = plugin.getEconomy().depositPlayer(player, amount);
+                if (!r.transactionSuccess()) {
+                    System.out.println("[TitansBattle] Error: " + r.errorMessage);
+                }
+            }
+            return;
+        }
+        for (Player player : players) {
+            EconomyResponse r = plugin.getEconomy().depositPlayer(player, amount);
+            if (!r.transactionSuccess()) {
+                System.out.println("[TitansBattle] Error: " + r.errorMessage);
+            }
+        }
     }
 
-    public double getLeaderMoneyAmount() {
-        return leaderMoneyAmount;
-    }
-
-    public double getLeaderCommandsSomeNumber() {
-        return leaderCommandsSomeNumber;
-    }
-
-    public boolean isMemberCommandsSomeNumberDivide() {
-        return memberCommandsSomeNumberDivide;
-    }
-
-    public boolean isLeaderMoneyDivide() {
-        return leaderMoneyDivide;
-    }
-
-    public double getMemberMoneyAmount() {
-        return memberMoneyAmount;
-    }
-
-    public double getMemberCommandsSomeNumber() {
-        return memberCommandsSomeNumber;
-    }
-
-    public boolean isLeaderMoneyEnabled() {
-        return leaderMoneyEnabled;
-    }
-
-    public boolean isLeaderItemsEnabled() {
-        return leaderItemsEnabled;
-    }
-
-    public boolean isMemberCommandsEnabled() {
-        return memberCommandsEnabled;
-    }
-
-    public boolean isMemberItemsEnabled() {
-        return memberItemsEnabled;
-    }
-
-    public void setLeaderCommandsSomeNumberDivide(boolean leaderCommandsSomeNumberDivide) {
-        this.leaderCommandsSomeNumberDivide = leaderCommandsSomeNumberDivide;
-    }
-
-    public void setLeaderCommands(List<String> leaderCommands) {
-        this.leaderCommands = leaderCommands;
-    }
-
-    public void setLeaderItemsEnabled(boolean leaderItemsEnabled) {
-        this.leaderItemsEnabled = leaderItemsEnabled;
-    }
-
-    public void setLeaderMoneyAmount(double leaderMoneyAmount) {
-        this.leaderMoneyAmount = leaderMoneyAmount;
-    }
-
-    public void setLeaderCommandsEnabled(boolean leaderCommandsEnabled) {
-        this.leaderCommandsEnabled = leaderCommandsEnabled;
-    }
-
-    public boolean isMemberMoneyEnabled() {
-        return memberMoneyEnabled;
-    }
-
-    public boolean isTreatLeadersAsMembers() {
-        return treatLeadersAsMembers;
-    }
-
-    public void setMemberCommandsEnabled(boolean memberCommandsEnabled) {
-        this.memberCommandsEnabled = memberCommandsEnabled;
-    }
-
-    public void setMemberCommands(List<String> memberCommands) {
-        this.memberCommands = memberCommands;
-    }
-
-    public void setLeaderMoneyEnabled(boolean leaderMoneyEnabled) {
-        this.leaderMoneyEnabled = leaderMoneyEnabled;
-    }
-
-    public void setItemsGiveInterval(long itemsGiveInterval) {
-        this.itemsGiveInterval = itemsGiveInterval;
-    }
-
-    public List<String> getMemberCommands() {
-        return memberCommands;
-    }
-
-    public List<ItemStack> getLeaderItems() {
-        return leaderItems;
-    }
-
-    public boolean isMemberMoneyDivide() {
-        return memberMoneyDivide;
-    }
-
-    public void setLeaderCommandsSomeNumber(double leaderCommandsSomeNumber) {
-        this.leaderCommandsSomeNumber = leaderCommandsSomeNumber;
-    }
-
-    public void setLeaderMoneyDivide(boolean leaderMoneyDivide) {
-        this.leaderMoneyDivide = leaderMoneyDivide;
-    }
-
-    public void setLeaderItems(List<ItemStack> leaderItems) {
-        this.leaderItems = Helper.removeNullItems(leaderItems);
-    }
-
-    public void setMemberMoneyEnabled(boolean memberMoneyEnabled) {
-        this.memberMoneyEnabled = memberMoneyEnabled;
-    }
-
-    public void setTreatLeadersAsMembers(boolean treatLeadersAsMembers) {
-        this.treatLeadersAsMembers = treatLeadersAsMembers;
-    }
-
-    public void setMemberMoneyAmount(double memberMoneyAmount) {
-        this.memberMoneyAmount = memberMoneyAmount;
-    }
-
-    public void setMemberCommandsSomeNumberDivide(boolean memberCommandsSomeNumberDivide) {
-        this.memberCommandsSomeNumberDivide = memberCommandsSomeNumberDivide;
-    }
-
-    public void setMemberItems(List<ItemStack> memberItems) {
-        this.memberItems = Helper.removeNullItems(memberItems);
-    }
-
-    public void setMemberItemsEnabled(boolean memberItemsEnabled) {
-        this.memberItemsEnabled = memberItemsEnabled;
-    }
-
-    public void setMemberCommandsSomeNumber(double memberCommandsSomeNumber) {
-        this.memberCommandsSomeNumber = memberCommandsSomeNumber;
-    }
-
-    public void setMemberMoneyDivide(boolean memberMoneyDivide) {
-        this.memberMoneyDivide = memberMoneyDivide;
+    public static Map<Player, HashMap<Integer, ItemStack>> getPlayersWithItemsToReceive() {
+        ITEMS_NOT_GIVEN.keySet().removeIf(p -> !p.isOnline());
+        return ITEMS_NOT_GIVEN;
     }
 }

@@ -23,7 +23,8 @@
  */
 package me.roinujnosde.titansbattle.listeners;
 
-import me.roinujnosde.titansbattle.Helper;
+import me.roinujnosde.titansbattle.types.Game;
+import me.roinujnosde.titansbattle.utils.Helper;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.events.ParticipantDeathEvent;
 import me.roinujnosde.titansbattle.managers.GameManager;
@@ -40,38 +41,40 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 public class PlayerDeathListener implements Listener {
 
     private final GameManager gm;
-    private final Helper helper;
     private final TitansBattle plugin;
 
     public PlayerDeathListener() {
         plugin = TitansBattle.getInstance();
         gm = plugin.getGameManager();
-        helper = plugin.getHelper();
     }
 
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
         Player victim = event.getEntity();
-        Player killer = helper.getPlayerAttackerOrKiller(victim.getKiller());
+        Player killer = Helper.getPlayerAttackerOrKiller(victim.getKiller());
 
-        if (!gm.isHappening() && killer != null) {
-            if (helper.isKiller(victim)) {
-                gm.setKiller(helper.getGameFromWinnerOrKiller(victim), killer, victim);
+        Game game = gm.getCurrentGame();
+        if (game == null) {
+            return;
+        }
+        if (!game.isHappening() && killer != null) {
+            if (Helper.isKiller(victim)) {
+                gm.setKiller(Helper.getConfigFromWinnerOrKiller(victim).getName(), killer, victim);
                 plugin.getDatabaseManager().saveAll();
             }
         }
 
-        if (!gm.isHappening()) {
+        if (!game.isHappening()) {
             return;
         }
-        if (gm.getParticipants().contains(victim.getUniqueId())) {
+        if (game.getPlayerParticipants().contains(victim.getUniqueId())) {
             Bukkit.getPluginManager().callEvent(new ParticipantDeathEvent(victim));
-            if (!gm.isBattle()) {
+            if (!game.isBattle()) {
                 gm.removeParticipant(victim);
                 return;
             }
 
-            if (helper.isFun(gm.getCurrentGame())) {
+            if (game.getConfig().isUseKits()) {
                 event.setKeepInventory(true);
                 victim.getInventory().clear();
                 victim.getInventory().setArmorContents(null);

@@ -37,11 +37,9 @@ public class PlayerJoinGameEvent extends Event implements Cancellable {
 
     private static final HandlerList HANDLERS = new HandlerList();
     private boolean cancelled = false;
-    private Player player;
-    private Game game;
-    
-    private PlayerJoinGameEvent() {}
-    
+    private final Player player;
+    private final Game game;
+
     public PlayerJoinGameEvent(Player player, Game game) {
         if (player == null || game == null) {
             throw new IllegalArgumentException("Player or Game cannot be null!");

@@ -23,12 +23,12 @@
  */
 package me.roinujnosde.titansbattle.types;
 
+import org.jetbrains.annotations.NotNull;
+
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import me.roinujnosde.titansbattle.types.Game.Mode;
 
 /**
  *
@@ -36,16 +36,15 @@ import me.roinujnosde.titansbattle.types.Game.Mode;
  */
 public class Winners {
 
-    private Date date;
-    private Map<Mode, UUID> killer;
-    private Map<Mode, Set<UUID>> playerWinners;
-    private Map<Mode, Group> winnerGroup;
+    private final Date date;
+    private final Map<String, UUID> killer;
+    private final Map<String, Set<UUID>> playerWinners;
+    private final Map<String, String> winnerGroup;
 
-    public Winners(Date date, Map<Mode, UUID> killer, Map<Mode, Set<UUID>> playerWinners, Map<Mode, Group> winnerGroup) {
-        if (date == null || killer == null || playerWinners == null || winnerGroup == null) {
-            throw new IllegalArgumentException("no argument can be null");
-        }
-                
+    public Winners(@NotNull Date date,
+                   @NotNull Map<String, UUID> killer,
+                   @NotNull Map<String, Set<UUID>> playerWinners,
+                   @NotNull Map<String, String> winnerGroup) {
         this.date = date;
         this.killer = killer;
         this.playerWinners = playerWinners;
@@ -56,27 +55,27 @@ public class Winners {
         return date;
     }
 
-    public UUID getKiller(Mode mode) {
-        return killer.get(mode);
+    public UUID getKiller(String game) {
+        return killer.get(game);
     }
 
-    public Set<UUID> getPlayerWinners(Mode mode) {
-        return playerWinners.get(mode);
+    public Set<UUID> getPlayerWinners(String game) {
+        return playerWinners.get(game);
     }
 
-    public Group getWinnerGroup(Mode mode) {
-        return winnerGroup.get(mode);
+    public String getWinnerGroup(String game) {
+        return winnerGroup.get(game);
     }
 
-    public void setKiller(Mode mode, UUID uuid) {
-        killer.put(mode, uuid);
+    public void setKiller(String game, UUID uuid) {
+        killer.put(game, uuid);
     }
 
-    public void setWinnerGroup(Mode mode, Group group) {
-        winnerGroup.put(mode, group);
+    public void setWinnerGroup(String game, String group) {
+        winnerGroup.put(game, group);
     }
 
-    public void setWinners(Mode mode, Set<UUID> winners) {
-        playerWinners.put(mode, winners);
+    public void setWinners(String game, Set<UUID> winners) {
+        playerWinners.put(game, winners);
     }
 }
