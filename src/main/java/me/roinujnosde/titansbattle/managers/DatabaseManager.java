@@ -25,9 +25,8 @@ package me.roinujnosde.titansbattle.managers;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
-import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
-import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.GroupData;
 import me.roinujnosde.titansbattle.types.Warrior;
@@ -43,7 +42,6 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.*;
-import java.util.function.Function;
 
 /**
  * @author RoinujNosde
@@ -334,12 +332,8 @@ public class DatabaseManager {
             }
         }
 
-        Function<UUID, Group> getGroup = null;
-        GroupManager groupManager = plugin.getGroupManager();
-        if (groupManager != null) {
-            getGroup = groupManager::getGroup;
-        }
-        Warrior warrior = new Warrior(player, getGroup, new HashMap<>(), new HashMap<>(), new HashMap<>());
+        Warrior warrior = new Warrior(player, plugin::getGroupManager, new HashMap<>(), new HashMap<>(),
+                new HashMap<>());
         warriors.add(warrior);
         return warrior;
     }
@@ -399,9 +393,7 @@ public class DatabaseManager {
                 OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
                 HashMap<CountType, HashMap<String, Integer>> playerData = players.get(uuid);
 
-                Function<UUID, Group> getGroup = plugin.getGroupManager() != null ? plugin.getGroupManager()::getGroup
-                        : null;
-                Warrior warrior = new Warrior(player, getGroup, playerData.get(CountType.KILLS),
+                Warrior warrior = new Warrior(player, plugin::getGroupManager, playerData.get(CountType.KILLS),
                         playerData.get(CountType.DEATHS), playerData.get(CountType.VICTORIES));
                 warriors.add(warrior);
             }

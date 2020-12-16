@@ -51,24 +51,14 @@ public class Kit implements ConfigurationSerializable {
 
     public static boolean inventoryHasItems(@NotNull Player player) {
         ItemStack[] contents = player.getInventory().getContents();
-        for (int i = 0; i < contents.length; i++) {
-            ItemStack item = contents[i];
-            System.out.println("i = " + i);
+        for (ItemStack item : contents) {
             if (item == null) {
-                System.out.println("item é null");
                 continue;
             }
-            System.out.println("item.getType() = " + item.getType());
             if (item.getType() != Material.AIR) {
-                System.out.println("item não é AIR");
                 return true;
             }
         }
-//        for (ItemStack item : player.getInventory().getContents()) {
-//            if (item != null && !item.getType().toString().contains("AIR")) {
-//                return true;
-//            }
-//        }
         return false;
     }
 

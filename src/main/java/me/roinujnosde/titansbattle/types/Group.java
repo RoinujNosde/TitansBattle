@@ -61,7 +61,7 @@ public abstract class Group {
     @Override
     public boolean equals(Object other) {
         if (other instanceof Group) {
-            return getId().equals(((SimpleClansGroup) other).getId());
+            return getId().equals(((Group) other).getId());
         }
         return false;
     }

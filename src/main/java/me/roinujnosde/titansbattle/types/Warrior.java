@@ -23,13 +23,14 @@
  */
 package me.roinujnosde.titansbattle.types;
 
+import me.roinujnosde.titansbattle.managers.GroupManager;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.UUID;
-import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  *
@@ -37,20 +38,19 @@ import java.util.function.Function;
  */
 public class Warrior {
 
+    private final Supplier<GroupManager> groupManager;
     private final OfflinePlayer player;
-    // Using a Function here so the Group is always the current when needed
-    private final Function<UUID, Group> getGroup;
     private final Map<String, Integer> kills;
     private final Map<String, Integer> deaths;
     private final Map<String, Integer> victories;
 
     public Warrior(@NotNull OfflinePlayer player,
-                   @Nullable Function<UUID, Group> getGroup,
+                   @NotNull Supplier<GroupManager> groupManager,
                    @NotNull Map<String, Integer> kills,
                    @NotNull Map<String, Integer> deaths,
                    @NotNull Map<String, Integer> victories) {
+        this.groupManager = groupManager;
         this.player = player;
-        this.getGroup = getGroup;
         this.kills = kills;
         this.deaths = deaths;
         this.victories = victories;
@@ -78,10 +78,11 @@ public class Warrior {
 
     @Nullable
     public Group getGroup() {
-        if (getGroup == null) {
+        GroupManager groupManager = this.groupManager.get();
+        if (groupManager == null) {
             return null;
         }
-        return getGroup.apply(player.getUniqueId());
+        return groupManager.getGroup(player.getUniqueId());
     }
 
     public int getKills(@NotNull String game) {
