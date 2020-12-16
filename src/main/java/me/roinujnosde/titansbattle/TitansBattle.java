@@ -171,11 +171,9 @@ public final class TitansBattle extends JavaPlugin {
 
     private void loadGroupsPlugin() {
         if (Bukkit.getPluginManager().getPlugin("SimpleClans") != null) {
-            groupManager = new SimpleClansGroupManager(this);
-            debug("SimpleClans found.", false);
+            setGroupManager(new SimpleClansGroupManager(this));
         } else if (Bukkit.getPluginManager().getPlugin("Factions") != null) {
-            groupManager = new FactionsGroupManager(this);
-            debug("Factions found.", false);
+            setGroupManager(new FactionsGroupManager(this));
         }
     }
 
@@ -228,6 +226,7 @@ public final class TitansBattle extends JavaPlugin {
      */
     public void setGroupManager(@NotNull GroupManager groupManager) {
         this.groupManager = groupManager;
+        getLogger().info(String.format("Registered %s", groupManager.getClass().getSimpleName()));
     }
 
     public GameManager getGameManager() {
