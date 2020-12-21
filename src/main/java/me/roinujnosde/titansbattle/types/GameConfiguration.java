@@ -225,7 +225,7 @@ public class GameConfiguration implements ConfigurationSerializable {
     }
 
     @Override
-    public boolean equals(Object other) {
+    public boolean equals(@Nullable Object other) {
         if (other instanceof GameConfiguration) {
             return getName().equals(((GameConfiguration) other).getName());
         }

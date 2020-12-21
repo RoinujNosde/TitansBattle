@@ -17,13 +17,11 @@ import java.util.Objects;
 
 public class EntityDamageListener implements Listener {
 
-    private final GroupManager groupManager;
     private final GameManager gm;
 
     public EntityDamageListener() {
         TitansBattle plugin = TitansBattle.getInstance();
         gm = plugin.getGameManager();
-        groupManager = plugin.getGroupManager();
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -70,6 +68,7 @@ public class EntityDamageListener implements Listener {
                 return;
             }
 
+            GroupManager groupManager = TitansBattle.getInstance().getGroupManager();
             if (groupManager != null) {
                 event.setCancelled(groupManager.sameGroup(defender.getUniqueId(), attacker.getUniqueId()));
             }

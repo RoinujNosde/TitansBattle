@@ -23,16 +23,18 @@
  */
 package me.roinujnosde.titansbattle.listeners;
 
-import me.roinujnosde.titansbattle.types.Game;
-import me.roinujnosde.titansbattle.utils.Helper;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.events.ParticipantDeathEvent;
 import me.roinujnosde.titansbattle.managers.GameManager;
+import me.roinujnosde.titansbattle.types.Game;
+import me.roinujnosde.titansbattle.types.GameConfiguration;
+import me.roinujnosde.titansbattle.utils.Helper;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.jetbrains.annotations.Nullable;
 
 /**
  *
@@ -54,17 +56,15 @@ public class PlayerDeathListener implements Listener {
         Player killer = Helper.getPlayerAttackerOrKiller(victim.getKiller());
 
         Game game = gm.getCurrentGame();
-        if (game == null) {
-            return;
-        }
-        if (!game.isHappening() && killer != null) {
-            if (Helper.isKiller(victim)) {
-                gm.setKiller(Helper.getConfigFromWinnerOrKiller(victim).getName(), killer, victim);
+        if (!isHappening(game)) {
+            if (killer != null && Helper.isKiller(victim)) {
+                GameConfiguration gameConfig = Helper.getGameConfigurationFromWinnerOrKiller(victim);
+                if (gameConfig == null) {
+                    return;
+                }
+                gm.setKiller(gameConfig.getName(), killer, victim);
                 plugin.getDatabaseManager().saveAll();
             }
-        }
-
-        if (!game.isHappening()) {
             return;
         }
         if (game.getPlayerParticipants().contains(victim.getUniqueId())) {
@@ -81,5 +81,9 @@ public class PlayerDeathListener implements Listener {
             }
             gm.addCasualty(victim, killer);
         }
+    }
+
+    private boolean isHappening(@Nullable Game game) {
+        return game != null && game.isHappening();
     }
 }

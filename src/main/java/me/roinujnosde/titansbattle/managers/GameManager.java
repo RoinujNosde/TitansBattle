@@ -5,6 +5,9 @@ import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
 import me.roinujnosde.titansbattle.events.*;
 import me.roinujnosde.titansbattle.types.*;
 import me.roinujnosde.titansbattle.utils.Helper;
+import me.roinujnosde.titansbattle.utils.SoundUtils;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -16,6 +19,9 @@ import org.jetbrains.annotations.Nullable;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.*;
 
 public class GameManager {
 
@@ -44,7 +50,6 @@ public class GameManager {
         if (killer != null) {
             setKiller(game.getConfig().getName(), killer, null);
         }
-        //Anuncia
         Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("who_won", getCurrentGame()),
                 winner.getName()));
 
@@ -54,8 +59,7 @@ public class GameManager {
 
         setWinner(winner);
 
-        //Finaliza o jogo atual
-        finishGame(null, null, winner);
+        finishGame(null, null, winner, killer);
     }
 
     private void setWinner(@NotNull Player winner) {
@@ -121,7 +125,7 @@ public class GameManager {
         //Salva as alterações
         plugin.getConfigManager().save();
         //Finaliza o jogo
-        finishGame(leaders, members, null);
+        finishGame(leaders, members, null, killerPlayer);
         //Dá os prêmios
     }
 
@@ -210,13 +214,13 @@ public class GameManager {
         }
         if (game.getPlayersParticipatingCount() < game.getConfig().getMinimumPlayers()) {
             Bukkit.broadcastMessage(plugin.getLang("not_enough_participants", getCurrentGame()));
-            finishGame(null, null, null);
+            finishGame(null, null, null, null);
             return;
         }
         if (game.getConfig().isGroupMode()) {
             if (game.getGroupsParticipatingCount() < game.getConfig().getMinimumGroups()) {
                 Bukkit.broadcastMessage(plugin.getLang("not_enough_participants", getCurrentGame()));
-                finishGame(null, null, null);
+                finishGame(null, null, null, null);
                 return;
             }
         }
@@ -226,7 +230,7 @@ public class GameManager {
         tm.startPreparationTimeTask(game.getConfig().getPreparationTime());
         Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("game_started", getCurrentGame()),
                 Long.toString(game.getConfig().getPreparationTime())));
-        game.teleportAll(game.getConfig().getArena());
+        game.teleportAll(plugin, game.getConfig().getArena());
         tm.startGameExpirationTask(game.getConfig().getExpirationTime());
         tm.startArenaAnnouncementTask(game.getConfig().getAnnouncementGameInfoInterval());
         if (game.getConfig().isDeleteGroups()) {
@@ -282,6 +286,61 @@ public class GameManager {
         }
 
         removeParticipant(victim);
+        sendRemainingOpponentsCount(game);
+        playDeathSound(game, victim);
+    }
+
+    private void playDeathSound(@NotNull Game game, @NotNull Player victim) {
+        Stream<Player> players = game.getPlayerParticipants().stream().map(Bukkit::getPlayer).filter(Objects::nonNull);
+        if (!game.getConfig().isGroupMode()) {
+            players.forEach(p -> SoundUtils.playSound(ENEMY_DEATH, plugin.getConfig(), p));
+            return;
+        }
+        GroupManager groupManager = plugin.getGroupManager();
+        if (groupManager == null) {
+            return;
+        }
+        Group victimGroup = groupManager.getGroup(victim.getUniqueId());
+        players.forEach(participant -> {
+            Group group = groupManager.getGroup(participant.getUniqueId());
+            if (group == null) {
+                return;
+            }
+            if (group.equals(victimGroup)) {
+                SoundUtils.playSound(ALLY_DEATH, plugin.getConfig(), participant);
+            } else {
+                SoundUtils.playSound(ENEMY_DEATH, plugin.getConfig(), participant);
+            }
+        });
+    }
+
+    private int getRemainingOpponents(@NotNull Game game, @NotNull Player player) {
+        if (!game.getConfig().isGroupMode()) {
+            return game.getPlayersParticipatingCount() - 1;
+        }
+        int opponents = 0;
+        Warrior warrior = plugin.getDatabaseManager().getWarrior(player.getUniqueId());
+        for (Map.Entry<Group, Integer> entry : game.getGroups().entrySet()) {
+            Group group = entry.getKey();
+            if (group.equals(warrior.getGroup())) {
+                continue;
+            }
+            opponents += entry.getValue();
+        }
+        return opponents;
+    }
+
+    private void sendRemainingOpponentsCount(@NotNull Game game) {
+        try {
+            game.getPlayerParticipants().stream().map(Bukkit::getPlayer).filter(Objects::nonNull).forEach(p -> {
+                int remaining = getRemainingOpponents(game, p);
+                if (remaining <= 0) {
+                    return;
+                }
+                p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(
+                        MessageFormat.format(plugin.getLang("action-bar-remaining-opponents", game), remaining)));
+            });
+        } catch (NoSuchMethodError ignored) {}
     }
 
     /**
@@ -308,7 +367,7 @@ public class GameManager {
         if (currentGame == null) return false;
 
         if (!currentGame.isLobby()) {
-            player.sendMessage(plugin.getLang("not-starting-or-started"));
+            player.sendMessage(plugin.getLang("not-starting-or-started", currentGame));
         } else {
             if (currentGame.getPlayerParticipants().contains(player.getUniqueId())) {
                 player.sendMessage(plugin.getLang("already-joined", currentGame));
@@ -410,6 +469,7 @@ public class GameManager {
             Player p = Bukkit.getPlayer(uuid);
             p.sendMessage(MessageFormat.format(plugin.getLang("player_joined", getCurrentGame()), player.getName()));
         }
+        SoundUtils.playSound(JOIN_GAME, plugin.getConfig(), player);
     }
 
     public void setKiller(@NotNull String game, @NotNull Player killer, @Nullable Player victim) {
@@ -426,11 +486,11 @@ public class GameManager {
             sender = cs.getName();
         }
         Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("cancelled", getCurrentGame()), sender));
-        finishGame(null, null, null);
+        finishGame(null, null, null, null);
     }
 
     public void finishGame(@Nullable List<Player> leaders, @Nullable List<Player> members,
-                           @Nullable Player winner) {
+                           @Nullable Player winner, @Nullable Player killer) {
         Game game = getCurrentGame();
         if (game == null || !game.isHappening()) {
             return;
@@ -439,7 +499,10 @@ public class GameManager {
         game.setBattle(false);
         game.setPreparation(false);
         game.setHappening(false);
-        game.teleportAll(game.getConfig().getExit());
+        game.teleportAll(plugin, game.getConfig().getExit());
+        SoundUtils.playSound(VICTORY, plugin.getConfig(), leaders);
+        SoundUtils.playSound(VICTORY, plugin.getConfig(), members);
+        SoundUtils.playSound(VICTORY, plugin.getConfig(), winner);
         plugin.getTaskManager().killAllTasks();
         if (game.getConfig().isUseKits()) {
             for (UUID uuid : game.getPlayerParticipants()) {
@@ -449,10 +512,10 @@ public class GameManager {
         }
         Prizes prizes = game.getConfig().getPrizes();
         if (winner != null) {
-            prizes.give(plugin, null, Collections.singletonList(winner));
+            prizes.give(plugin, null, Collections.singletonList(winner), killer);
         }
         if (leaders != null && members != null) {
-            prizes.give(plugin, leaders, members);
+            prizes.give(plugin, leaders, members, killer);
         }
 
         plugin.getDatabaseManager().saveAll();

@@ -23,7 +23,10 @@ public class ConfigUtils {
             }
             try {
                 declaredField.setAccessible(true);
-                declaredField.set(instance, data.get(ConfigUtils.getPath(declaredField)));
+                Object value = data.get(ConfigUtils.getPath(declaredField));
+                if (value != null) {
+                    declaredField.set(instance, value);
+                }
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
