@@ -58,6 +58,25 @@ public class Prizes implements ConfigurationSerializable {
     private Boolean memberMoneyDivide = false;
     @Path("member.money.amount")
     private Double memberMoneyAmount = 10000D;
+    @Path("killer.items.enabled")
+    private Boolean killerItemsEnabled = false;
+    @Path("killer.items.item_list")
+    private @Nullable List<ItemStack> killerItems;
+    @Path("killer.commands.enabled")
+    private Boolean killerCommandsEnabled = false;
+    @Path("killer.commands.command_list")
+    private @Nullable List<String> killerCommands = Arrays.asList("give %player% diamond_sword %some_number%",
+            "eco give %player% %some_number%");
+    @Path("killer.commands.some_number.value")
+    private Double killerCommandsSomeNumber = 100D;
+    @Path("killer.commands.some_number.divided")
+    private Boolean killerCommandsSomeNumberDivide = false;
+    @Path("killer.money.enabled")
+    private Boolean killerMoneyEnabled = false;
+    @Path("killer.money.divided")
+    private Boolean killerMoneyDivide = false;
+    @Path("killer.money.amount")
+    private Double killerMoneyAmount = 10000D;
 
     public Prizes() {
     }
@@ -71,6 +90,10 @@ public class Prizes implements ConfigurationSerializable {
         return ConfigUtils.serialize(this);
     }
 
+    public void setKillerItems(@Nullable List<ItemStack> killerItems) {
+        this.killerItems = killerItems;
+    }
+
     public void setMemberItems(@Nullable List<ItemStack> memberItems) {
         this.memberItems = memberItems;
     }
@@ -79,7 +102,8 @@ public class Prizes implements ConfigurationSerializable {
         this.leaderItems = leaderItems;
     }
 
-    public void give(@NotNull TitansBattle plugin, @Nullable List<Player> leaders, @NotNull List<Player> members) {
+    public void give(@NotNull TitansBattle plugin, @Nullable List<Player> leaders, @NotNull List<Player> members,
+                     @Nullable Player killer) {
         if (treatLeadersAsMembers && leaders != null) {
             members.addAll(leaders);
             leaders.clear();
@@ -89,6 +113,18 @@ public class Prizes implements ConfigurationSerializable {
         }
         if (memberItemsEnabled && memberItems != null) {
             giveItemsToPlayers(plugin, members, memberItems);
+        }
+        if (killer != null) {
+            List<Player> killerList = Collections.singletonList(killer);
+            if (killerItemsEnabled && killerItems != null) {
+                giveItemsToPlayers(plugin, killerList, killerItems);
+            }
+            if (killerMoneyEnabled) {
+                giveMoneyToPlayers(plugin, killerList, killerMoneyAmount, killerMoneyDivide);
+            }
+            if (killerCommandsEnabled) {
+                runCommandsOnPlayers(killerList, killerCommands, killerCommandsSomeNumber, killerCommandsSomeNumberDivide);
+            }
         }
         if (leaderMoneyEnabled && leaders != null) {
             giveMoneyToPlayers(plugin, leaders, leaderMoneyAmount, leaderMoneyDivide);

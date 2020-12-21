@@ -96,7 +96,7 @@ public class GameConfigurationDao {
         return GAMES.get(name);
     }
 
-    public @Nullable YamlConfiguration getConfigFile(@NotNull GameConfiguration gameConfig) {
+    public @Nullable YamlConfiguration getConfigFile(@Nullable GameConfiguration gameConfig) {
         for (YamlConfiguration yamlConfig : CONFIG_FILES.values()) {
             GameConfiguration gameConfiguration = (GameConfiguration) yamlConfig.get(GAME_PATH);
             if (gameConfiguration.equals(gameConfig)) {

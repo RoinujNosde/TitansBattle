@@ -33,6 +33,7 @@ import me.roinujnosde.titansbattle.utils.ConfigUtils;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
@@ -43,10 +44,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Locale;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -68,6 +66,7 @@ public final class TitansBattle extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        saveDefaultConfig();
         ConfigurationSerialization.registerClass(GameConfiguration.class);
         ConfigurationSerialization.registerClass(Kit.class);
         ConfigurationSerialization.registerClass(Prizes.class);
@@ -84,12 +83,12 @@ public final class TitansBattle extends JavaPlugin {
         databaseManager.setup();
 
         loadGroupsPlugin();
-        saveDefaultConfig();
         setupEconomy();
 
         pcm = new PaperCommandManager(this);
         pcm.enableUnstableAPI("help");
         configureCommands();
+        registerEvents();
         databaseManager.loadDataToMemory();
         gameManager.startOrSchedule();
     }
@@ -99,14 +98,25 @@ public final class TitansBattle extends JavaPlugin {
         registerDependencies();
         registerCompletions();
         registerContexts();
-        registerCommands();
+        registerReplacements();
         registerConditions();
-        registerEvents();
+        registerCommands();
     }
 
     private void setDefaultLocale() {
         String[] s = configManager.getLanguage().split("_");
         pcm.getLocales().setDefaultLocale(new Locale(s[0]));
+    }
+
+    private void registerReplacements() {
+        ConfigurationSection commandsSection = getConfig().getConfigurationSection("commands");
+        if (commandsSection == null) {
+            return;
+        }
+        Set<String> commands = commandsSection.getKeys(false);
+        for (String command : commands) {
+            pcm.getCommandReplacements().addReplacement(command, commandsSection.getString(command) + "|" + command);
+        }
     }
 
     private void registerContexts() {
@@ -207,7 +217,7 @@ public final class TitansBattle extends JavaPlugin {
 
     @Override
     public void onDisable() {
-        gameManager.finishGame(null, null, null);
+        gameManager.finishGame(null, null, null, null);
         databaseManager.close();
     }
 
@@ -252,13 +262,13 @@ public final class TitansBattle extends JavaPlugin {
      * @param config a FileConfiguration to access
      * @return the language from the config, with its color codes (&) translated
      */
-    public @NotNull String getLang(String path, @Nullable FileConfiguration config) {
-        if (config == null) {
-            config = getLanguageManager().getConfig();
+    public @NotNull String getLang(@NotNull String path, @Nullable FileConfiguration config) {
+        String language = null;
+        if (config != null) {
+            language = config.getString("language." + path);
         }
-        String language = config.getString(path);
         if (language == null) {
-            return path;
+            language = getLanguageManager().getConfig().getString(path, "Missing key: " + path);
         }
         return ChatColor.translateAlternateColorCodes('&', language);
     }
@@ -269,7 +279,7 @@ public final class TitansBattle extends JavaPlugin {
      * @param path where the String is
      * @return the language from the default language file
      */
-    public String getLang(String path) {
+    public String getLang(@NotNull String path) {
         return getLang(path, (FileConfiguration) null);
     }
 
@@ -281,14 +291,12 @@ public final class TitansBattle extends JavaPlugin {
      * @return the overrider language if found, or from the default language
      * file
      */
-    public String getLang(String path, @Nullable Game game) {
+    public String getLang(@NotNull String path, @Nullable Game game) {
+        YamlConfiguration configFile = null;
         if (game != null) {
-            YamlConfiguration configFile = gameConfigurationDao.getConfigFile(game.getConfig());
-            if (configFile != null) {
-                getLang("language." + path, configFile);
-            }
+            configFile = gameConfigurationDao.getConfigFile(game.getConfig());
         }
-        return getLang(path);
+        return getLang(path, configFile);
     }
 
     /**

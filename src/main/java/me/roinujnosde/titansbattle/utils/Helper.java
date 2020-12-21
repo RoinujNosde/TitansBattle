@@ -2,6 +2,7 @@ package me.roinujnosde.titansbattle.utils;
 
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
+import me.roinujnosde.titansbattle.types.Game;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Winners;
 import org.bukkit.Bukkit;
@@ -35,7 +36,8 @@ public class Helper {
         return Arrays.stream(player.getInventory().getContents()).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    public static FileConfiguration getConfigFromWinnerOrKiller(Player player) {
+    @Nullable
+    public static GameConfiguration getGameConfigurationFromWinnerOrKiller(@Nullable Player player) {
         if (player == null) {
             return null;
         }
@@ -48,15 +50,28 @@ public class Helper {
                 continue;
             }
             if (w.getKiller(gameName).equals(uniqueId)) {
-                return dao.getConfigFile(game);
+                return game;
             }
             Set<UUID> playerWinners = w.getPlayerWinners(gameName);
             if (playerWinners == null) {
                 continue;
             }
             if (playerWinners.contains(uniqueId)) {
-                return dao.getConfigFile(game);
+                return game;
             }
+        }
+        return null;
+    }
+
+    @Nullable
+    public static FileConfiguration getConfigFromWinnerOrKiller(Player player) {
+        if (player == null) {
+            return null;
+        }
+        GameConfigurationDao dao = GameConfigurationDao.getInstance(plugin);
+        GameConfiguration gameConfig = getGameConfigurationFromWinnerOrKiller(player);
+        if (gameConfig != null) {
+            return dao.getConfigFile(gameConfig);
         }
         return null;
     }
@@ -350,7 +365,9 @@ public class Helper {
      *
      * @param list the String list
      * @return the String representation
+     * @deprecated use {@link Helper#buildStringFrom(Collection)}
      */
+    @Deprecated
     public static String getStringFromStringList(List<String> list) {
         if (list == null || list.isEmpty()) {
             return "";
@@ -386,10 +403,20 @@ public class Helper {
         return ((hour * 60 * 60) + (minute * 60));
     }
 
+    /**
+     * Gets a String representation of a String Collection
+     * Example: "RoinujNosde, GhostTheWolf & Killer07"
+     *
+     * @param collection the String collection
+     * @return the String representation
+     */
     public static @NotNull String buildStringFrom(@NotNull Collection<String> collection) {
         StringBuilder sb = new StringBuilder();
         List<String> list = new ArrayList<>(collection);
         for (String s : list) {
+            Game currentGame = plugin.getGameManager().getCurrentGame();
+            String listColor = plugin.getLang("list-color", currentGame);
+            sb.append(listColor);
             if (s.equalsIgnoreCase(list.get(0))) {
                 sb.append(s);
             } else if (s.equals(list.get(list.size() - 1))) {

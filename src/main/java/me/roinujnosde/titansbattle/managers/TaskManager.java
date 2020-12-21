@@ -54,16 +54,16 @@ public class TaskManager {
 
 
     public void startArenaAnnouncementTask(long interval) {
-        arenaAnnouncementTask = new ArenaAnnouncementTask().runTaskTimerAsynchronously(plugin, interval * 20, interval * 20);
+        arenaAnnouncementTask = new ArenaAnnouncementTask().runTaskTimer(plugin, interval * 20, interval * 20);
     }
 
     public void startPreparationTimeTask(long interval) {
-        preparationTimeTask = new PreparationTimeTask().runTaskLaterAsynchronously(plugin, interval * 20);
+        preparationTimeTask = new PreparationTimeTask().runTaskLater(plugin, interval * 20);
     }
 
     public void startLobbyAnnouncementTask(int times, long interval) {
-        lobbyAnnouncementTask = new LobbyAnnouncementTask(times, interval)
-                .runTaskTimerAsynchronously(plugin, 0, interval * 20);
+        lobbyAnnouncementTask = new LobbyAnnouncementTask(times + 1, interval)
+                .runTaskTimer(plugin, 0, interval * 20);
     }
 
     public void startSchedulerTask(long interval) {
@@ -119,19 +119,14 @@ public class TaskManager {
 
         @Override
         public void run() {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    GameManager gm = plugin.getGameManager();
-                    Game currentGame = gm.getCurrentGame();
-                    if (currentGame == null) {
-                        return;
-                    }
-                    Bukkit.getServer().broadcastMessage(plugin.getLang("preparation_over", currentGame));
-                    currentGame.setPreparation(false);
-                    currentGame.setBattle(true);
-                }
-            }.runTask(plugin);
+            GameManager gm = plugin.getGameManager();
+            Game currentGame = gm.getCurrentGame();
+            if (currentGame == null) {
+                return;
+            }
+            Bukkit.getServer().broadcastMessage(plugin.getLang("preparation_over", currentGame));
+            currentGame.setPreparation(false);
+            currentGame.setBattle(true);
         }
     }
 
@@ -148,30 +143,25 @@ public class TaskManager {
 
         @Override
         public void run() {
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    GameManager gm = plugin.getGameManager();
-                    seconds = times * interval;
-                    if (times > 0) {
-                        Game currentGame = gm.getCurrentGame();
-                        if (currentGame == null) {
-                            cancel();
-                            return;
-                        }
-                        Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("starting_game",
-                                currentGame), Long.toString(seconds),
-                                Integer.toString(currentGame.getConfig().getMinimumGroups()),
-                                Integer.toString(currentGame.getConfig().getMinimumPlayers()),
-                                Integer.toString(currentGame.getGroupsParticipatingCount()),
-                                Integer.toString(currentGame.getPlayersParticipatingCount())));
-                        times--;
-                    } else {
-                        gm.startBattle();
-                        cancel();
-                    }
+            GameManager gm = plugin.getGameManager();
+            seconds = times * interval;
+            if (times > 0) {
+                Game currentGame = gm.getCurrentGame();
+                if (currentGame == null) {
+                    cancel();
+                    return;
                 }
-            }.runTask(plugin);
+                Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("starting_game",
+                        currentGame), Long.toString(seconds),
+                        Integer.toString(currentGame.getConfig().getMinimumGroups()),
+                        Integer.toString(currentGame.getConfig().getMinimumPlayers()),
+                        Integer.toString(currentGame.getGroupsParticipatingCount()),
+                        Integer.toString(currentGame.getPlayersParticipatingCount())));
+                times--;
+            } else {
+                gm.startBattle();
+                cancel();
+            }
         }
     }
 
@@ -185,22 +175,17 @@ public class TaskManager {
                 this.cancel();
                 return;
             }
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    String groupsText;
-                    GroupManager groupManager = plugin.getGroupManager();
-                    if (groupManager != null) {
-                        groupsText = groupManager.buildStringFrom(currentGame.getGroups().keySet());
-                    } else {
-                        return;
-                    }
-                    Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("game_info", currentGame),
-                            Integer.toString(currentGame.getPlayersParticipatingCount()),
-                            Integer.toString(currentGame.getGroupsParticipatingCount()),
-                            groupsText));
-                }
-            }.runTask(plugin);
+            String groupsText;
+            GroupManager groupManager = plugin.getGroupManager();
+            if (groupManager != null) {
+                groupsText = groupManager.buildStringFrom(currentGame.getGroups().keySet());
+            } else {
+                groupsText = "";
+            }
+            Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("game_info", currentGame),
+                    Integer.toString(currentGame.getPlayersParticipatingCount()),
+                    Integer.toString(currentGame.getGroupsParticipatingCount()),
+                    groupsText));
         }
     }
 
@@ -215,7 +200,7 @@ public class TaskManager {
                     Game currentGame = gm.getCurrentGame();
                     if (currentGame != null && currentGame.isHappening()) {
                         Bukkit.broadcastMessage(plugin.getLang("game_expired", currentGame));
-                        gm.finishGame(null, null, null);
+                        gm.finishGame(null, null, null, null);
                     }
                     gameExpirationTask.cancel();
                 }

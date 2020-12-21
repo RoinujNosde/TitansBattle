@@ -1,11 +1,15 @@
 package me.roinujnosde.titansbattle.types;
 
+import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.utils.SoundUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+
+import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.TELEPORT;
 
 public class Game {
 
@@ -65,12 +69,15 @@ public class Game {
         killsCount.put(player, killsCount.getOrDefault(player, 0) + 1);
     }
 
-    public void teleportAll(Location destination) {
+    public void teleportAll(TitansBattle plugin, Location destination) {
         if (destination == null) {
             return;
         }
-
-        getPlayerParticipants().forEach(uuid -> Bukkit.getPlayer(uuid).teleport(destination));
+        getPlayerParticipants().stream().map(Bukkit::getPlayer).filter(Objects::nonNull)
+                .forEach(player -> {
+                    player.teleport(destination);
+                    SoundUtils.playSound(TELEPORT, plugin.getConfig(), player);
+                });
     }
 
     public void setLobby(boolean lobby) {

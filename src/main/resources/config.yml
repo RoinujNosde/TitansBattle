@@ -2,7 +2,7 @@
 
 #SQL database settings
 sql:
-    #Set this as false if you want to use a flatfile instead.
+    #Set this as false if you want to use a flat-file instead.
     use-mysql: false
     database: "titansbattle"
     mysql:
@@ -19,18 +19,40 @@ debug: false
 
 #Change the commands
 commands:
+    titansbattle: "titansbattle"
+    create: "create"
     join: "join"
     exit: "exit"
     start: "start"
     cancel: "cancel"
     setdestination: "setdestination"
     setinventory: "setinventory"
+    setkit: "setkit"
+    setprize: "setprize"
     help: "help"
     reload: "reload"
     watch: "watch"
     winners: "winners"
     ranking: "ranking"
-    
+    edit: "edit"
+    prize: "prize"
+    game: "game"
+    members: "members"
+    leaders: "leaders"
+    killer: "killer"
+    groups: "groups"
+    players: "players"
+
+#Sounds used in games, to disable one leave it ""
+sounds:
+  join_game: "entity.player.levelup"
+  leave_game: "block.anvil.break"
+  watch: "entity.enderman.teleport"
+  teleport: "entity.enderman.teleport"
+  victory: "entity.ender_dragon.growl"
+  enemy_death: "entity.wolf.growl"
+  ally_death: "entity.wolf.howl"
+
 #Date format used on /tb winners command
 date-format: "dd/MM/yyyy"
 
@@ -41,25 +63,21 @@ page-limit:
     
 #List here commands that the plugin will not block in battle phase
 allowed_commands: ["/tb exit", "/tb winners"]
-
-#On /tb winners, for instance, you have to insert the game mode as in: "/tb winners GROUPS_FUN", but, if you only use one of the 4 modes,
-#you can set this as false and set the mode you use on "default-game-mode".
-ask-for-game-mode: true
-
-#Game modes: GROUPS_FUN | GROUPS_REAL | FREEFORALL_FUN | FREEFORALL_REAL
-default-game-mode: "FREEFORALL_REAL"
+#Commands that NO ONE will be able to use, not even players who didn't join the game
+blocked_commands_everyone:
+  - "/clan disband"
+  - "/f disband"
+  - "/clan kick"
+  - "/f kick"
+  - "/marry tp"
 
 #Destinations
 destinations:
     general_exit:
     
 #Will the game begin automatically? Which game? When?
-#Game modes: GROUPS_FUN | GROUPS_REAL | FREEFORALL_FUN | FREEFORALL_REAL
+#Game: the name of the game file
 #Day: 1 = Sunday
-#In GROUPS, players must be part of a SimpleClans' Clan or a Factions' Faction
-#There is not for that in FREEFORALL
-#In REAL, players will use their own items in the game
-#In FUN, the server will provide the temporary items
 #Hour format: 0 to 24
 #Minute format: 0 to 59
 #If you want more schedulers, just follow the example below, copy them and change the number

@@ -27,6 +27,7 @@ import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
 import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.utils.Helper;
+import me.roinujnosde.titansbattle.utils.SoundUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -94,6 +95,7 @@ public class PlayerJoinListener implements Listener {
 
     private void teleportToExit(Player player) {
         if (cm.getRespawn().contains(player.getUniqueId())) {
+            SoundUtils.playSound(SoundUtils.Type.TELEPORT, plugin.getConfig(), player);
             player.teleport(cm.getGeneralExit());
             cm.getRespawn().remove(player.getUniqueId());
             cm.save();
