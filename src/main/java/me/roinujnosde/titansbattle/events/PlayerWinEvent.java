@@ -23,12 +23,14 @@
  */
 package me.roinujnosde.titansbattle.events;
 
+import me.roinujnosde.titansbattle.types.Warrior;
+import org.bukkit.event.Event;
+import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.NotNull;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
-import org.bukkit.event.HandlerList;
 
 /**
  *
@@ -37,31 +39,22 @@ import org.bukkit.event.HandlerList;
 public class PlayerWinEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
-    private List<Player> players;
+    private final List<Warrior> players;
 
-    private PlayerWinEvent() {
-    }
-
-    public PlayerWinEvent(List<Player> players) {
-        if (players == null) {
-            throw new IllegalArgumentException("Players must not be null.");
-        }
+    public PlayerWinEvent(@NotNull List<Warrior> players) {
         this.players = players;
     }
 
-    public PlayerWinEvent(Player player) {
-        if (player == null) {
-            throw new IllegalArgumentException("Player must not be null.");
-        }
+    public PlayerWinEvent(@NotNull Warrior warrior) {
         players = new ArrayList<>();
-        players.add(player);
+        players.add(warrior);
     }
 
     /**
      * Returns the winner of the event (or the first of the list, if there are more than one winner)
      * @return the winner of the event
      */
-    public Player getPlayer() {
+    public Warrior getPlayer() {
         return players.get(0);
     }
 
@@ -69,7 +62,7 @@ public class PlayerWinEvent extends Event {
      * Returns an Unmodifiable List of the Winners
      * @return an Unmodifiable List of the Winners
      */
-    public List<Player> getPlayers() {
+    public List<Warrior> getPlayers() {
         return Collections.unmodifiableList(players);
     }
 
@@ -78,4 +71,7 @@ public class PlayerWinEvent extends Event {
         return HANDLERS;
     }
 
+    public static HandlerList getHandlerList() {
+        return HANDLERS;
+    }
 }

@@ -6,7 +6,9 @@ api-version: 1.13
 softdepend:
   - "SimpleClans"
   - "Factions"
-  - "Vault"
+  - "mcMMO"
+  - "PlaceholderAPI"
+  - "Essentials"
 permissions:
   titansbattle.admin:
     description: "Gives access to administrator commands"

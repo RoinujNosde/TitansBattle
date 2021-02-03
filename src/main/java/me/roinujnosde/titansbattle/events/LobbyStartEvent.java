@@ -23,10 +23,11 @@
  */
 package me.roinujnosde.titansbattle.events;
 
-import me.roinujnosde.titansbattle.types.Game;
+import me.roinujnosde.titansbattle.games.Game;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.NotNull;
 
 /**
  *
@@ -39,10 +40,7 @@ public class LobbyStartEvent extends Event implements Cancellable {
     private final Game game;
     
 
-    public LobbyStartEvent(Game game) {
-        if (game == null) {
-            throw new IllegalArgumentException("Game cannot be null!");
-        }
+    public LobbyStartEvent(@NotNull Game game) {
         this.game = game;
     }
     
@@ -71,5 +69,9 @@ public class LobbyStartEvent extends Event implements Cancellable {
     @Override
     public void setCancelled(boolean cancel) {
         cancelled = cancel;
+    }
+
+    public static HandlerList getHandlerList() {
+        return HANDLERS;
     }
 }

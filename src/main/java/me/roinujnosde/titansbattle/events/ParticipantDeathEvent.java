@@ -23,9 +23,10 @@
  */
 package me.roinujnosde.titansbattle.events;
 
-import org.bukkit.entity.Player;
+import me.roinujnosde.titansbattle.types.Warrior;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
+import org.jetbrains.annotations.NotNull;
 
 /**
  *
@@ -34,24 +35,18 @@ import org.bukkit.event.HandlerList;
 public class ParticipantDeathEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
-    private Player player;
+    private final Warrior warrior;
 
-    private ParticipantDeathEvent() {
-    }
-
-    public ParticipantDeathEvent(Player player) {
-        if (player == null) {
-            throw new IllegalArgumentException("Player cannot be null.");
-        }
-        this.player = player;
+    public ParticipantDeathEvent(@NotNull Warrior warrior) {
+        this.warrior = warrior;
     }
     
     /**
      * Returns the Player
      * @return the Player
      */
-    public Player getPlayer() {
-        return player;
+    public Warrior getWarrior() {
+        return warrior;
     }
 
     @Override
@@ -59,4 +54,7 @@ public class ParticipantDeathEvent extends Event {
         return HANDLERS;
     }
 
+    public static HandlerList getHandlerList() {
+        return HANDLERS;
+    }
 }

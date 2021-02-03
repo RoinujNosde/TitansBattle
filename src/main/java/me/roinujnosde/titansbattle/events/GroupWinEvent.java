@@ -34,10 +34,7 @@ import org.bukkit.event.HandlerList;
 public class GroupWinEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
-    private Group group;
-
-    private GroupWinEvent() {
-    }
+    private final Group group;
 
     public GroupWinEvent(Group group) {
         if (group == null) {
@@ -59,4 +56,7 @@ public class GroupWinEvent extends Event {
         return HANDLERS;
     }
 
+    public static HandlerList getHandlerList() {
+        return HANDLERS;
+    }
 }

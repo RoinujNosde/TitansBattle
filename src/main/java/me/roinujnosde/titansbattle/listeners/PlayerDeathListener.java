@@ -24,17 +24,15 @@
 package me.roinujnosde.titansbattle.listeners;
 
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.events.ParticipantDeathEvent;
+import me.roinujnosde.titansbattle.games.Game;
+import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
-import me.roinujnosde.titansbattle.types.Game;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.utils.Helper;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.jetbrains.annotations.Nullable;
 
 /**
  *
@@ -43,11 +41,12 @@ import org.jetbrains.annotations.Nullable;
 public class PlayerDeathListener implements Listener {
 
     private final GameManager gm;
-    private final TitansBattle plugin;
+    private final DatabaseManager databaseManager;
 
     public PlayerDeathListener() {
-        plugin = TitansBattle.getInstance();
+        TitansBattle plugin = TitansBattle.getInstance();
         gm = plugin.getGameManager();
+        databaseManager = plugin.getDatabaseManager();
     }
 
     @EventHandler
@@ -55,35 +54,23 @@ public class PlayerDeathListener implements Listener {
         Player victim = event.getEntity();
         Player killer = Helper.getPlayerAttackerOrKiller(victim.getKiller());
 
-        Game game = gm.getCurrentGame();
-        if (!isHappening(game)) {
+        Game game = gm.getCurrentGame().orElse(null);
+        if (game == null) {
             if (killer != null && Helper.isKiller(victim)) {
                 GameConfiguration gameConfig = Helper.getGameConfigurationFromWinnerOrKiller(victim);
                 if (gameConfig == null) {
                     return;
                 }
-                gm.setKiller(gameConfig.getName(), killer, victim);
-                plugin.getDatabaseManager().saveAll();
+                gm.setKiller(gameConfig, killer, victim);
+                databaseManager.saveAll();
             }
             return;
         }
-        if (game.getPlayerParticipants().contains(victim.getUniqueId())) {
-            Bukkit.getPluginManager().callEvent(new ParticipantDeathEvent(victim));
-            if (!game.isBattle()) {
-                gm.removeParticipant(victim);
-                return;
-            }
-
-            if (game.getConfig().isUseKits()) {
-                event.setKeepInventory(true);
-                victim.getInventory().clear();
-                victim.getInventory().setArmorContents(null);
-            }
-            gm.addCasualty(victim, killer);
+        game.onDeath(databaseManager.getWarrior(victim.getUniqueId()), killer != null ?
+                databaseManager.getWarrior(killer.getUniqueId()) : null);
+        boolean keepInventory = game.shouldKeepInventoryOnDeath(databaseManager.getWarrior(victim.getUniqueId()));
+        if (keepInventory) {
+            event.setKeepInventory(true);
         }
-    }
-
-    private boolean isHappening(@Nullable Game game) {
-        return game != null && game.isHappening();
     }
 }

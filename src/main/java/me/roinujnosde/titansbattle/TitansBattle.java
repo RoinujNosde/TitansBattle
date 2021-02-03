@@ -26,18 +26,20 @@ import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.PaperCommandManager;
 import me.roinujnosde.titansbattle.commands.TBCommands;
 import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
+import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.listeners.*;
 import me.roinujnosde.titansbattle.managers.*;
-import me.roinujnosde.titansbattle.types.*;
+import me.roinujnosde.titansbattle.types.GameConfiguration;
+import me.roinujnosde.titansbattle.types.Kit;
+import me.roinujnosde.titansbattle.types.Prizes;
+import me.roinujnosde.titansbattle.types.Winners;
 import me.roinujnosde.titansbattle.utils.ConfigUtils;
-import net.milkbowl.vault.economy.Economy;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
-import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -62,14 +64,11 @@ public final class TitansBattle extends JavaPlugin {
     private DatabaseManager databaseManager;
     private @Nullable GroupManager groupManager;
     private GameConfigurationDao gameConfigurationDao;
-    private Economy economy;
 
     @Override
     public void onEnable() {
         saveDefaultConfig();
-        ConfigurationSerialization.registerClass(GameConfiguration.class);
-        ConfigurationSerialization.registerClass(Kit.class);
-        ConfigurationSerialization.registerClass(Prizes.class);
+        registerSerializationClasses();
         instance = this;
         gameManager = new GameManager();
         configManager = new ConfigManager();
@@ -83,7 +82,6 @@ public final class TitansBattle extends JavaPlugin {
         databaseManager.setup();
 
         loadGroupsPlugin();
-        setupEconomy();
 
         pcm = new PaperCommandManager(this);
         pcm.enableUnstableAPI("help");
@@ -91,6 +89,16 @@ public final class TitansBattle extends JavaPlugin {
         registerEvents();
         databaseManager.loadDataToMemory();
         gameManager.startOrSchedule();
+        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new TBExpansion(this).register();
+        }
+    }
+
+    private void registerSerializationClasses() {
+        ConfigurationSerialization.registerClass(GameConfiguration.Prize.class);
+        ConfigurationSerialization.registerClass(GameConfiguration.class);
+        ConfigurationSerialization.registerClass(Kit.class);
+        ConfigurationSerialization.registerClass(Prizes.class);
     }
 
     private void configureCommands() {
@@ -120,7 +128,7 @@ public final class TitansBattle extends JavaPlugin {
     }
 
     private void registerContexts() {
-        pcm.getCommandContexts().registerIssuerOnlyContext(Game.class, supplier -> gameManager.getCurrentGame());
+        pcm.getCommandContexts().registerIssuerOnlyContext(Game.class, supplier -> gameManager.getCurrentGame().orElse(null));
         pcm.getCommandContexts().registerContext(Date.class, supplier -> {
             try {
                 return new SimpleDateFormat(configManager.getDateFormat()).parse(supplier.popFirstArg());
@@ -137,7 +145,7 @@ public final class TitansBattle extends JavaPlugin {
 
     private void registerConditions() {
         pcm.getCommandConditions().addCondition("happening", handler -> {
-            if (gameManager.getCurrentGame() == null) {
+            if (!gameManager.getCurrentGame().isPresent()) {
                 handler.getIssuer().sendMessage(getLang("not-starting-or-started"));
                 throw new ConditionFailedException();
             }
@@ -193,31 +201,16 @@ public final class TitansBattle extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerDeathListener(), this);
         Bukkit.getPluginManager().registerEvents(new EntityDamageListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerRespawnListener(), this);
     }
 
     public DatabaseManager getDatabaseManager() {
         return databaseManager;
     }
 
-    public @Nullable Economy getEconomy() {
-        return economy;
-    }
-
-    private void setupEconomy() {
-        if (getServer().getPluginManager().getPlugin("Vault") == null) {
-            return;
-        }
-        RegisteredServiceProvider<Economy> rsp = getServer().getServicesManager().getRegistration(Economy.class);
-        if (rsp == null) {
-            return;
-        }
-        economy = rsp.getProvider();
-        debug("Vault and economy plugin found.", false);
-    }
-
     @Override
     public void onDisable() {
-        gameManager.finishGame(null, null, null, null);
+        gameManager.getCurrentGame().ifPresent(g -> g.cancel(Bukkit.getConsoleSender()));
         databaseManager.close();
     }
 
@@ -291,7 +284,8 @@ public final class TitansBattle extends JavaPlugin {
      * @return the overrider language if found, or from the default language
      * file
      */
-    public String getLang(@NotNull String path, @Nullable Game game) {
+    @NotNull
+    public String getLang(@NotNull String path, Game game) {
         YamlConfiguration configFile = null;
         if (game != null) {
             configFile = gameConfigurationDao.getConfigFile(game.getConfig());
@@ -306,10 +300,8 @@ public final class TitansBattle extends JavaPlugin {
      * @param respectUserDecision should the message be sent if debug is false?
      */
     public void debug(String message, boolean respectUserDecision) {
-        if (respectUserDecision) {
-            if (!configManager.isDebug()) {
-                return;
-            }
+        if (respectUserDecision && !configManager.isDebug()) {
+            return;
         }
         Bukkit.getConsoleSender().sendMessage(ChatColor.BLUE + "[TitansBattle] " + message);
     }

@@ -36,7 +36,10 @@ public class Kit implements ConfigurationSerializable {
     public Map<String, Object> serialize() {
         HashMap<String, Object> data = new HashMap<>();
         for (int i = 0; i < contents.length; i++) {
-            data.put(String.valueOf(i), contents[i]);
+            ItemStack item = contents[i];
+            if (item != null) {
+                data.put(String.valueOf(i), item);
+            }
         }
         return data;
     }
@@ -60,6 +63,13 @@ public class Kit implements ConfigurationSerializable {
             }
         }
         return false;
+    }
+
+    public static void clearInventory(@NotNull Warrior warrior) {
+        Player player = warrior.toOnlinePlayer();
+        if (player != null) {
+            clearInventory(player);
+        }
     }
 
     public static void clearInventory(@NotNull Player player) {

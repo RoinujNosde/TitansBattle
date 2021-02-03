@@ -36,11 +36,8 @@ import org.jetbrains.annotations.NotNull;
 public class NewKillerEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
-    private Player killer;
-    private OfflinePlayer oldKiller;
-
-    private NewKillerEvent() {
-    }
+    private final Player killer;
+    private final OfflinePlayer oldKiller;
 
     public NewKillerEvent(@NotNull Player killer, OfflinePlayer oldKiller) {
         this.killer = killer;
@@ -66,6 +63,10 @@ public class NewKillerEvent extends Event {
 
     @Override
     public HandlerList getHandlers() {
+        return HANDLERS;
+    }
+
+    public static HandlerList getHandlerList() {
         return HANDLERS;
     }
 }

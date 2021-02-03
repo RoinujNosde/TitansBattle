@@ -1,6 +1,6 @@
 package me.roinujnosde.titansbattle.managers;
 
-import me.roinujnosde.titansbattle.types.Game;
+import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.types.GroupData;

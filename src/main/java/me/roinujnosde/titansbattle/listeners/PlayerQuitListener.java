@@ -23,13 +23,10 @@
  */
 package me.roinujnosde.titansbattle.listeners;
 
-import java.text.MessageFormat;
-
-import me.roinujnosde.titansbattle.types.Game;
-import me.roinujnosde.titansbattle.utils.Helper;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.GameManager;
-import org.bukkit.Bukkit;
+import me.roinujnosde.titansbattle.utils.Helper;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -52,10 +49,8 @@ public class PlayerQuitListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        Game game = gm.getCurrentGame();
-        if (game != null && game.getPlayerParticipants().contains(player.getUniqueId())) {
-            gm.addQuitter(player);
-        }
+        gm.getCurrentGame().ifPresent(game -> game.onDisconnect(plugin.getDatabaseManager()
+                .getWarrior(player.getUniqueId())));
         sendQuitMessage(player);
     }
 
@@ -63,26 +58,22 @@ public class PlayerQuitListener implements Listener {
         if (Helper.isWinner(player) || Helper.isKiller(player)) {
             boolean killerQuitMessageEnabled = Helper.isKillerQuitMessageEnabled(player);
             boolean winnerQuitMessageEnabled = Helper.isWinnerQuitMessageEnabled(player);
+            FileConfiguration config = Helper.getConfigFromWinnerOrKiller(player);
             if (Helper.isKiller(player) && Helper.isWinner(player)) {
                 if (Helper.isKillerPriority(player) && killerQuitMessageEnabled) {
-                    Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("killer-has-left",
-                            Helper.getConfigFromWinnerOrKiller(player)), player.getName()));
+                    gm.broadcastKey("killer-has-left", config, player.getName());
                     return;
                 }
                 if (winnerQuitMessageEnabled) {
-                    Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("winner-has-left",
-                            Helper.getConfigFromWinnerOrKiller(player)), player.getName()));
+                    gm.broadcastKey("winner-has-left", config, player.getName());
                 }
                 return;
             }
             if (Helper.isKiller(player) && killerQuitMessageEnabled) {
-                Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("killer-has-left",
-                        Helper.getConfigFromWinnerOrKiller(player)), player.getName()));
-
+                gm.broadcastKey("killer-has-left", config, player.getName());
             }
             if (Helper.isWinner(player) && winnerQuitMessageEnabled) {
-                Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("winner-has-left",
-                        Helper.getConfigFromWinnerOrKiller(player)), player.getName()));
+                gm.broadcastKey("winner-has-left", config, player.getName());
             }
         }
     }

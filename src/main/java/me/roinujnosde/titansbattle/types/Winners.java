@@ -26,8 +26,8 @@ package me.roinujnosde.titansbattle.types;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -38,12 +38,12 @@ public class Winners {
 
     private final Date date;
     private final Map<String, UUID> killer;
-    private final Map<String, Set<UUID>> playerWinners;
+    private final Map<String, List<UUID>> playerWinners;
     private final Map<String, String> winnerGroup;
 
     public Winners(@NotNull Date date,
                    @NotNull Map<String, UUID> killer,
-                   @NotNull Map<String, Set<UUID>> playerWinners,
+                   @NotNull Map<String, List<UUID>> playerWinners,
                    @NotNull Map<String, String> winnerGroup) {
         this.date = date;
         this.killer = killer;
@@ -59,7 +59,7 @@ public class Winners {
         return killer.get(game);
     }
 
-    public Set<UUID> getPlayerWinners(String game) {
+    public List<UUID> getPlayerWinners(String game) {
         return playerWinners.get(game);
     }
 
@@ -75,7 +75,7 @@ public class Winners {
         winnerGroup.put(game, group);
     }
 
-    public void setWinners(String game, Set<UUID> winners) {
+    public void setWinners(String game, List<UUID> winners) {
         playerWinners.put(game, winners);
     }
 }

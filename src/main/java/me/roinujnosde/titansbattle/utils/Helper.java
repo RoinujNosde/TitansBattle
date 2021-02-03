@@ -2,8 +2,9 @@ package me.roinujnosde.titansbattle.utils;
 
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
-import me.roinujnosde.titansbattle.types.Game;
+import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
+import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.types.Winners;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
@@ -52,7 +53,7 @@ public class Helper {
             if (w.getKiller(gameName).equals(uniqueId)) {
                 return game;
             }
-            Set<UUID> playerWinners = w.getPlayerWinners(gameName);
+            List<UUID> playerWinners = w.getPlayerWinners(gameName);
             if (playerWinners == null) {
                 continue;
             }
@@ -84,7 +85,7 @@ public class Helper {
      */
     public static boolean isWinner(Player player) {
         for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
-            Set<UUID> winners = plugin.getDatabaseManager().getLatestWinners().getPlayerWinners(game.getName());
+            List<UUID> winners = plugin.getDatabaseManager().getLatestWinners().getPlayerWinners(game.getName());
             if (winners == null) {
                 continue;
             }
@@ -94,31 +95,6 @@ public class Helper {
         }
         return false;
     }
-
-//    /**
-//     * Gets the Winner Prefix for this player, or null if he is not a Winner
-//     *
-//     * @param player the player
-//     * @return the prefix or null
-//     */
-//    public String getWinnerPrefix(Player player) {
-//        if (isWinner(player)) {
-//            for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
-//                Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
-//                Set<UUID> playerWinners = latestWinners.getPlayerWinners(game.getName());
-//                if (playerWinners == null) {
-//                    continue;
-//                }
-//                if (playerWinners.contains(player.getUniqueId())) {
-//                    if (game.getWinnerPrefix() == null || game.getWinnerPrefix().equals("")) {
-//                        return null;
-//                    }
-//                    return game.getWinnerPrefix();
-//                }
-//            }
-//        }
-//        return null;
-//    }
 
     /**
      * Returns whether he is a Winner or not
@@ -139,31 +115,6 @@ public class Helper {
         }
         return false;
     }
-
-//    /**
-//     * Gets the Killer Prefix for this player, or null if he is not a Killer
-//     *
-//     * @param player the player
-//     * @return the prefix or null
-//     */
-//    public String getKillerPrefix(Player player) {
-//        if (isKiller(player)) {
-//            for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
-//                Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
-//                UUID killer = latestWinners.getKiller(game.getName());
-//                if (killer == null) {
-//                    continue;
-//                }
-//                if (killer.equals(player.getUniqueId())) {
-//                    if (game.getKillerPrefix() == null || game.getKillerPrefix().equals("")) {
-//                        return null;
-//                    }
-//                    return game.getKillerPrefix();
-//                }
-//            }
-//        }
-//        return null;
-//    }
 
     /**
      * Checks if Killer is set as priority for this Killer's game config
@@ -231,6 +182,11 @@ public class Helper {
         return false;
     }
 
+    @NotNull
+    public static List<UUID> warriorListToUuidList(@NotNull List<Warrior> players) {
+        return players.stream().map(Warrior::getUniqueId).collect(Collectors.toList());
+    }
+
     /**
      * Converts a list of Strings to a list of UUIDs
      *
@@ -243,20 +199,6 @@ public class Helper {
             uuidList.add(UUID.fromString(uuid));
         }
         return uuidList;
-    }
-
-    /**
-     * Converts a set of UUIDs to a list of Strings using
-     * {@link org.bukkit.Bukkit#getOfflinePlayer(java.util.UUID) getOfflinePlayer}
-     *
-     * @param set the UUID set
-     * @return the String list
-     */
-    public static List<String> uuidListToPlayerNameList(Set<UUID> set) {
-        if (set == null) {
-            return null;
-        }
-        return uuidListToPlayerNameList(new ArrayList<>(set));
     }
 
     /**
@@ -304,7 +246,7 @@ public class Helper {
         if (isKiller(player)) {
             for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
                 Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
-                Set<UUID> playerWinners = latestWinners.getPlayerWinners(game.getName());
+                List<UUID> playerWinners = latestWinners.getPlayerWinners(game.getName());
                 if (playerWinners == null) {
                     continue;
                 }
@@ -326,7 +268,7 @@ public class Helper {
         if (isWinner(player)) {
             for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
                 Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
-                Set<UUID> playerWinners = latestWinners.getPlayerWinners(game.getName());
+                List<UUID> playerWinners = latestWinners.getPlayerWinners(game.getName());
                 if (playerWinners == null) {
                     continue;
                 }
@@ -414,7 +356,7 @@ public class Helper {
         StringBuilder sb = new StringBuilder();
         List<String> list = new ArrayList<>(collection);
         for (String s : list) {
-            Game currentGame = plugin.getGameManager().getCurrentGame();
+            Game currentGame = plugin.getGameManager().getCurrentGame().orElse(null);
             String listColor = plugin.getLang("list-color", currentGame);
             sb.append(listColor);
             if (s.equalsIgnoreCase(list.get(0))) {

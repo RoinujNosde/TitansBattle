@@ -442,7 +442,7 @@ public class DatabaseManager {
                             innerData.put(game, wg);
                             break;
                         case PLAYER_WINNER:
-                            Set<UUID> pw = new HashSet<>();
+                            List<UUID> pw = new ArrayList<>();
                             JsonArray ja = new Gson().fromJson(rs.getString("player_winners"), JsonArray.class);
                             if (ja != null) {
                                 ja.forEach(uuid -> pw.add(UUID.fromString(uuid.getAsString())));
@@ -457,7 +457,7 @@ public class DatabaseManager {
                 Map<WinnerType, Map<String, Object>> data = winnersData.get(date);
 
                 Map<String, UUID> killer = new HashMap<>();
-                Map<String, Set<UUID>> playerWinners = new HashMap<>();
+                Map<String, List<UUID>> playerWinners = new HashMap<>();
                 Map<String, String> winnerGroup = new HashMap<>();
 
                 for (WinnerType wt : data.keySet()) {
@@ -471,7 +471,7 @@ public class DatabaseManager {
                                 winnerGroup.put(game, (String) innerObject);
                                 break;
                             case PLAYER_WINNER:
-                                playerWinners.put(game, (Set<UUID>) innerObject);
+                                playerWinners.put(game, (List<UUID>) innerObject);
                         }
                     }
                 }
@@ -535,7 +535,7 @@ public class DatabaseManager {
             date = Calendar.getInstance().getTime();
         }
         Map<String, UUID> killer = new HashMap<>();
-        Map<String, Set<UUID>> playerWinners = new HashMap<>();
+        Map<String, List<UUID>> playerWinners = new HashMap<>();
         Map<String, String> winnerGroup = new HashMap<>();
 
         Winners w = new Winners(date, killer, playerWinners, winnerGroup);

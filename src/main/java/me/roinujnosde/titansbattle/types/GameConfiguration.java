@@ -7,6 +7,8 @@ import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
@@ -14,6 +16,8 @@ public class GameConfiguration implements ConfigurationSerializable {
 
     private String name;
     private Boolean groupMode = false;
+    private Boolean eliminationTournament = false;
+    private Boolean killer = true;
     @Path("minimum.groups")
     private Integer minimumGroups = 2;
     @Path("maximum.groups")
@@ -33,7 +37,8 @@ public class GameConfiguration implements ConfigurationSerializable {
     private Boolean useKits = false;
     private Kit kit;
 
-    private Prizes prizes = new Prizes();
+    @Path("prizes")
+    private Map<Prize, Prizes> prizesMap = createPrizesMap();
 
     @Path("destination.exit")
     private Location exit;
@@ -124,15 +129,9 @@ public class GameConfiguration implements ConfigurationSerializable {
     public Integer getAnnouncementGameInfoInterval() {
         return announcementGameInfoInterval;
     }
-    // TODO Winner and killer prefix (PlaceholderAPI)
-    // TODO Challenge mode (separate folder/different commands)
 
-    public Prizes getPrizes() {
-        return prizes;
-    }
-
-    public void setPrizes(@NotNull Prizes prizes) {
-        this.prizes = prizes;
+    public Prizes getPrizes(@NotNull Prize prize) {
+        return prizesMap.get(prize);
     }
 
     public @Nullable Kit getKit() {
@@ -179,8 +178,16 @@ public class GameConfiguration implements ConfigurationSerializable {
         return useKits;
     }
 
+    public Boolean isEliminationTournament() {
+        return eliminationTournament;
+    }
+
     public Boolean isGroupMode() {
         return groupMode;
+    }
+
+    public Boolean isKiller() {
+        return killer;
     }
 
     public Boolean isDeleteGroups() {
@@ -219,6 +226,14 @@ public class GameConfiguration implements ConfigurationSerializable {
         return arena != null && exit != null && lobby != null && watchroom != null;
     }
 
+    private Map<Prize, Prizes> createPrizesMap() {
+        HashMap<Prize, Prizes> map = new HashMap<>();
+        for (Prize p : Prize.values()) {
+            map.put(p, new Prizes());
+        }
+        return map;
+    }
+
     @Override
     public int hashCode() {
         return getName().hashCode();
@@ -230,5 +245,18 @@ public class GameConfiguration implements ConfigurationSerializable {
             return getName().equals(((GameConfiguration) other).getName());
         }
         return false;
+    }
+
+    public enum Prize implements ConfigurationSerializable {
+        FIRST, SECOND, THIRD, KILLER;
+
+        public static Prize deserialize(Map<String, Object> data) {
+            return Prize.valueOf((String) data.get("prize"));
+        }
+
+        @Override
+        public Map<String, Object> serialize() {
+            return Collections.singletonMap("prize", this.name());
+        }
     }
 }

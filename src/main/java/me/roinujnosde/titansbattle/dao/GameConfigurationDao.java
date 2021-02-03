@@ -1,7 +1,6 @@
 package me.roinujnosde.titansbattle.dao;
 
 import me.roinujnosde.titansbattle.types.GameConfiguration;
-import me.roinujnosde.titansbattle.types.Prizes;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.NotNull;
@@ -51,7 +50,6 @@ public class GameConfigurationDao {
             }
             GameConfiguration c = new GameConfiguration();
             c.setName(game);
-            c.setPrizes(new Prizes());
             YamlConfiguration yamlConfiguration = new YamlConfiguration();
             yamlConfiguration.set(GAME_PATH, c);
             yamlConfiguration.save(file);

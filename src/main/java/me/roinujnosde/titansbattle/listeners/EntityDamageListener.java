@@ -1,9 +1,10 @@
 package me.roinujnosde.titansbattle.listeners;
 
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.games.Game;
+import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
 import me.roinujnosde.titansbattle.managers.GroupManager;
-import me.roinujnosde.titansbattle.types.Game;
 import me.roinujnosde.titansbattle.utils.Helper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -13,15 +14,15 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 
-import java.util.Objects;
-
 public class EntityDamageListener implements Listener {
 
     private final GameManager gm;
+    private final DatabaseManager dm;
 
     public EntityDamageListener() {
         TitansBattle plugin = TitansBattle.getInstance();
         gm = plugin.getGameManager();
+        dm = plugin.getDatabaseManager();
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -33,15 +34,11 @@ public class EntityDamageListener implements Listener {
     }
 
     private boolean isParticipant(Entity entity) {
-        if (!(entity instanceof Player)) {
+        Game game = gm.getCurrentGame().orElse(null);
+        if (game == null || !(entity instanceof Player)) {
             return false;
         }
-
-        if (gm.getCurrentGame() == null) {
-            return false;
-        }
-
-        return gm.getCurrentGame().getPlayerParticipants().contains(entity.getUniqueId());
+        return game.isParticipant(dm.getWarrior(entity.getUniqueId()));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -51,20 +48,21 @@ public class EntityDamageListener implements Listener {
         }
         Player defender = (Player) event.getEntity();
 
-        Game game = Objects.requireNonNull(gm.getCurrentGame());
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
+        Game game = gm.getCurrentGame().get();
 
-        if (!game.isBattle()) {
+        if (!game.isInBattle(dm.getWarrior(defender.getUniqueId()))) {
             event.setCancelled(true);
             return;
         }
+        event.setCancelled(false);
         if (event instanceof EntityDamageByEntityEvent) {
             EntityDamageByEntityEvent subEvent = (EntityDamageByEntityEvent) event;
             Player attacker = Helper.getPlayerAttackerOrKiller(subEvent.getDamager());
-            if (attacker == null || !game.getPlayerParticipants().contains(attacker.getUniqueId())) {
+            if (attacker == null || !game.isParticipant(dm.getWarrior(attacker.getUniqueId()))) {
                 return;
             }
             if (!game.getConfig().isGroupMode()) {
-                event.setCancelled(false);
                 return;
             }
 

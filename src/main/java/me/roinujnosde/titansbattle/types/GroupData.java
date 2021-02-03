@@ -1,9 +1,7 @@
 package me.roinujnosde.titansbattle.types;
 
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.Map;
 
 public class GroupData {
@@ -41,7 +39,11 @@ public class GroupData {
     }
 
     public void increaseDefeats(@NotNull String game) {
-        setDefeats(game, getDefeats(game) + 1);
+        defeats.compute(game, (g, i) -> i == null ? 1 : i + 1);
+    }
+
+    public void increaseVictories(@NotNull String game) {
+        victories.compute(game, (g, i) -> i == null ? 1 : i + 1);
     }
 
     public void setVictories(String game, int newVictories) {

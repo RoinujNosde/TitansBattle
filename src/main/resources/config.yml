@@ -49,7 +49,7 @@ sounds:
   leave_game: "block.anvil.break"
   watch: "entity.enderman.teleport"
   teleport: "entity.enderman.teleport"
-  victory: "entity.ender_dragon.growl"
+  victory: "ui.toast.challenge_complete"
   enemy_death: "entity.wolf.growl"
   ally_death: "entity.wolf.howl"
 

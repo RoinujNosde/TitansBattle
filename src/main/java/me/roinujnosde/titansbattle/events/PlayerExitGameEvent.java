@@ -24,9 +24,8 @@
 
 package me.roinujnosde.titansbattle.events;
 
-import me.roinujnosde.titansbattle.types.Game;
+import me.roinujnosde.titansbattle.games.Game;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 
@@ -34,10 +33,9 @@ import org.bukkit.event.HandlerList;
  *
  * @author RoinujNosde
  */
-public class PlayerExitGameEvent extends Event implements Cancellable {
+public class PlayerExitGameEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
-    private boolean cancelled = false;
     private final Player player;
     private final Game game;
 
@@ -67,18 +65,7 @@ public class PlayerExitGameEvent extends Event implements Cancellable {
         return HANDLERS;
     }
 
-    @Override
-    public boolean isCancelled() {
-        return cancelled;
+    public static HandlerList getHandlerList() {
+        return HANDLERS;
     }
-
-    /**
-     * Prevents the player from joining the Game
-     * @param cancel should the player be prevented?
-     */
-    @Override
-    public void setCancelled(boolean cancel) {
-        cancelled = cancel;
-    }
-
 }
