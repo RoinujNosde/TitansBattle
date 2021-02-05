@@ -11,6 +11,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class EliminationTournamentGame extends Game {
@@ -182,6 +183,7 @@ public class EliminationTournamentGame extends Game {
 
     @Override
     protected void onLobbyEnd() {
+        // TODO Adicionar opção para ativar/desativar power of two
         if (!isPowerOfTwo(getPlayerOrGroupCount())) {
             kickExcessiveParticipants();
         }
@@ -296,6 +298,7 @@ public class EliminationTournamentGame extends Game {
         }
         generateDuelists();
         teleportNextDuelists();
+        informOtherDuelists();
         startPreparationTask();
     }
 
@@ -307,6 +310,17 @@ public class EliminationTournamentGame extends Game {
             participants = playerParticipants.size();
         }
         return participants;
+    }
+
+    private void informOtherDuelists() {
+        String message = plugin.getLang("wait_for_your_turn", this);
+        Consumer<Warrior> sendMessage = warrior -> {
+            if (!isCurrentDuelist(warrior)) {
+                warrior.sendMessage(message);
+            }
+        };
+        getPlayerParticipants().forEach(sendMessage);
+        waitingThirdPlace.forEach(sendMessage);
     }
 
     private void teleportNextDuelists() {
@@ -359,12 +373,13 @@ public class EliminationTournamentGame extends Game {
 
         todaysWinners.setWinners(getConfig().getName(), Helper.warriorListToUuidList(firstPlaceWinners));
         Group firstGroup = getAnyGroup(firstPlaceWinners);
+        //we must clear the inventory before adding the casualties, otherwise the already dead would lose their items again
+        if (getConfig().isUseKits()) {
+            firstPlaceWinners.forEach(Kit::clearInventory);
+        }
         if (getConfig().isGroupMode() && firstGroup != null) {
             casualties.stream().filter(firstGroup::isMember).forEach(firstPlaceWinners::add);
             todaysWinners.setWinnerGroup(getConfig().getName(), firstGroup.getName());
-        }
-        if (getConfig().isUseKits()) {
-            firstPlaceWinners.forEach(Kit::clearInventory);
         }
         givePrizes(Prize.FIRST, firstGroup, firstPlaceWinners);
         givePrizes(Prize.SECOND, getAnyGroup(secondPlaceWinners), secondPlaceWinners);
@@ -393,19 +408,21 @@ public class EliminationTournamentGame extends Game {
             firstDuel = groupDuelistsToNameArray(0);
             if (groupDuelists.size() > 1) {
                 for (int i = 1; i < groupDuelists.size(); i++) {
-                    builder.append(MessageFormat.format(nextDuelsLineMessage, i + 1, groupDuelistsToNameArray(i)));
+                    @NotNull String[] name = groupDuelistsToNameArray(i);
+                    builder.append(MessageFormat.format(nextDuelsLineMessage, i + 1, name[0], name[1]));
                 }
             }
         } else {
             firstDuel = playerDuelistsToNameArray(0);
             if (playerDuelists.size() > 1) {
                 for (int i = 1; i < playerDuelists.size(); i++) {
-                    builder.append(MessageFormat.format(nextDuelsLineMessage, i + 1, playerDuelistsToNameArray(i)));
+                    @NotNull String[] name = playerDuelistsToNameArray(i);
+                    builder.append(MessageFormat.format(nextDuelsLineMessage, i + 1, name[0], name[1]));
                 }
             }
         }
 
-        return MessageFormat.format(gameInfo, firstDuel, builder.toString());
+        return MessageFormat.format(gameInfo, firstDuel[0], firstDuel[1], builder.toString());
     }
 
     @NotNull

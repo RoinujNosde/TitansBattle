@@ -3,7 +3,6 @@ package me.roinujnosde.titansbattle.games;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.events.GroupWinEvent;
 import me.roinujnosde.titansbattle.events.PlayerWinEvent;
-import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.managers.GroupManager;
 import me.roinujnosde.titansbattle.types.*;
 import me.roinujnosde.titansbattle.utils.Helper;
@@ -43,9 +42,7 @@ public class FreeForAllGame extends Game {
                 killer = findKiller();
                 getGroupParticipants().keySet().stream().findAny().ifPresent(g -> {
                     winnerGroup = g;
-                    winners = new ArrayList<>();
                     getPlayerParticipants().stream().filter(p -> g.isMember(p.getUniqueId())).forEach(winners::add);
-                    getCasualties().stream().filter(p -> g.isMember(p.getUniqueId())).forEach(winners::add);
                 });
                 finish(false);
             }
@@ -66,28 +63,28 @@ public class FreeForAllGame extends Game {
 
     @Override
     protected void processWinners() {
-        SoundUtils.playSound(VICTORY, plugin.getConfig(), winners);
+        String gameName = getConfig().getName();
         Winners today = databaseManager.getTodaysWinners();
-
+        if (getConfig().isUseKits()) {
+            winners.forEach(Kit::clearInventory);
+        }
+        if (winnerGroup != null) {
+            Bukkit.getPluginManager().callEvent(new GroupWinEvent(winnerGroup));
+            winnerGroup.getData().increaseVictories(gameName);
+            today.setWinnerGroup(gameName, winnerGroup.getName());
+            getCasualties().stream().filter(p -> winnerGroup.isMember(p.getUniqueId())).forEach(winners::add);
+        }
+        SoundUtils.playSound(VICTORY, plugin.getConfig(), winners);
         PlayerWinEvent event = new PlayerWinEvent(winners);
         Bukkit.getPluginManager().callEvent(event);
         if (killer != null) {
             plugin.getGameManager().setKiller(getConfig(), killer, null);
             SoundUtils.playSound(VICTORY, plugin.getConfig(), killer.toOnlinePlayer());
         }
-        String gameName = getConfig().getName();
-        if (winnerGroup != null) {
-            Bukkit.getPluginManager().callEvent(new GroupWinEvent(winnerGroup));
-            winnerGroup.getData().increaseVictories(gameName);
-            today.setWinnerGroup(gameName, winnerGroup.getName());
-        }
         today.setWinners(gameName, Helper.warriorListToUuidList(winners));
         String winnerName = getConfig().isGroupMode() ? winnerGroup.getName() : winners.get(0).getName();
         Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("who_won", this), winnerName));
         winners.forEach(w -> w.increaseVictories(gameName));
-        if (getConfig().isUseKits()) {
-            winners.forEach(Kit::clearInventory);
-        }
         givePrizes(FIRST, winnerGroup, winners);
         givePrizes(KILLER, null, Collections.singletonList(killer));
     }

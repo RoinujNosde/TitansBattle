@@ -118,6 +118,7 @@ public abstract class Game {
         Kit kit = getConfig().getKit();
         Player player = warrior.toOnlinePlayer();
         if (getConfig().isUseKits() && kit != null && player != null) {
+            Kit.clearInventory(player);
             kit.set(player);
         }
     }
@@ -126,31 +127,30 @@ public abstract class Game {
         return false;
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    protected boolean processPlayerExit(@NotNull Warrior warrior) {
+    protected void processPlayerExit(@NotNull Warrior warrior) {
         if (!isParticipant(warrior)) {
-            return false;
+            return;
         }
         Player player = warrior.toOnlinePlayer();
-        if (player == null) return false;
-        teleport(warrior, getConfig().getExit());
-        if (getConfig().isUseKits()) {
-            Kit.clearInventory(player);
+        if (player != null) {
+            teleport(warrior, getConfig().getExit());
+            if (getConfig().isUseKits()) {
+                Kit.clearInventory(player);
+            }
+            PlayerExitGameEvent event = new PlayerExitGameEvent(player, this);
+            Bukkit.getPluginManager().callEvent(event);
         }
         playerParticipants.remove(warrior);
         Group group = warrior.getGroup();
         if (!isLobby()) {
             processRemainingPlayers(warrior);
             //last participant
-            if (group != null && !getGroupParticipants().containsKey(group)) {
+            if (config.isGroupMode() && group != null && !getGroupParticipants().containsKey(group)) {
                 gameManager.broadcastKey("group_defeated", this, group.getName());
                 Bukkit.getPluginManager().callEvent(new GroupDefeatedEvent(group, warrior.toOnlinePlayer()));
                 group.getData().increaseDefeats(getConfig().getName());
             }
         }
-        PlayerExitGameEvent event = new PlayerExitGameEvent(player, this);
-        Bukkit.getPluginManager().callEvent(event);
-        return true;
     }
 
     /**
@@ -177,49 +177,55 @@ public abstract class Game {
     protected abstract void processRemainingPlayers(@NotNull Warrior warrior);
 
     public void onLeave(@NotNull Warrior warrior) {
-        if (!processPlayerExit(warrior)) {
+        if (!isParticipant(warrior)) {
             return;
         }
         Player player = Objects.requireNonNull(warrior.toOnlinePlayer());
         player.sendMessage(plugin.getLang("you-have-left", this));
         SoundUtils.playSound(LEAVE_GAME, plugin.getConfig(), player);
+        processPlayerExit(warrior);
     }
 
     public void onDisconnect(@NotNull Warrior warrior) {
-        if (!processPlayerExit(warrior)) {
+        if (!isParticipant(warrior)) {
             return;
         }
         Player player = Objects.requireNonNull(warrior.toOnlinePlayer());
         plugin.getConfigManager().getClearInventory().add(player.getUniqueId());
         plugin.getConfigManager().getRespawn().add(player.getUniqueId());
         plugin.getConfigManager().save();
+        processPlayerExit(warrior);
     }
 
-    public void onRespawn(@NotNull Warrior warrior) {}
+    public void onRespawn(@NotNull Warrior warrior) {
+        if (casualties.contains(warrior)) {
+            teleport(warrior, getConfig().getWatchroom());
+        }
+    }
 
     public void onDeath(@NotNull Warrior victim, @Nullable Warrior killer) {
-        if (!processPlayerExit(victim)) {
+        if (!isParticipant(victim)) {
             return;
         }
-        if (isLobby()) {
-            return;
-        }
-        ParticipantDeathEvent event = new ParticipantDeathEvent(victim);
-        Bukkit.getPluginManager().callEvent(event);
-        String gameName = getConfig().getName();
-        casualties.add(victim);
-        victim.sendMessage(plugin.getLang("watch_to_the_end", this));
-        if (killer != null) {
-            killer.increaseKills(gameName);
-            increaseKillsCount(killer);
-            gameManager.broadcastKey("killed_by", this, victim.getName(), killer.getName());
-            gameManager.broadcastKey("has_killed_times", this, killer.getName(), getPlayerKillsCount(killer));
-        } else {
+        if (killer == null) {
             gameManager.broadcastKey("died_by_himself", this, victim.getName());
         }
-        victim.increaseDeaths(gameName);
-        sendRemainingOpponentsCount();
-        playDeathSound(victim);
+        if (!isLobby()) {
+            ParticipantDeathEvent event = new ParticipantDeathEvent(victim);
+            Bukkit.getPluginManager().callEvent(event);
+            String gameName = getConfig().getName();
+            casualties.add(victim);
+            victim.sendMessage(plugin.getLang("watch_to_the_end", this));
+            if (killer != null) {
+                killer.increaseKills(gameName);
+                gameManager.broadcastKey("killed_by", this, victim.getName(), killer.getName());
+                gameManager.broadcastKey("has_killed_times", this, killer.getName(), increaseKills(killer));
+            }
+            victim.increaseDeaths(gameName);
+            sendRemainingOpponentsCount();
+            playDeathSound(victim);
+        }
+        processPlayerExit(victim);
     }
 
     protected abstract void onLobbyEnd();
@@ -356,12 +362,8 @@ public abstract class Game {
         return killsCount;
     }
 
-    public int getPlayerKillsCount(Warrior warrior) {
-        return killsCount.getOrDefault(warrior, 0);
-    }
-
-    protected void increaseKillsCount(Warrior warrior) {
-        killsCount.compute(warrior, (p, i) -> i == null ? 1 : i + 1);
+    protected int increaseKills(Warrior warrior) {
+        return killsCount.compute(warrior, (p, i) -> i == null ? 1 : i + 1);
     }
 
     public void sendMessageToParticipants(@NotNull String message) {
@@ -443,6 +445,7 @@ public abstract class Game {
         getPlayerParticipants().forEach(player -> teleport(player, destination));
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public boolean isLobby() {
         return lobby;
     }
