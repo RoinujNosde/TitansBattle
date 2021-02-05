@@ -99,10 +99,10 @@ public class DatabaseManager {
 
     private void start() throws SQLException {
         ConfigManager cm = plugin.getConfigManager();
+        String database = cm.getSqlDatabase();
         if (cm.isSqlUseMysql()) {
             String hostname = cm.getSqlHostname();
             int port = cm.getSqlPort();
-            String database = cm.getSqlDatabase();
             String username = cm.getSqlUsername();
             String password = cm.getSqlPassword();
             try {
