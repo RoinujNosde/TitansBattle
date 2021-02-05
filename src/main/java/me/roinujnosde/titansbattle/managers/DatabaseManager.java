@@ -99,12 +99,12 @@ public class DatabaseManager {
 
     private void start() throws SQLException {
         ConfigManager cm = plugin.getConfigManager();
+        String hostname = cm.getSqlHostname();
+        int port = cm.getSqlPort();
+        String database = cm.getSqlDatabase();
+        String username = cm.getSqlUsername();
+        String password = cm.getSqlPassword();
         if (cm.isSqlUseMysql()) {
-            String hostname = cm.getSqlHostname();
-            int port = cm.getSqlPort();
-            String database = cm.getSqlDatabase();
-            String username = cm.getSqlUsername();
-            String password = cm.getSqlPassword();
             try {
                 Class.forName("com.mysql.jdbc.Driver");
                 connection = DriverManager.getConnection("jdbc:mysql://" + hostname + ":" + port + "/" + database +
