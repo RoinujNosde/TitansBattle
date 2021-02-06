@@ -183,8 +183,7 @@ public class EliminationTournamentGame extends Game {
 
     @Override
     protected void onLobbyEnd() {
-        // TODO Adicionar opção para ativar/desativar power of two
-        if (!isPowerOfTwo(getPlayerOrGroupCount())) {
+        if (getConfig().isPowerOfTwo() && !isPowerOfTwo(getPlayerOrGroupCount())) {
             kickExcessiveParticipants();
         }
         startNextDuel();
@@ -266,6 +265,9 @@ public class EliminationTournamentGame extends Game {
             battleForThirdPlace = true;
             return;
         }
+        if (getPlayerOrGroupCount() == 2) {
+            gameManager.broadcastKey("final_battle", this);
+        }
         if (!getConfig().isGroupMode()) {
             generateDuelist(playerParticipants, playerDuelists);
         } else {
@@ -288,13 +290,9 @@ public class EliminationTournamentGame extends Game {
     }
 
     private void startNextDuel() {
-        int count = getPlayerOrGroupCount();
-        if (count <= 1) {
+        if (getPlayerOrGroupCount() <= 1) {
             finish(false);
             return;
-        }
-        if (count == 2) {
-            gameManager.broadcastKey("final_battle", this);
         }
         generateDuelists();
         teleportNextDuelists();

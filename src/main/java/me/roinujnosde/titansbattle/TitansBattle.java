@@ -261,7 +261,8 @@ public final class TitansBattle extends JavaPlugin {
             language = config.getString("language." + path);
         }
         if (language == null) {
-            language = getLanguageManager().getConfig().getString(path, "Missing key: " + path);
+            language = getLanguageManager().getConfig().getString(path,
+                    getLanguageManager().getEnglishLanguageFile().getString(path, "<MISSING KEY: " + path + ">"));
         }
         return ChatColor.translateAlternateColorCodes('&', language);
     }

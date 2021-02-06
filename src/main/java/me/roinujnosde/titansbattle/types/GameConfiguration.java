@@ -17,6 +17,7 @@ public class GameConfiguration implements ConfigurationSerializable {
     private String name;
     private Boolean groupMode = false;
     private Boolean eliminationTournament = false;
+    private Boolean powerOfTwo = false;
     private Boolean killer = true;
     @Path("minimum.groups")
     private Integer minimumGroups = 2;
@@ -180,6 +181,10 @@ public class GameConfiguration implements ConfigurationSerializable {
 
     public Boolean isEliminationTournament() {
         return eliminationTournament;
+    }
+
+    public Boolean isPowerOfTwo() {
+        return powerOfTwo;
     }
 
     public Boolean isGroupMode() {
