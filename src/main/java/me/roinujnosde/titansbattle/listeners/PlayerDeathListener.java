@@ -28,6 +28,7 @@ import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
+import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.Helper;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -66,11 +67,15 @@ public class PlayerDeathListener implements Listener {
             }
             return;
         }
-        game.onDeath(databaseManager.getWarrior(victim.getUniqueId()), killer != null ?
+        Warrior warrior = databaseManager.getWarrior(victim.getUniqueId());
+        game.onDeath(warrior, killer != null ?
                 databaseManager.getWarrior(killer.getUniqueId()) : null);
-        boolean keepInventory = game.shouldKeepInventoryOnDeath(databaseManager.getWarrior(victim.getUniqueId()));
-        if (keepInventory) {
+        if (game.shouldKeepInventoryOnDeath(warrior)) {
             event.setKeepInventory(true);
+        }
+        if (game.shouldClearDropsOnDeath(warrior)) {
+            event.getDrops().clear();
+            event.setDroppedExp(0);
         }
     }
 }

@@ -10,6 +10,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -17,7 +18,7 @@ public class GameConfigurationDao {
 
     public static final String GAME_PATH = "game";
     private static GameConfigurationDao instance;
-    private static final Map<String, GameConfiguration> GAMES = new HashMap<>();
+    private static final Map<String, GameConfiguration> GAMES = new ConcurrentHashMap<>();
     private static final Map<String, YamlConfiguration> CONFIG_FILES = new HashMap<>();
     private final @NotNull File gamesFolder;
     private final Logger logger = Logger.getLogger("TitansBattle");
@@ -66,7 +67,7 @@ public class GameConfigurationDao {
             YamlConfiguration yamlConfig = YamlConfiguration.loadConfiguration(file);
             GameConfiguration gc = (GameConfiguration) yamlConfig.get(GAME_PATH);
             if (gc != null) {
-                GAMES.put(gc.getName(), gc);
+                GAMES.put(gc.getName().toLowerCase(), gc);
                 CONFIG_FILES.put(file.getName(), yamlConfig);
             }
         }
@@ -91,7 +92,7 @@ public class GameConfigurationDao {
     }
 
     public @Nullable GameConfiguration getGameConfiguration(@NotNull String name) {
-        return GAMES.get(name);
+        return GAMES.get(name.toLowerCase());
     }
 
     public @Nullable YamlConfiguration getConfigFile(@Nullable GameConfiguration gameConfig) {

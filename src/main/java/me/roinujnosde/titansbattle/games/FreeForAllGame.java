@@ -80,23 +80,21 @@ public class FreeForAllGame extends Game {
         if (killer != null) {
             plugin.getGameManager().setKiller(getConfig(), killer, null);
             SoundUtils.playSound(VICTORY, plugin.getConfig(), killer.toOnlinePlayer());
+            givePrizes(KILLER, null, Collections.singletonList(killer));
         }
         today.setWinners(gameName, Helper.warriorListToUuidList(winners));
         String winnerName = getConfig().isGroupMode() ? winnerGroup.getName() : winners.get(0).getName();
         Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("who_won", this), winnerName));
         winners.forEach(w -> w.increaseVictories(gameName));
         givePrizes(FIRST, winnerGroup, winners);
-        givePrizes(KILLER, null, Collections.singletonList(killer));
     }
 
     @Override
     protected @NotNull String getGameInfoMessage() {
-        String groupsText;
+        String groupsText = "";
         GroupManager groupManager = plugin.getGroupManager();
-        if (groupManager != null) {
+        if (groupManager != null && getConfig().isGroupMode()) {
             groupsText = groupManager.buildStringFrom(getGroupParticipants().keySet());
-        } else {
-            groupsText = "";
         }
         return MessageFormat.format(plugin.getLang("game_info", this),
                 getPlayerParticipants().size(), getGroupParticipants().size(), groupsText);

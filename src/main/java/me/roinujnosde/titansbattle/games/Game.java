@@ -123,6 +123,10 @@ public abstract class Game {
         }
     }
 
+    public boolean shouldClearDropsOnDeath(@NotNull Warrior warrior) {
+        return false;
+    }
+
     public boolean shouldKeepInventoryOnDeath(@NotNull Warrior warrior) {
         return false;
     }
@@ -215,7 +219,9 @@ public abstract class Game {
             Bukkit.getPluginManager().callEvent(event);
             String gameName = getConfig().getName();
             casualties.add(victim);
-            victim.sendMessage(plugin.getLang("watch_to_the_end", this));
+            if (config.isGroupMode()) {
+                victim.sendMessage(plugin.getLang("watch_to_the_end", this));
+            }
             if (killer != null) {
                 killer.increaseKills(gameName);
                 gameManager.broadcastKey("killed_by", this, victim.getName(), killer.getName());
@@ -309,8 +315,8 @@ public abstract class Game {
         if (warriors == null) {
             return;
         }
-        List<Player> players = warriors.stream().map(Warrior::toOnlinePlayer).filter(Objects::nonNull)
-                .collect(Collectors.toList());
+        List<Player> players = warriors.stream().filter(Objects::nonNull).map(Warrior::toOnlinePlayer)
+                .filter(Objects::nonNull).collect(Collectors.toList());
         if (group != null) {
             for (Player p : players) {
                 if (group.isLeaderOrOfficer(p.getUniqueId())) {

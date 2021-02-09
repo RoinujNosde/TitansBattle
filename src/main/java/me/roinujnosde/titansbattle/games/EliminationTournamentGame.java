@@ -168,6 +168,11 @@ public class EliminationTournamentGame extends Game {
     }
 
     @Override
+    public boolean shouldClearDropsOnDeath(@NotNull Warrior warrior) {
+        return isParticipant(warrior) && !shouldKeepInventoryOnDeath(warrior);
+    }
+
+    @Override
     public boolean shouldKeepInventoryOnDeath(@NotNull Warrior warrior) {
         return isSemiFinals() && isCurrentDuelist(warrior) && !battleForThirdPlace;
     }
@@ -283,7 +288,7 @@ public class EliminationTournamentGame extends Game {
         if (duelList.size() < 1) {
             Collections.shuffle(list);
             duelList.clear();
-            for (int i = 0; i < list.size(); i = i + 2) {
+            for (int i = 0; i + 1 < list.size(); i = i + 2) {
                 duelList.add(new Duel<>(list.get(i), list.get(i + 1)));
             }
         }
