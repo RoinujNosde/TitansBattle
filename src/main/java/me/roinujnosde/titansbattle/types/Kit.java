@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -72,7 +73,9 @@ public class Kit implements ConfigurationSerializable {
         }
     }
 
-    public static void clearInventory(@NotNull Player player) {
+    public static void clearInventory(@Nullable Player player) {
+        if (player == null) return;
+
         player.getInventory().clear();
         player.getInventory().setHelmet(null);
         player.getInventory().setChestplate(null);

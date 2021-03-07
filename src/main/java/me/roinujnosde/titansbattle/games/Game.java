@@ -138,9 +138,6 @@ public abstract class Game {
         Player player = warrior.toOnlinePlayer();
         if (player != null) {
             teleport(warrior, getConfig().getExit());
-            if (getConfig().isUseKits()) {
-                Kit.clearInventory(player);
-            }
             PlayerExitGameEvent event = new PlayerExitGameEvent(player, this);
             Bukkit.getPluginManager().callEvent(event);
         }
@@ -184,6 +181,9 @@ public abstract class Game {
         if (!isParticipant(warrior)) {
             return;
         }
+        if (getConfig().isUseKits()) {
+            Kit.clearInventory(warrior.toOnlinePlayer());
+        }
         Player player = Objects.requireNonNull(warrior.toOnlinePlayer());
         player.sendMessage(plugin.getLang("you-have-left", this));
         SoundUtils.playSound(LEAVE_GAME, plugin.getConfig(), player);
@@ -194,9 +194,10 @@ public abstract class Game {
         if (!isParticipant(warrior)) {
             return;
         }
-        Player player = Objects.requireNonNull(warrior.toOnlinePlayer());
-        plugin.getConfigManager().getClearInventory().add(player.getUniqueId());
-        plugin.getConfigManager().getRespawn().add(player.getUniqueId());
+        if (config.isUseKits()) {
+            plugin.getConfigManager().getClearInventory().add(warrior.getUniqueId());
+        }
+        plugin.getConfigManager().getRespawn().add(warrior.getUniqueId());
         plugin.getConfigManager().save();
         processPlayerExit(warrior);
     }
