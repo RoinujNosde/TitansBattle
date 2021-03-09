@@ -101,6 +101,7 @@ public class EliminationTournamentGame extends Game {
     private void processLoss(@NotNull Warrior warrior, List<Warrior> duelLosers) {
         battle = false;
         List<Warrior> duelWinners = getDuelWinners(warrior);
+        heal(duelWinners);
         if (nextToLoseIsThirdWinner) {
             thirdPlaceWinners = duelLosers;
         }
@@ -113,7 +114,6 @@ public class EliminationTournamentGame extends Game {
             battleForThirdPlace = false;
             thirdPlaceWinners = duelWinners;
             teleport(duelWinners, getConfig().getWatchroom());
-            heal(duelWinners);
             playerParticipants.removeIf(thirdPlaceWinners::contains);
             if (getConfig().isUseKits()) {
                 thirdPlaceWinners.forEach(Kit::clearInventory);
@@ -398,7 +398,6 @@ public class EliminationTournamentGame extends Game {
     protected void processWinners() {
         Winners todaysWinners = databaseManager.getTodaysWinners();
 
-        todaysWinners.setWinners(getConfig().getName(), Helper.warriorListToUuidList(firstPlaceWinners));
         Group firstGroup = getAnyGroup(firstPlaceWinners);
         //we must clear the inventory before adding the casualties, otherwise the already dead would lose their items again
         if (getConfig().isUseKits()) {
@@ -408,6 +407,7 @@ public class EliminationTournamentGame extends Game {
             casualties.stream().filter(firstGroup::isMember).forEach(firstPlaceWinners::add);
             todaysWinners.setWinnerGroup(getConfig().getName(), firstGroup.getName());
         }
+        todaysWinners.setWinners(getConfig().getName(), Helper.warriorListToUuidList(firstPlaceWinners));
         givePrizes(Prize.FIRST, firstGroup, firstPlaceWinners);
         givePrizes(Prize.SECOND, getAnyGroup(secondPlaceWinners), secondPlaceWinners);
         givePrizes(Prize.THIRD, getAnyGroup(thirdPlaceWinners), thirdPlaceWinners);

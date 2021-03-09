@@ -151,6 +151,7 @@ public abstract class Game {
                 Bukkit.getPluginManager().callEvent(new GroupDefeatedEvent(group, warrior.toOnlinePlayer()));
                 group.getData().increaseDefeats(getConfig().getName());
             }
+            sendRemainingOpponentsCount();
         }
     }
 
@@ -229,7 +230,6 @@ public abstract class Game {
                 gameManager.broadcastKey("has_killed_times", this, killer.getName(), increaseKills(killer));
             }
             victim.increaseDeaths(gameName);
-            sendRemainingOpponentsCount();
             playDeathSound(victim);
         }
         processPlayerExit(victim);
