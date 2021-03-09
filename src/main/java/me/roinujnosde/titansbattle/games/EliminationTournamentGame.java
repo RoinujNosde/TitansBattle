@@ -5,6 +5,7 @@ import me.roinujnosde.titansbattle.types.*;
 import me.roinujnosde.titansbattle.types.GameConfiguration.Prize;
 import me.roinujnosde.titansbattle.utils.Helper;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -89,7 +90,7 @@ public class EliminationTournamentGame extends Game {
             processNotCurrentDuelistLeaving(warrior, duelLosers);
             return;
         }
-        if (isSemiFinals() && !battleForThirdPlace) {
+        if (isSemiFinals(false) && !battleForThirdPlace) {
             processLeavingDuringSemiFinals(warrior);
         }
         if (lost(warrior)) {
@@ -112,6 +113,7 @@ public class EliminationTournamentGame extends Game {
             battleForThirdPlace = false;
             thirdPlaceWinners = duelWinners;
             teleport(duelWinners, getConfig().getWatchroom());
+            heal(duelWinners);
             playerParticipants.removeIf(thirdPlaceWinners::contains);
             if (getConfig().isUseKits()) {
                 thirdPlaceWinners.forEach(Kit::clearInventory);
@@ -123,17 +125,32 @@ public class EliminationTournamentGame extends Game {
             firstPlaceWinners = duelWinners;
             secondPlaceWinners = duelLosers;
         }
-        startNextDuel();
+        //delaying the next duel, so there is time for other players to respawn
+        Bukkit.getScheduler().runTaskLater(plugin, this::startNextDuel, 20L);
+    }
+
+    private void heal(List<Warrior> warriors) {
+        warriors.stream().map(Warrior::toOnlinePlayer).filter(Objects::nonNull).forEach(player -> {
+            player.setHealth(player.getMaxHealth());
+            player.setFoodLevel(20);
+            player.setFireTicks(0);
+        });
     }
 
     private void processLeavingDuringSemiFinals(@NotNull Warrior warrior) {
-        Player player = Objects.requireNonNull(warrior.toOnlinePlayer());
+        Player player = warrior.toOnlinePlayer();
+        if (player == null) return;
+
         waitingThirdPlace.add(warrior);
-        player.spigot().respawn();
+        Bukkit.getScheduler().runTask(plugin, () -> player.spigot().respawn());
     }
 
     private void processNotCurrentDuelistLeaving(@NotNull Warrior warrior, List<Warrior> duelLosers) {
         removeDuelist(warrior);
+        if (getPlayerOrGroupCount() == 2 && getWaitingThirdPlaceCount() == 1) {
+            thirdPlaceWinners = new ArrayList<>(waitingThirdPlace);
+            waitingThirdPlace.clear();
+        }
         if (getPlayerOrGroupCount() == 3) {
             if (!waitingThirdPlace.remove(warrior)) {
                 if (lost(warrior)) {
@@ -142,7 +159,7 @@ public class EliminationTournamentGame extends Game {
                 }
                 return;
             }
-            if (waitingThirdPlace.size() == 0) {
+            if (getWaitingThirdPlaceCount() == 0) {
                 nextToLoseIsThirdWinner = true;
             }
         }
@@ -174,11 +191,18 @@ public class EliminationTournamentGame extends Game {
 
     @Override
     public boolean shouldKeepInventoryOnDeath(@NotNull Warrior warrior) {
-        return isSemiFinals() && isCurrentDuelist(warrior) && !battleForThirdPlace;
+        if (!isCurrentDuelist(warrior)) {
+            return false;
+        }
+        return isSemiFinals(true) && !battleForThirdPlace;
     }
 
-    public boolean isSemiFinals() {
-        return getPlayerOrGroupCount() > 2 && getPlayerOrGroupCount() < 5;
+    private boolean isSemiFinals(boolean deathEvent) {
+        // during the DeathEvent, the size of the participants list is unaltered, but after that, it is reduced by 1,
+        // so the offset is needed to counterbalance
+        int offset = deathEvent ? 0 : 1;
+        return (getWaitingThirdPlaceCount() == 0 && getPlayerOrGroupCount() == 4 - offset) ||
+                (getWaitingThirdPlaceCount() == 1 && getPlayerOrGroupCount() == 3 - offset);
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -412,7 +436,7 @@ public class EliminationTournamentGame extends Game {
             if (groupDuelists.size() > 1) {
                 for (int i = 1; i < groupDuelists.size(); i++) {
                     @NotNull String[] name = groupDuelistsToNameArray(i);
-                    builder.append(MessageFormat.format(nextDuelsLineMessage, i + 1, name[0], name[1]));
+                    builder.append(MessageFormat.format(nextDuelsLineMessage, i, name[0], name[1]));
                 }
             }
         } else {
@@ -420,7 +444,7 @@ public class EliminationTournamentGame extends Game {
             if (playerDuelists.size() > 1) {
                 for (int i = 1; i < playerDuelists.size(); i++) {
                     @NotNull String[] name = playerDuelistsToNameArray(i);
-                    builder.append(MessageFormat.format(nextDuelsLineMessage, i + 1, name[0], name[1]));
+                    builder.append(MessageFormat.format(nextDuelsLineMessage, i, name[0], name[1]));
                 }
             }
         }

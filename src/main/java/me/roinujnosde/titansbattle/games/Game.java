@@ -216,7 +216,7 @@ public abstract class Game {
             gameManager.broadcastKey("died_by_himself", this, victim.getName());
         }
         if (!isLobby()) {
-            ParticipantDeathEvent event = new ParticipantDeathEvent(victim);
+            ParticipantDeathEvent event = new ParticipantDeathEvent(victim, killer);
             Bukkit.getPluginManager().callEvent(event);
             String gameName = getConfig().getName();
             casualties.add(victim);

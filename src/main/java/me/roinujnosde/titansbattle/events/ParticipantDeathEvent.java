@@ -27,26 +27,32 @@ import me.roinujnosde.titansbattle.types.Warrior;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 /**
- *
  * @author RoinujNosde
  */
 public class ParticipantDeathEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
-    private final Warrior warrior;
+    private final Warrior victim;
+    private final @Nullable Warrior killer;
 
-    public ParticipantDeathEvent(@NotNull Warrior warrior) {
-        this.warrior = warrior;
+    public ParticipantDeathEvent(@NotNull Warrior victim, @Nullable Warrior killer) {
+        this.victim = victim;
+        this.killer = killer;
     }
-    
+
     /**
-     * Returns the Player
-     * @return the Player
+     * Returns the victim
+     * @return the Warrior
      */
     public Warrior getWarrior() {
-        return warrior;
+        return victim;
+    }
+
+    public @Nullable Warrior getKiller() {
+        return killer;
     }
 
     @Override
