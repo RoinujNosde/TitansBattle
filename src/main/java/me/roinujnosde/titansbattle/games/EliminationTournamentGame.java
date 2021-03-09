@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class EliminationTournamentGame extends Game {
@@ -428,37 +429,39 @@ public class EliminationTournamentGame extends Game {
     @Override
     protected @NotNull String getGameInfoMessage() {
         String gameInfo = plugin.getLang("game_info_duels", this);
-        String nextDuelsLineMessage = plugin.getLang("game_info_duels_line", this);
+        String nextDuels = plugin.getLang("game_info_next_duels", this);
         String[] firstDuel;
         StringBuilder builder = new StringBuilder();
         if (getConfig().isGroupMode()) {
-            firstDuel = groupDuelistsToNameArray(0);
-            if (groupDuelists.size() > 1) {
-                for (int i = 1; i < groupDuelists.size(); i++) {
-                    @NotNull String[] name = groupDuelistsToNameArray(i);
-                    builder.append(MessageFormat.format(nextDuelsLineMessage, i, name[0], name[1]));
-                }
-            }
+            firstDuel = duelistsToNameArray(0, groupDuelists, Group::getName);
+            populateDuelsMessage(builder, groupDuelists, Group::getName);
         } else {
-            firstDuel = playerDuelistsToNameArray(0);
-            if (playerDuelists.size() > 1) {
-                for (int i = 1; i < playerDuelists.size(); i++) {
-                    @NotNull String[] name = playerDuelistsToNameArray(i);
-                    builder.append(MessageFormat.format(nextDuelsLineMessage, i, name[0], name[1]));
-                }
-            }
+            firstDuel = duelistsToNameArray(0, playerDuelists, Warrior::getName);
+            populateDuelsMessage(builder, playerDuelists, Warrior::getName);
+        }
+        if (isMultipleDuels()) {
+            gameInfo = gameInfo + nextDuels;
         }
 
         return MessageFormat.format(gameInfo, firstDuel[0], firstDuel[1], builder.toString());
     }
 
-    @NotNull
-    private String[] playerDuelistsToNameArray(int index) {
-        return playerDuelists.get(index).getDuelists().stream().map(Warrior::getName).toArray(String[]::new);
+    private <D> void populateDuelsMessage(StringBuilder builder, List<Duel<D>> list, Function<D, String> getName) {
+        String nextDuelsLineMessage = plugin.getLang("game_info_duels_line", this);
+        if (list.size() > 1) {
+            for (int i = 1; i < list.size(); i++) {
+                @NotNull String[] name = duelistsToNameArray(i, list, getName);
+                builder.append(MessageFormat.format(nextDuelsLineMessage, i, name[0], name[1]));
+            }
+        }
     }
 
-    @NotNull
-    private String[] groupDuelistsToNameArray(int index) {
-        return groupDuelists.get(index).getDuelists().stream().map(Group::getName).toArray(String[]::new);
+    private boolean isMultipleDuels() {
+        List<?> duels = getConfig().isGroupMode() ? groupDuelists : playerDuelists;
+        return duels.size() > 1;
+    }
+
+    private <D> String[] duelistsToNameArray(int index, List<Duel<D>> list, Function<D, String> getName) {
+        return list.get(index).getDuelists().stream().map(getName).toArray(String[]::new);
     }
 }
