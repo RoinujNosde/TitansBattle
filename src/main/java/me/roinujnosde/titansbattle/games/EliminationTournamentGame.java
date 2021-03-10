@@ -328,6 +328,7 @@ public class EliminationTournamentGame extends Game {
         teleportNextDuelists();
         informOtherDuelists();
         startPreparationTask();
+        startCountdownTitleTask(getCurrentDuelists());
     }
 
     private int getPlayerOrGroupCount() {
@@ -338,6 +339,10 @@ public class EliminationTournamentGame extends Game {
             participants = playerParticipants.size();
         }
         return participants;
+    }
+
+    private List<Warrior> getCurrentDuelists() {
+        return getPlayerParticipants().stream().filter(this::isCurrentDuelist).collect(Collectors.toList());
     }
 
     private void informOtherDuelists() {

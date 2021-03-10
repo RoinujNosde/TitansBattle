@@ -13,6 +13,7 @@ import me.roinujnosde.titansbattle.utils.SoundUtils;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -481,6 +482,54 @@ public abstract class Game {
         public void run() {
             Bukkit.getServer().broadcastMessage(plugin.getLang("preparation_over", Game.this));
             battle = true;
+        }
+    }
+
+    protected void startCountdownTitleTask(@NotNull List<Warrior> warriors) {
+        new CountdownTitleTask(warriors, getConfig().getPreparationTime()).runTaskTimer(plugin, 0L, 20L);
+    }
+
+    protected class CountdownTitleTask extends BukkitRunnable {
+
+        private final List<Warrior> warriors;
+        private int timer;
+
+        public CountdownTitleTask(List<Warrior> warriors, int timer) {
+            this.warriors = warriors;
+            if (timer < 1) {
+                timer = 10;
+            }
+            this.timer = timer;
+        }
+
+        @SuppressWarnings("deprecation")
+        @Override
+        public void run() {
+            ChatColor color = getColor();
+            List<Player> players = warriors.stream().map(Warrior::toOnlinePlayer).filter(Objects::nonNull)
+                    .collect(Collectors.toList());
+            String title;
+            if (timer > 0) {
+                title = color + "" + timer;
+            } else {
+                title = ChatColor.RED + plugin.getLang("title.fight", Game.this);
+                this.cancel();
+                Bukkit.getScheduler().runTaskLater(plugin, () -> players.forEach(Player::resetTitle), 20L);
+            }
+            players.forEach(player -> player.sendTitle(title, ""));
+            timer--;
+        }
+
+        private ChatColor getColor() {
+            ChatColor color;
+            if (timer > 6) {
+                color = ChatColor.GREEN;
+            } else if (timer > 3) {
+                color = ChatColor.YELLOW;
+            } else {
+                color = ChatColor.RED;
+            }
+            return color;
         }
     }
 

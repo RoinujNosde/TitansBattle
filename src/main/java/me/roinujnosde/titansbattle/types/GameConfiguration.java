@@ -132,7 +132,7 @@ public class GameConfiguration implements ConfigurationSerializable {
     }
 
     public Prizes getPrizes(@NotNull Prize prize) {
-        return prizesMap.get(prize);
+        return prizesMap.getOrDefault(prize, new Prizes());
     }
 
     public @Nullable Kit getKit() {

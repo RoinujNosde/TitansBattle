@@ -59,6 +59,7 @@ public class FreeForAllGame extends Game {
                 getConfig().getPreparationTime()));
         teleportAll(getConfig().getArena());
         startPreparationTask();
+        startCountdownTitleTask(getPlayerParticipants());
     }
 
     @Override
