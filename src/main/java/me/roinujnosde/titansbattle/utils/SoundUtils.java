@@ -1,14 +1,19 @@
 package me.roinujnosde.titansbattle.utils;
 
 import me.roinujnosde.titansbattle.types.Warrior;
+import org.bukkit.Sound;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.Locale;
+import java.util.logging.Logger;
 
 public class SoundUtils {
+
+    private static final Logger LOGGER = Logger.getLogger("TitansBattle");
 
     private SoundUtils() {
     }
@@ -29,8 +34,15 @@ public class SoundUtils {
         if (player == null) {
             return;
         }
-        String soundName = config.getString("sounds." + type.name().toLowerCase(), "");
-        player.playSound(player.getLocation(), soundName, 1F, 1F);
+        String soundName = config.getString("sounds." + type.name().toLowerCase(Locale.ROOT), "");
+        if (soundName.isEmpty()) return;
+        Sound sound = null;
+        try {
+             sound = Sound.valueOf(soundName.toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException e) {
+            LOGGER.warning(String.format("Invalid sound: %s", soundName));
+        }
+        player.playSound(player.getLocation(), sound, 1F, 1F);
     }
 
     public enum Type {

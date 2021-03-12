@@ -16,18 +16,19 @@ import org.bukkit.event.entity.EntityDamageEvent;
 
 public class EntityDamageListener implements Listener {
 
+    private final TitansBattle plugin = TitansBattle.getInstance();
     private final GameManager gm;
     private final DatabaseManager dm;
 
     public EntityDamageListener() {
-        TitansBattle plugin = TitansBattle.getInstance();
         gm = plugin.getGameManager();
         dm = plugin.getDatabaseManager();
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onDamageLowest(EntityDamageEvent event) {
-        if (isParticipant(event.getEntity())) {
+        boolean disableFfMessages = plugin.getConfig().getBoolean("disable-ff-messages", true);
+        if (disableFfMessages && isParticipant(event.getEntity())) {
             // Cancelling so other plugins don't display messages such as "can't hit an ally" during the game
             event.setCancelled(true);
         }
