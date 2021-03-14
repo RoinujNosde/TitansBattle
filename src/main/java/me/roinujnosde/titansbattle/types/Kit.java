@@ -8,8 +8,8 @@ import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class Kit implements ConfigurationSerializable {
 
@@ -35,7 +35,7 @@ public class Kit implements ConfigurationSerializable {
 
     @Override
     public Map<String, Object> serialize() {
-        HashMap<String, Object> data = new HashMap<>();
+        TreeMap<String, Object> data = new TreeMap<>();
         for (int i = 0; i < contents.length; i++) {
             ItemStack item = contents[i];
             if (item != null) {

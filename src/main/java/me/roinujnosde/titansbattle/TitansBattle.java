@@ -190,8 +190,6 @@ public final class TitansBattle extends JavaPlugin {
     private void loadGroupsPlugin() {
         if (Bukkit.getPluginManager().getPlugin("SimpleClans") != null) {
             setGroupManager(new SimpleClansGroupManager(this));
-        } else if (Bukkit.getPluginManager().getPlugin("Factions") != null) {
-            setGroupManager(new FactionsGroupManager(this));
         }
     }
 

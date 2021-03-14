@@ -8,7 +8,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
@@ -39,7 +39,7 @@ public class GameConfiguration implements ConfigurationSerializable {
     private Kit kit;
 
     @Path("prizes")
-    private Map<Prize, Prizes> prizesMap = createPrizesMap();
+    private Map<String, Prizes> prizesMap = createPrizesMap();
 
     @Path("destination.exit")
     private Location exit;
@@ -132,7 +132,7 @@ public class GameConfiguration implements ConfigurationSerializable {
     }
 
     public Prizes getPrizes(@NotNull Prize prize) {
-        return prizesMap.getOrDefault(prize, new Prizes());
+        return prizesMap.getOrDefault(prize.name(), new Prizes());
     }
 
     public @Nullable Kit getKit() {
@@ -231,10 +231,10 @@ public class GameConfiguration implements ConfigurationSerializable {
         return arena != null && exit != null && lobby != null && watchroom != null;
     }
 
-    private Map<Prize, Prizes> createPrizesMap() {
-        HashMap<Prize, Prizes> map = new HashMap<>();
+    private Map<String, Prizes> createPrizesMap() {
+        LinkedHashMap<String, Prizes> map = new LinkedHashMap<>();
         for (Prize p : Prize.values()) {
-            map.put(p, new Prizes());
+            map.put(p.name(), new Prizes());
         }
         return map;
     }

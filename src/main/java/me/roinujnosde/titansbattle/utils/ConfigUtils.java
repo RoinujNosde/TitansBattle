@@ -7,9 +7,9 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class ConfigUtils {
 
@@ -34,7 +34,7 @@ public class ConfigUtils {
     }
 
     public static Map<String, Object> serialize(@NotNull Object instance) {
-        HashMap<String, Object> data = new HashMap<>();
+        TreeMap<String, Object> data = new TreeMap<>();
         for (Field declaredField : instance.getClass().getDeclaredFields()) {
             if (Modifier.isStatic(declaredField.getModifiers())) {
                 continue;

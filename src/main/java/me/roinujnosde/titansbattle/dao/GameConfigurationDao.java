@@ -33,7 +33,7 @@ public class GameConfigurationDao {
     private GameConfigurationDao(@NotNull File dataFolder) {
         gamesFolder = new File(dataFolder, "games");
         if (!gamesFolder.exists()) {
-            if (gamesFolder.mkdirs()) {
+            if (!gamesFolder.mkdirs()) {
                 logger.severe("Error creating the games folder");
             }
         }
@@ -48,6 +48,7 @@ public class GameConfigurationDao {
             if (!file.createNewFile()) {
                 logger.log(Level.SEVERE, String.format("Error creating the game %s's file. Maybe it already exists?",
                         game));
+                return;
             }
             GameConfiguration c = new GameConfiguration();
             c.setName(game);
