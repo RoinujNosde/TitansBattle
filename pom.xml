@@ -95,10 +95,6 @@
             <id>placeholderapi-repo</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
         </repository>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
     </repositories>
     <dependencies>
         <dependency>
@@ -110,24 +106,6 @@
             <groupId>net.sacredlabyrinth.phaed.simpleclans</groupId>
             <artifactId>SimpleClans</artifactId>
             <version>2.15.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.github.sxskdev</groupId>
-            <artifactId>LegendChat</artifactId>
-            <version>3.1</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.MassiveCraft.MassiveCore</groupId>
-            <artifactId>MassiveCore</artifactId>
-            <version>2.14.0</version>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.MassiveCraft.Factions</groupId>
-            <artifactId>Factions</artifactId>
-            <version>2.14.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
