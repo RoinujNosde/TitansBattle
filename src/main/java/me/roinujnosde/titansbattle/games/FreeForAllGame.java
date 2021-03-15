@@ -13,6 +13,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.text.MessageFormat;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
@@ -33,6 +34,11 @@ public class FreeForAllGame extends Game {
     @Override
     public boolean isInBattle(@NotNull Warrior warrior) {
         return battle && playerParticipants.contains(warrior);
+    }
+
+    @Override
+    public @NotNull Collection<Warrior> getCurrentFighters() {
+        return playerParticipants;
     }
 
     @Override
@@ -59,7 +65,6 @@ public class FreeForAllGame extends Game {
                 getConfig().getPreparationTime()));
         teleportAll(getConfig().getArena());
         startPreparationTask();
-        startCountdownTitleTask(getPlayerParticipants());
     }
 
     @Override

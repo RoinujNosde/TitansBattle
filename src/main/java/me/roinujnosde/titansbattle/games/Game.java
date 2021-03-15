@@ -24,6 +24,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -145,6 +146,7 @@ public abstract class Game {
         playerParticipants.remove(warrior);
         Group group = warrior.getGroup();
         if (!isLobby()) {
+            runCommandsAfterBattle(Collections.singletonList(warrior));
             processRemainingPlayers(warrior);
             //last participant
             if (config.isGroupMode() && group != null && !getGroupParticipants().containsKey(group)) {
@@ -336,6 +338,7 @@ public abstract class Game {
     public void finish(boolean cancelled) {
         teleportAll(getConfig().getExit());
         killTasks();
+        runCommandsAfterBattle(getPlayerParticipants());
         if (getConfig().isUseKits()) {
             getPlayerParticipantsStream().forEach(Kit::clearInventory);
         }
@@ -353,6 +356,8 @@ public abstract class Game {
     public @NotNull List<Warrior> getPlayerParticipants() {
         return Collections.unmodifiableList(playerParticipants);
     }
+
+    public abstract @NotNull Collection<Warrior> getCurrentFighters();
 
     public Map<Group, Integer> getGroupParticipants() {
         Map<Group, Integer> groups = new HashMap<>();
@@ -438,6 +443,24 @@ public abstract class Game {
         }
     }
 
+    protected void runCommandsBeforeBattle(@NotNull Collection<Warrior> warriors) {
+        runCommands(warriors, getConfig().getCommandsBeforeBattle());
+    }
+
+    protected void runCommandsAfterBattle(@NotNull Collection<Warrior> warriors) {
+        runCommands(warriors, getConfig().getCommandsAfterBattle());
+    }
+
+    private void runCommands(@NotNull Collection<Warrior> warriors, @Nullable Collection<String> commands) {
+        if (commands == null) return;
+        Consumer<Player> dispatchCommands = (player) -> {
+            for (String command : commands) {
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("%player%", player.getName()));
+            }
+        };
+        warriors.stream().map(Warrior::toOnlinePlayer).filter(Objects::nonNull).forEach(dispatchCommands);
+    }
+
     protected void teleport(@NotNull Collection<Warrior> collection, @NotNull Location destination) {
         collection.forEach(p -> teleport(p, destination));
     }
@@ -474,6 +497,8 @@ public abstract class Game {
 
     protected void startPreparationTask() {
         addTask(new PreparationTimeTask().runTaskLater(plugin, config.getPreparationTime() * 20));
+        addTask(new CountdownTitleTask(getCurrentFighters(), getConfig().getPreparationTime())
+                .runTaskTimer(plugin, 0L, 20L));
     }
 
     protected class PreparationTimeTask extends BukkitRunnable {
@@ -481,20 +506,17 @@ public abstract class Game {
         @Override
         public void run() {
             Bukkit.getServer().broadcastMessage(plugin.getLang("preparation_over", Game.this));
+            runCommandsBeforeBattle(getCurrentFighters());
             battle = true;
         }
     }
 
-    protected void startCountdownTitleTask(@NotNull List<Warrior> warriors) {
-        new CountdownTitleTask(warriors, getConfig().getPreparationTime()).runTaskTimer(plugin, 0L, 20L);
-    }
-
     protected class CountdownTitleTask extends BukkitRunnable {
 
-        private final List<Warrior> warriors;
+        private final Collection<Warrior> warriors;
         private int timer;
 
-        public CountdownTitleTask(List<Warrior> warriors, int timer) {
+        public CountdownTitleTask(Collection<Warrior> warriors, int timer) {
             this.warriors = warriors;
             if (timer < 1) {
                 timer = 10;

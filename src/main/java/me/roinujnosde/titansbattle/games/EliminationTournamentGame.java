@@ -112,22 +112,28 @@ public class EliminationTournamentGame extends Game {
             }
             teleport(duelWinners, getConfig().getLobby());
         } else {
-            battleForThirdPlace = false;
-            thirdPlaceWinners = duelWinners;
-            teleport(duelWinners, getConfig().getWatchroom());
-            playerParticipants.removeIf(thirdPlaceWinners::contains);
-            if (getConfig().isUseKits()) {
-                thirdPlaceWinners.forEach(Kit::clearInventory);
-            }
+            processThirdPlaceBattle(duelWinners);
         }
         if (nextToWinIsFirstWinner) {
             firstPlaceWinners = duelWinners;
         } else if (getPlayerOrGroupCount() == 1) {
             firstPlaceWinners = duelWinners;
             secondPlaceWinners = duelLosers;
+        } else {
+            runCommandsAfterBattle(duelWinners);
         }
         //delaying the next duel, so there is time for other players to respawn
         Bukkit.getScheduler().runTaskLater(plugin, this::startNextDuel, 20L);
+    }
+
+    private void processThirdPlaceBattle(List<Warrior> duelWinners) {
+        battleForThirdPlace = false;
+        thirdPlaceWinners = duelWinners;
+        teleport(duelWinners, getConfig().getWatchroom());
+        playerParticipants.removeIf(thirdPlaceWinners::contains);
+        if (getConfig().isUseKits()) {
+            thirdPlaceWinners.forEach(Kit::clearInventory);
+        }
     }
 
     private void heal(List<Warrior> warriors) {
@@ -328,7 +334,6 @@ public class EliminationTournamentGame extends Game {
         teleportNextDuelists();
         informOtherDuelists();
         startPreparationTask();
-        startCountdownTitleTask(getCurrentDuelists());
     }
 
     private int getPlayerOrGroupCount() {
@@ -341,7 +346,8 @@ public class EliminationTournamentGame extends Game {
         return participants;
     }
 
-    private List<Warrior> getCurrentDuelists() {
+    @Override
+    public @NotNull Collection<Warrior> getCurrentFighters() {
         return getPlayerParticipants().stream().filter(this::isCurrentDuelist).collect(Collectors.toList());
     }
 

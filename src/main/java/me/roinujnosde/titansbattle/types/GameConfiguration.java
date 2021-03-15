@@ -9,7 +9,9 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
 public class GameConfiguration implements ConfigurationSerializable {
@@ -34,6 +36,10 @@ public class GameConfiguration implements ConfigurationSerializable {
     private Integer expirationTime = 3600;
     @Path("time.preparation")
     private Integer preparationTime = 30;
+    @Path("run_commands.before_battle")
+    private @Nullable List<String> commandsBeforeBattle;
+    @Path("run_commands.after_battle")
+    private @Nullable List<String> commandsAfterBattle;
 
     private Boolean useKits = false;
     private Kit kit;
@@ -119,6 +125,14 @@ public class GameConfiguration implements ConfigurationSerializable {
         return expirationTime;
     }
 
+    public @Nullable List<String> getCommandsBeforeBattle() {
+        return commandsBeforeBattle;
+    }
+
+    public @Nullable List<String> getCommandsAfterBattle() {
+        return commandsAfterBattle;
+    }
+
     public Integer getAnnouncementStartingInterval() {
         return announcementStartingInterval;
     }
@@ -132,7 +146,12 @@ public class GameConfiguration implements ConfigurationSerializable {
     }
 
     public Prizes getPrizes(@NotNull Prize prize) {
-        return prizesMap.getOrDefault(prize.name(), new Prizes());
+        Prizes prizes = prizesMap.get(prize.name());
+        if (prizes == null) {
+            Logger.getLogger("TitansBattle").warning(String.format("Prizes not set for %s!", prize.name()));
+            prizes = new Prizes();
+        }
+        return prizes;
     }
 
     public @Nullable Kit getKit() {
