@@ -518,8 +518,8 @@ public abstract class Game {
 
         public CountdownTitleTask(Collection<Warrior> warriors, int timer) {
             this.warriors = warriors;
-            if (timer < 1) {
-                timer = 10;
+            if (timer < 0) {
+                timer = 0;
             }
             this.timer = timer;
         }
@@ -527,12 +527,11 @@ public abstract class Game {
         @SuppressWarnings("deprecation")
         @Override
         public void run() {
-            ChatColor color = getColor();
             List<Player> players = warriors.stream().map(Warrior::toOnlinePlayer).filter(Objects::nonNull)
                     .collect(Collectors.toList());
             String title;
             if (timer > 0) {
-                title = color + "" + timer;
+                title = getColor() + "" + timer;
             } else {
                 title = ChatColor.RED + plugin.getLang("title.fight", Game.this);
                 this.cancel();

@@ -21,6 +21,7 @@ public class GameConfiguration implements ConfigurationSerializable {
     private Boolean eliminationTournament = false;
     private Boolean powerOfTwo = false;
     private Boolean killer = true;
+    private Boolean pvp = true;
     @Path("minimum.groups")
     private Integer minimumGroups = 2;
     @Path("maximum.groups")
@@ -208,6 +209,10 @@ public class GameConfiguration implements ConfigurationSerializable {
 
     public Boolean isGroupMode() {
         return groupMode;
+    }
+
+    public Boolean isPvP() {
+        return pvp;
     }
 
     public Boolean isKiller() {
