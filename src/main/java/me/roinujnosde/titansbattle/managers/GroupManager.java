@@ -1,6 +1,6 @@
 package me.roinujnosde.titansbattle.managers;
 
-import me.roinujnosde.titansbattle.types.Game;
+import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.types.GroupData;
@@ -10,6 +10,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
@@ -64,7 +65,8 @@ public abstract class GroupManager {
      * @return the built String
      */
     public @NotNull String buildStringFrom(@NotNull Collection<Group> groups) {
-        return Helper.buildStringFrom(groups.stream().map(Group::getName).collect(Collectors.toList()));
+        return Helper.buildStringFrom(groups.stream().filter(Objects::nonNull).map(Group::getName)
+                .collect(Collectors.toList()));
     }
 
 }

@@ -6,9 +6,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 
 public class Kit implements ConfigurationSerializable {
 
@@ -34,9 +35,12 @@ public class Kit implements ConfigurationSerializable {
 
     @Override
     public Map<String, Object> serialize() {
-        HashMap<String, Object> data = new HashMap<>();
+        TreeMap<String, Object> data = new TreeMap<>();
         for (int i = 0; i < contents.length; i++) {
-            data.put(String.valueOf(i), contents[i]);
+            ItemStack item = contents[i];
+            if (item != null) {
+                data.put(String.valueOf(i), item);
+            }
         }
         return data;
     }
@@ -62,7 +66,16 @@ public class Kit implements ConfigurationSerializable {
         return false;
     }
 
-    public static void clearInventory(@NotNull Player player) {
+    public static void clearInventory(@NotNull Warrior warrior) {
+        Player player = warrior.toOnlinePlayer();
+        if (player != null) {
+            clearInventory(player);
+        }
+    }
+
+    public static void clearInventory(@Nullable Player player) {
+        if (player == null) return;
+
         player.getInventory().clear();
         player.getInventory().setHelmet(null);
         player.getInventory().setChestplate(null);

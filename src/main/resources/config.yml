@@ -45,13 +45,13 @@ commands:
 
 #Sounds used in games, to disable one leave it ""
 sounds:
-  join_game: "entity.player.levelup"
-  leave_game: "block.anvil.break"
-  watch: "entity.enderman.teleport"
-  teleport: "entity.enderman.teleport"
-  victory: "entity.ender_dragon.growl"
-  enemy_death: "entity.wolf.growl"
-  ally_death: "entity.wolf.howl"
+  join_game: "ENTITY_PLAYER_LEVELUP"
+  leave_game: "BLOCK_ANVIL_BREAK"
+  watch: "ENTITY_ENDERMAN_TELEPORT"
+  teleport: "ENTITY_ENDERMAN_TELEPORT"
+  victory: "UI_TOAST_CHALLENGE_COMPLETE"
+  enemy_death: "ENTITY_WOLF_GROWL"
+  ally_death: "ENTITY_WOLF_HOWL"
 
 #Date format used on /tb winners command
 date-format: "dd/MM/yyyy"

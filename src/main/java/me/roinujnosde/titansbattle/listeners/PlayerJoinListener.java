@@ -25,16 +25,15 @@ package me.roinujnosde.titansbattle.listeners;
 
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
+import me.roinujnosde.titansbattle.managers.GameManager;
 import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.utils.Helper;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
-import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
-
-import java.text.MessageFormat;
 
 /**
  *
@@ -44,10 +43,12 @@ public class PlayerJoinListener implements Listener {
 
     private final ConfigManager cm;
     private final TitansBattle plugin;
+    private final GameManager gameManager;
 
     public PlayerJoinListener() {
         plugin = TitansBattle.getInstance();
         cm = plugin.getConfigManager();
+        gameManager = plugin.getGameManager();
     }
 
     @EventHandler
@@ -62,25 +63,22 @@ public class PlayerJoinListener implements Listener {
         if (Helper.isWinner(player) || Helper.isKiller(player)) {
             boolean killerJoinMessageEnabled = Helper.isKillerJoinMessageEnabled(player);
             boolean winnerJoinMessageEnabled = Helper.isWinnerJoinMessageEnabled(player);
+            FileConfiguration config = Helper.getConfigFromWinnerOrKiller(player);
             if (Helper.isKiller(player) && Helper.isWinner(player)) {
                 if (Helper.isKillerPriority(player) && killerJoinMessageEnabled) {
-                    Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("killer-has-joined",
-                            Helper.getConfigFromWinnerOrKiller(player)), player.getName()));
+                    gameManager.broadcastKey("killer-has-joined", config, player.getName());
                     return;
                 }
                 if (winnerJoinMessageEnabled) {
-                    Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("winner-has-joined",
-                            Helper.getConfigFromWinnerOrKiller(player)), player.getName()));
+                    gameManager.broadcastKey("winner-has-joined", config, player.getName());
                 }
                 return;
             }
             if (Helper.isKiller(player) && killerJoinMessageEnabled) {
-                Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("killer-has-joined",
-                        Helper.getConfigFromWinnerOrKiller(player)), player.getName()));
+                gameManager.broadcastKey("killer-has-joined", config, player.getName());
             }
             if (Helper.isWinner(player) && winnerJoinMessageEnabled) {
-                Bukkit.broadcastMessage(MessageFormat.format(plugin.getLang("winner-has-joined",
-                        Helper.getConfigFromWinnerOrKiller(player)), player.getName()));
+                gameManager.broadcastKey("winner-has-joined", config, player.getName());
             }
         }
     }
@@ -95,8 +93,13 @@ public class PlayerJoinListener implements Listener {
 
     private void teleportToExit(Player player) {
         if (cm.getRespawn().contains(player.getUniqueId())) {
-            SoundUtils.playSound(SoundUtils.Type.TELEPORT, plugin.getConfig(), player);
-            player.teleport(cm.getGeneralExit());
+            if (cm.getGeneralExit() != null) {
+                SoundUtils.playSound(SoundUtils.Type.TELEPORT, plugin.getConfig(), player);
+                player.teleport(cm.getGeneralExit());
+            } else {
+                plugin.getLogger().warning(String.format("GENERAL_EXIT is not set, it was not possible to teleport %s",
+                        player.getName()));
+            }
             cm.getRespawn().remove(player.getUniqueId());
             cm.save();
         }

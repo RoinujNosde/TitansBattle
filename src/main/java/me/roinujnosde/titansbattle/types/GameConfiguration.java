@@ -7,13 +7,21 @@ import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
 public class GameConfiguration implements ConfigurationSerializable {
 
     private String name;
     private Boolean groupMode = false;
+    private Boolean eliminationTournament = false;
+    private Boolean powerOfTwo = false;
+    private Boolean killer = true;
+    private Boolean pvp = true;
     @Path("minimum.groups")
     private Integer minimumGroups = 2;
     @Path("maximum.groups")
@@ -29,11 +37,16 @@ public class GameConfiguration implements ConfigurationSerializable {
     private Integer expirationTime = 3600;
     @Path("time.preparation")
     private Integer preparationTime = 30;
+    @Path("run_commands.before_battle")
+    private @Nullable List<String> commandsBeforeBattle;
+    @Path("run_commands.after_battle")
+    private @Nullable List<String> commandsAfterBattle;
 
     private Boolean useKits = false;
     private Kit kit;
 
-    private Prizes prizes = new Prizes();
+    @Path("prizes")
+    private Map<String, Prizes> prizesMap = createPrizesMap();
 
     @Path("destination.exit")
     private Location exit;
@@ -113,6 +126,14 @@ public class GameConfiguration implements ConfigurationSerializable {
         return expirationTime;
     }
 
+    public @Nullable List<String> getCommandsBeforeBattle() {
+        return commandsBeforeBattle;
+    }
+
+    public @Nullable List<String> getCommandsAfterBattle() {
+        return commandsAfterBattle;
+    }
+
     public Integer getAnnouncementStartingInterval() {
         return announcementStartingInterval;
     }
@@ -124,15 +145,14 @@ public class GameConfiguration implements ConfigurationSerializable {
     public Integer getAnnouncementGameInfoInterval() {
         return announcementGameInfoInterval;
     }
-    // TODO Winner and killer prefix (PlaceholderAPI)
-    // TODO Challenge mode (separate folder/different commands)
 
-    public Prizes getPrizes() {
+    public Prizes getPrizes(@NotNull Prize prize) {
+        Prizes prizes = prizesMap.get(prize.name());
+        if (prizes == null) {
+            Logger.getLogger("TitansBattle").warning(String.format("Prizes not set for %s!", prize.name()));
+            prizes = new Prizes();
+        }
         return prizes;
-    }
-
-    public void setPrizes(@NotNull Prizes prizes) {
-        this.prizes = prizes;
     }
 
     public @Nullable Kit getKit() {
@@ -179,8 +199,24 @@ public class GameConfiguration implements ConfigurationSerializable {
         return useKits;
     }
 
+    public Boolean isEliminationTournament() {
+        return eliminationTournament;
+    }
+
+    public Boolean isPowerOfTwo() {
+        return powerOfTwo;
+    }
+
     public Boolean isGroupMode() {
         return groupMode;
+    }
+
+    public Boolean isPvP() {
+        return pvp;
+    }
+
+    public Boolean isKiller() {
+        return killer;
     }
 
     public Boolean isDeleteGroups() {
@@ -219,6 +255,14 @@ public class GameConfiguration implements ConfigurationSerializable {
         return arena != null && exit != null && lobby != null && watchroom != null;
     }
 
+    private Map<String, Prizes> createPrizesMap() {
+        LinkedHashMap<String, Prizes> map = new LinkedHashMap<>();
+        for (Prize p : Prize.values()) {
+            map.put(p.name(), new Prizes());
+        }
+        return map;
+    }
+
     @Override
     public int hashCode() {
         return getName().hashCode();
@@ -230,5 +274,18 @@ public class GameConfiguration implements ConfigurationSerializable {
             return getName().equals(((GameConfiguration) other).getName());
         }
         return false;
+    }
+
+    public enum Prize implements ConfigurationSerializable {
+        FIRST, SECOND, THIRD, KILLER;
+
+        public static Prize deserialize(Map<String, Object> data) {
+            return Prize.valueOf((String) data.get("prize"));
+        }
+
+        @Override
+        public Map<String, Object> serialize() {
+            return Collections.singletonMap("prize", this.name());
+        }
     }
 }

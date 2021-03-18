@@ -1,5 +1,6 @@
 package me.roinujnosde.titansbattle.types;
 
+import me.roinujnosde.titansbattle.games.Game;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
@@ -42,6 +43,15 @@ public abstract class Group {
      * @return true if the {@link Player} is a member
      */
     public abstract boolean isMember(@NotNull UUID uuid);
+
+    /**
+     * Checks whether a {@link Warrior} belongs in this {@link Group}
+     * @param warrior the Warrior
+     * @return true if member
+     */
+    public boolean isMember(@NotNull Warrior warrior) {
+        return isMember(warrior.getUniqueId());
+    }
 
     /**
      * Checks whether a {@link Player} is a Leader, Officer or equivalent in this {@link Group}

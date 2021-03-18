@@ -25,6 +25,7 @@ package me.roinujnosde.titansbattle.types;
 
 import me.roinujnosde.titansbattle.managers.GroupManager;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -72,8 +73,31 @@ public class Warrior {
     }
 
     @NotNull
+    public String getName() {
+        return player.getName() != null ? player.getName() : "null";
+    }
+
+    public void sendMessage(@Nullable String message) {
+        if (message == null) return;
+        Player player = toOnlinePlayer();
+        if (player != null) {
+            player.sendMessage(message);
+        }
+    }
+
+    @Nullable
+    public Player toOnlinePlayer() {
+        return player.getPlayer();
+    }
+
+    @NotNull
     public OfflinePlayer toPlayer() {
         return player;
+    }
+
+    @NotNull
+    public UUID getUniqueId() {
+        return player.getUniqueId();
     }
 
     @Nullable

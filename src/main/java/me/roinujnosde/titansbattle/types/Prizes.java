@@ -1,9 +1,8 @@
 package me.roinujnosde.titansbattle.types;
 
-import me.roinujnosde.titansbattle.utils.ConfigUtils;
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.utils.ConfigUtils;
 import me.roinujnosde.titansbattle.utils.Path;
-import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.entity.Player;
@@ -16,7 +15,7 @@ import java.util.*;
 
 @SuppressWarnings({"FieldCanBeLocal", "unused", "FieldMayBeFinal"})
 public class Prizes implements ConfigurationSerializable {
-    private static final HashMap<Player, HashMap<Integer, ItemStack>> ITEMS_NOT_GIVEN = new HashMap<>();
+    private static final Map<Player, Collection<ItemStack>> ITEMS_NOT_GIVEN = new HashMap<>();
 
     private Integer itemsGiveInterval = 30;
     private Boolean treatLeadersAsMembers = false;
@@ -33,12 +32,6 @@ public class Prizes implements ConfigurationSerializable {
     private Double leaderCommandsSomeNumber = 100D;
     @Path("leader.commands.some_number.divided")
     private Boolean leaderCommandsSomeNumberDivide = false;
-    @Path("leader.money.enabled")
-    private Boolean leaderMoneyEnabled = false;
-    @Path("leader.money.divided")
-    private Boolean leaderMoneyDivide = false;
-    @Path("leader.money.amount")
-    private Double leaderMoneyAmount = 10000D;
     @Path("member.items.enabled")
     private Boolean memberItemsEnabled = false;
     @Path("member.items.item_list")
@@ -52,31 +45,6 @@ public class Prizes implements ConfigurationSerializable {
     private Double memberCommandsSomeNumber = 100D;
     @Path("member.commands.some_number.divided")
     private Boolean memberCommandsSomeNumberDivide = false;
-    @Path("member.money.enabled")
-    private Boolean memberMoneyEnabled = false;
-    @Path("member.money.divided")
-    private Boolean memberMoneyDivide = false;
-    @Path("member.money.amount")
-    private Double memberMoneyAmount = 10000D;
-    @Path("killer.items.enabled")
-    private Boolean killerItemsEnabled = false;
-    @Path("killer.items.item_list")
-    private @Nullable List<ItemStack> killerItems;
-    @Path("killer.commands.enabled")
-    private Boolean killerCommandsEnabled = false;
-    @Path("killer.commands.command_list")
-    private @Nullable List<String> killerCommands = Arrays.asList("give %player% diamond_sword %some_number%",
-            "eco give %player% %some_number%");
-    @Path("killer.commands.some_number.value")
-    private Double killerCommandsSomeNumber = 100D;
-    @Path("killer.commands.some_number.divided")
-    private Boolean killerCommandsSomeNumberDivide = false;
-    @Path("killer.money.enabled")
-    private Boolean killerMoneyEnabled = false;
-    @Path("killer.money.divided")
-    private Boolean killerMoneyDivide = false;
-    @Path("killer.money.amount")
-    private Double killerMoneyAmount = 10000D;
 
     public Prizes() {
     }
@@ -90,10 +58,6 @@ public class Prizes implements ConfigurationSerializable {
         return ConfigUtils.serialize(this);
     }
 
-    public void setKillerItems(@Nullable List<ItemStack> killerItems) {
-        this.killerItems = killerItems;
-    }
-
     public void setMemberItems(@Nullable List<ItemStack> memberItems) {
         this.memberItems = memberItems;
     }
@@ -102,8 +66,7 @@ public class Prizes implements ConfigurationSerializable {
         this.leaderItems = leaderItems;
     }
 
-    public void give(@NotNull TitansBattle plugin, @Nullable List<Player> leaders, @NotNull List<Player> members,
-                     @Nullable Player killer) {
+    public void give(@NotNull TitansBattle plugin, @Nullable List<Player> leaders, @NotNull List<Player> members) {
         if (treatLeadersAsMembers && leaders != null) {
             members.addAll(leaders);
             leaders.clear();
@@ -114,31 +77,11 @@ public class Prizes implements ConfigurationSerializable {
         if (memberItemsEnabled && memberItems != null) {
             giveItemsToPlayers(plugin, members, memberItems);
         }
-        if (killer != null) {
-            List<Player> killerList = Collections.singletonList(killer);
-            if (killerItemsEnabled && killerItems != null) {
-                giveItemsToPlayers(plugin, killerList, killerItems);
-            }
-            if (killerMoneyEnabled) {
-                giveMoneyToPlayers(plugin, killerList, killerMoneyAmount, killerMoneyDivide);
-            }
-            if (killerCommandsEnabled) {
-                runCommandsOnPlayers(killerList, killerCommands, killerCommandsSomeNumber, killerCommandsSomeNumberDivide);
-            }
-        }
-        if (leaderMoneyEnabled && leaders != null) {
-            giveMoneyToPlayers(plugin, leaders, leaderMoneyAmount, leaderMoneyDivide);
-        }
-        if (memberMoneyEnabled) {
-            giveMoneyToPlayers(plugin, members, memberMoneyAmount, memberMoneyDivide);
-        }
         if (leaderCommandsEnabled) {
-            runCommandsOnPlayers(leaders, leaderCommands, leaderCommandsSomeNumber,
-                    leaderCommandsSomeNumberDivide);
+            runCommandsOnPlayers(leaders, leaderCommands, leaderCommandsSomeNumber, leaderCommandsSomeNumberDivide);
         }
         if (memberCommandsEnabled) {
-            runCommandsOnPlayers(members, memberCommands, memberCommandsSomeNumber,
-                    memberCommandsSomeNumberDivide);
+            runCommandsOnPlayers(members, memberCommands, memberCommandsSomeNumber, memberCommandsSomeNumberDivide);
         }
     }
 
@@ -149,7 +92,7 @@ public class Prizes implements ConfigurationSerializable {
             Inventory inventory = player.getInventory();
             HashMap<Integer, ItemStack> remainingItems = inventory.addItem(items.toArray(new ItemStack[0]));
             if (!remainingItems.isEmpty()) {
-                ITEMS_NOT_GIVEN.put(player, remainingItems);
+                ITEMS_NOT_GIVEN.put(player, remainingItems.values());
                 plugin.getTaskManager().startGiveItemsTask(itemsGiveInterval);
             }
         }
@@ -168,31 +111,7 @@ public class Prizes implements ConfigurationSerializable {
         }
     }
 
-    private void giveMoneyToPlayers(@NotNull TitansBattle plugin, @NotNull List<Player> players, double amount,
-                                    boolean share) {
-        if (plugin.getEconomy() == null) {
-            return;
-        }
-        if (share) {
-            //Share prize
-            amount = (amount / players.size());
-            for (Player player : players) {
-                EconomyResponse r = plugin.getEconomy().depositPlayer(player, amount);
-                if (!r.transactionSuccess()) {
-                    System.out.println("[TitansBattle] Error: " + r.errorMessage);
-                }
-            }
-            return;
-        }
-        for (Player player : players) {
-            EconomyResponse r = plugin.getEconomy().depositPlayer(player, amount);
-            if (!r.transactionSuccess()) {
-                System.out.println("[TitansBattle] Error: " + r.errorMessage);
-            }
-        }
-    }
-
-    public static Map<Player, HashMap<Integer, ItemStack>> getPlayersWithItemsToReceive() {
+    public static Map<Player, Collection<ItemStack>> getPlayersWithItemsToReceive() {
         ITEMS_NOT_GIVEN.keySet().removeIf(p -> !p.isOnline());
         return ITEMS_NOT_GIVEN;
     }

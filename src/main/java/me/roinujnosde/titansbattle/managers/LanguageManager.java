@@ -2,6 +2,7 @@ package me.roinujnosde.titansbattle.managers;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.logging.Level;
 import me.roinujnosde.titansbattle.TitansBattle;
 
@@ -15,6 +16,7 @@ public class LanguageManager {
     private FileConfiguration configFile;
     private File file;
     private String fileName;
+    private YamlConfiguration englishLanguageFile;
 
     public void setup() {
         TitansBattle plugin = TitansBattle.getInstance();
@@ -30,6 +32,14 @@ public class LanguageManager {
 
     public FileConfiguration getConfig() {
         return configFile;
+    }
+
+    public FileConfiguration getEnglishLanguageFile() {
+        if (englishLanguageFile == null) {
+            InputStreamReader reader = new InputStreamReader(TitansBattle.getInstance().getResource("language-en.yml"));
+            englishLanguageFile = YamlConfiguration.loadConfiguration(reader);
+        }
+        return englishLanguageFile;
     }
 
     public void save() {

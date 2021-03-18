@@ -23,15 +23,16 @@
  */
 package me.roinujnosde.titansbattle.listeners;
 
-import java.text.MessageFormat;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
-import me.roinujnosde.titansbattle.types.Game;
+import me.roinujnosde.titansbattle.games.Game;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+
+import java.text.MessageFormat;
 
 /**
  *
@@ -51,14 +52,14 @@ public class PlayerCommandPreprocessListener implements Listener {
 
     @EventHandler
     public void onCommandEveryone(PlayerCommandPreprocessEvent event) {
-        Game game = gm.getCurrentGame();
-        if (game == null || !game.isHappening()) {
+        Game game = gm.getCurrentGame().orElse(null);
+        if (game == null) {
             return;
         }
         for (String command : cm.getBlockedCommandsEveryone()) {
             if (event.getMessage().startsWith(command)) {
                 event.getPlayer().sendMessage(MessageFormat.format(plugin.getLang("command-blocked-for-everyone",
-                        gm.getCurrentGame()), event.getMessage()));
+                        game), event.getMessage()));
                 event.setCancelled(true);
                 break;
             }
@@ -68,14 +69,11 @@ public class PlayerCommandPreprocessListener implements Listener {
     @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
-        Game game = gm.getCurrentGame();
+        Game game = gm.getCurrentGame().orElse(null);
         if (game == null) {
             return;
         }
-        if (!game.isHappening()) {
-            return;
-        }
-        if (!game.getPlayerParticipants().contains(player.getUniqueId())) {
+        if (!game.isParticipant(plugin.getDatabaseManager().getWarrior(player.getUniqueId()))) {
             return;
         }
         for (String command : cm.getAllowedCommands()) {
@@ -83,7 +81,7 @@ public class PlayerCommandPreprocessListener implements Listener {
                 return;
             }
         }
-        player.sendMessage(MessageFormat.format(plugin.getLang("command-not-allowed", gm.getCurrentGame()), event.getMessage()));
+        player.sendMessage(MessageFormat.format(plugin.getLang("command-not-allowed", game), event.getMessage()));
         event.setCancelled(true);
     }
 
