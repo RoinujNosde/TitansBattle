@@ -35,7 +35,7 @@ public class EliminationTournamentGame extends Game {
 
     @Override
     public boolean isInBattle(@NotNull Warrior warrior) {
-        if (!battle || !getConfig().isPvP()) {
+        if (!battle) {
             return false;
         }
         return isCurrentDuelist(warrior);

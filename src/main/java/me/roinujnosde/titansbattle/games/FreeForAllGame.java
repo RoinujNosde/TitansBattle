@@ -33,7 +33,7 @@ public class FreeForAllGame extends Game {
 
     @Override
     public boolean isInBattle(@NotNull Warrior warrior) {
-        return getConfig().isPvP() && battle && playerParticipants.contains(warrior);
+        return battle && playerParticipants.contains(warrior);
     }
 
     @Override

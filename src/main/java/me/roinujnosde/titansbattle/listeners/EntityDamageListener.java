@@ -58,19 +58,28 @@ public class EntityDamageListener implements Listener {
         }
         event.setCancelled(false);
         if (event instanceof EntityDamageByEntityEvent) {
-            EntityDamageByEntityEvent subEvent = (EntityDamageByEntityEvent) event;
-            Player attacker = Helper.getPlayerAttackerOrKiller(subEvent.getDamager());
-            if (attacker == null || !game.isParticipant(dm.getWarrior(attacker.getUniqueId()))) {
-                return;
-            }
-            if (!game.getConfig().isGroupMode()) {
-                return;
-            }
+            processEntityDamageByEntityEvent(event, defender, game);
+        }
+    }
 
-            GroupManager groupManager = TitansBattle.getInstance().getGroupManager();
-            if (groupManager != null) {
-                event.setCancelled(groupManager.sameGroup(defender.getUniqueId(), attacker.getUniqueId()));
-            }
+    private void processEntityDamageByEntityEvent(EntityDamageEvent event, Player defender, Game game) {
+        EntityDamageByEntityEvent subEvent = (EntityDamageByEntityEvent) event;
+        Player attacker = Helper.getPlayerAttackerOrKiller(subEvent.getDamager());
+        if (attacker != null && !game.getConfig().isPvP()) {
+            event.setCancelled(true);
+            return;
+        }
+        if (attacker == null || !game.isParticipant(dm.getWarrior(attacker.getUniqueId()))) {
+            return;
+        }
+
+        if (!game.getConfig().isGroupMode()) {
+            return;
+        }
+
+        GroupManager groupManager = TitansBattle.getInstance().getGroupManager();
+        if (groupManager != null) {
+            event.setCancelled(groupManager.sameGroup(defender.getUniqueId(), attacker.getUniqueId()));
         }
     }
 

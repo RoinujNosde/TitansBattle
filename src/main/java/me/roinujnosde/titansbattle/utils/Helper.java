@@ -286,8 +286,7 @@ public class Helper {
      * @param entity the entity to investigate
      * @return the attacker/killer or null
      */
-    public @Nullable
-    static Player getPlayerAttackerOrKiller(Entity entity) {
+    public static @Nullable Player getPlayerAttackerOrKiller(Entity entity) {
         Player investigated = null;
         if (entity instanceof Player) {
             investigated = (Player) entity;
