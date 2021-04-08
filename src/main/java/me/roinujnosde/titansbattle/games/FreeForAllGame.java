@@ -81,7 +81,7 @@ public class FreeForAllGame extends Game {
             getCasualties().stream().filter(p -> winnerGroup.isMember(p.getUniqueId())).forEach(winners::add);
         }
         SoundUtils.playSound(VICTORY, plugin.getConfig(), winners);
-        PlayerWinEvent event = new PlayerWinEvent(winners);
+        PlayerWinEvent event = new PlayerWinEvent(this, winners);
         Bukkit.getPluginManager().callEvent(event);
         if (killer != null) {
             plugin.getGameManager().setKiller(getConfig(), killer, null);
