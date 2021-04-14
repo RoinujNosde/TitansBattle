@@ -190,6 +190,7 @@ public class TBCommands extends BaseCommand {
     @CommandPermission("titansbattle.join")
     @Conditions("happening")
     public void join(Player sender) {
+        plugin.debug(String.format("%s used /tb join", sender.getName()));
         gameManager.getCurrentGame().ifPresent(g -> g.onJoin(databaseManager.getWarrior(sender.getUniqueId())));
     }
 

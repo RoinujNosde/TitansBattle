@@ -302,6 +302,10 @@ public final class TitansBattle extends JavaPlugin {
         if (respectUserDecision && !configManager.isDebug()) {
             return;
         }
-        Bukkit.getConsoleSender().sendMessage(ChatColor.BLUE + "[TitansBattle] " + message);
+        getLogger().info(message);
+    }
+
+    public void debug(String message) {
+        debug(message, true);
     }
 }

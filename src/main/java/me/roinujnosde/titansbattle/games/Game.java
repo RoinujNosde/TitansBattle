@@ -58,6 +58,7 @@ public abstract class Game {
     protected boolean canJoin(@NotNull Warrior warrior) {
         Player player = warrior.toOnlinePlayer();
         if (player == null) {
+            plugin.debug(String.format("canJoin() -> player %s %s == null", warrior.getName(), warrior.getUniqueId()));
             return false;
         }
         if (!isLobby()) {
@@ -105,10 +106,14 @@ public abstract class Game {
 
     public void onJoin(@NotNull Warrior warrior) {
         if (!canJoin(warrior)) {
+            plugin.debug(String.format("Warrior %s can't join", warrior.getName()));
             return;
         }
         Player player = warrior.toOnlinePlayer();
-        if (player == null) return;
+        if (player == null) {
+            plugin.debug(String.format("onJoin() -> player %s %s == null", warrior.getName(), warrior.getUniqueId()));
+            return;
+        }
         teleport(warrior, getConfig().getLobby());
         SoundUtils.playSound(JOIN_GAME, plugin.getConfig(), player);
         playerParticipants.add(warrior);
