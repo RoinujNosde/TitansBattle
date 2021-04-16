@@ -471,8 +471,12 @@ public abstract class Game {
     }
 
     protected void teleport(@Nullable Warrior warrior, Location destination) {
+        plugin.debug(String.format("teleport() -> destination %s", destination));
         Player player = warrior != null ? warrior.toOnlinePlayer() : null;
-        if (player == null) return;
+        if (player == null) {
+            plugin.debug(String.format("teleport() -> warrior %s", warrior));
+            return;
+        }
         player.teleport(destination);
         SoundUtils.playSound(TELEPORT, plugin.getConfig(), player);
     }

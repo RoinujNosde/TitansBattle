@@ -43,9 +43,9 @@ public class EliminationTournamentGame extends Game {
 
     private boolean isCurrentDuelist(@NotNull Warrior warrior) {
         if (!getConfig().isGroupMode()) {
-            return playerDuelists.get(0).isDuelist(warrior);
+            return playerDuelists.size() != 0 && playerDuelists.get(0).isDuelist(warrior);
         }
-        return groupDuelists.get(0).isDuelist(warrior.getGroup());
+        return groupDuelists.size() != 0 && groupDuelists.get(0).isDuelist(warrior.getGroup());
     }
 
     private List<Warrior> getDuelLosers(@NotNull Warrior defeated) {
