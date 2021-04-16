@@ -34,6 +34,15 @@ public class EntityDamageListener implements Listener {
         }
     }
 
+    //un-cancelling so mcMMO skills can be used
+    //mcMMO's listener is on HIGHEST and ignoreCancelled = true, this will run before
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onDamageHigh(EntityDamageEvent event) {
+        if (isParticipant(event.getEntity())) {
+            event.setCancelled(false);
+        }
+    }
+
     private boolean isParticipant(Entity entity) {
         Game game = gm.getCurrentGame().orElse(null);
         if (game == null || !(entity instanceof Player)) {
