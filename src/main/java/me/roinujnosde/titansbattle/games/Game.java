@@ -131,7 +131,7 @@ public abstract class Game {
     }
 
     public boolean shouldClearDropsOnDeath(@NotNull Warrior warrior) {
-        return false;
+        return isParticipant(warrior) && config.isClearItemsOnDeath();
     }
 
     public boolean shouldKeepInventoryOnDeath(@NotNull Warrior warrior) {
