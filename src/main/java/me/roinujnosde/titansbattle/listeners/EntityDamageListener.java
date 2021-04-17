@@ -5,9 +5,11 @@ import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
 import me.roinujnosde.titansbattle.managers.GroupManager;
+import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.utils.Helper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
@@ -74,6 +76,10 @@ public class EntityDamageListener implements Listener {
     private void processEntityDamageByEntityEvent(EntityDamageEvent event, Player defender, Game game) {
         EntityDamageByEntityEvent subEvent = (EntityDamageByEntityEvent) event;
         Player attacker = Helper.getPlayerAttackerOrKiller(subEvent.getDamager());
+        if (!isDamageTypeAllowed(subEvent, game)) {
+            event.setCancelled(true);
+            return;
+        }
         if (attacker != null && !game.getConfig().isPvP()) {
             event.setCancelled(true);
             return;
@@ -89,6 +95,15 @@ public class EntityDamageListener implements Listener {
         GroupManager groupManager = TitansBattle.getInstance().getGroupManager();
         if (groupManager != null) {
             event.setCancelled(groupManager.sameGroup(defender.getUniqueId(), attacker.getUniqueId()));
+        }
+    }
+
+    private boolean isDamageTypeAllowed(EntityDamageByEntityEvent event, Game game) {
+        GameConfiguration config = game.getConfig();
+        if (event.getDamager() instanceof Projectile) {
+            return config.isRangedDamage();
+        } else {
+            return config.isMeleeDamage();
         }
     }
 
