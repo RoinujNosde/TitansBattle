@@ -85,6 +85,14 @@ public class Warrior {
         }
     }
 
+    @Override
+    public String toString() {
+        return "Warrior{" +
+                "name=" + player.getName() +
+                ", uuid=" + player.getUniqueId() +
+                '}';
+    }
+
     @Nullable
     public Player toOnlinePlayer() {
         return player.getPlayer();

@@ -22,6 +22,11 @@ public class GameConfiguration implements ConfigurationSerializable {
     private Boolean powerOfTwo = false;
     private Boolean killer = true;
     private Boolean pvp = true;
+    private Boolean clearItemsOnDeath = false;
+    @Path("damage-type.melee")
+    private Boolean meleeDamage = true;
+    @Path("damage-type.ranged")
+    private Boolean rangedDamage = true;
     @Path("minimum.groups")
     private Integer minimumGroups = 2;
     @Path("maximum.groups")
@@ -213,6 +218,18 @@ public class GameConfiguration implements ConfigurationSerializable {
 
     public Boolean isPvP() {
         return pvp;
+    }
+
+    public Boolean isClearItemsOnDeath() {
+        return clearItemsOnDeath;
+    }
+
+    public Boolean isMeleeDamage() {
+        return meleeDamage;
+    }
+
+    public Boolean isRangedDamage() {
+        return rangedDamage;
     }
 
     public Boolean isKiller() {

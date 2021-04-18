@@ -15,8 +15,11 @@ import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
@@ -58,6 +61,7 @@ public abstract class Game {
     protected boolean canJoin(@NotNull Warrior warrior) {
         Player player = warrior.toOnlinePlayer();
         if (player == null) {
+            plugin.debug(String.format("canJoin() -> player %s %s == null", warrior.getName(), warrior.getUniqueId()));
             return false;
         }
         if (!isLobby()) {
@@ -105,10 +109,14 @@ public abstract class Game {
 
     public void onJoin(@NotNull Warrior warrior) {
         if (!canJoin(warrior)) {
+            plugin.debug(String.format("Warrior %s can't join", warrior.getName()));
             return;
         }
         Player player = warrior.toOnlinePlayer();
-        if (player == null) return;
+        if (player == null) {
+            plugin.debug(String.format("onJoin() -> player %s %s == null", warrior.getName(), warrior.getUniqueId()));
+            return;
+        }
         teleport(warrior, getConfig().getLobby());
         SoundUtils.playSound(JOIN_GAME, plugin.getConfig(), player);
         playerParticipants.add(warrior);
@@ -126,7 +134,7 @@ public abstract class Game {
     }
 
     public boolean shouldClearDropsOnDeath(@NotNull Warrior warrior) {
-        return false;
+        return isParticipant(warrior) && config.isClearItemsOnDeath();
     }
 
     public boolean shouldKeepInventoryOnDeath(@NotNull Warrior warrior) {
@@ -216,9 +224,6 @@ public abstract class Game {
         if (!isParticipant(victim)) {
             return;
         }
-        if (killer == null) {
-            gameManager.broadcastKey("died_by_himself", this, victim.getName());
-        }
         if (!isLobby()) {
             ParticipantDeathEvent event = new ParticipantDeathEvent(victim, killer);
             Bukkit.getPluginManager().callEvent(event);
@@ -229,13 +234,31 @@ public abstract class Game {
             }
             if (killer != null) {
                 killer.increaseKills(gameName);
-                gameManager.broadcastKey("killed_by", this, victim.getName(), killer.getName());
-                gameManager.broadcastKey("has_killed_times", this, killer.getName(), increaseKills(killer));
+                increaseKills(killer);
             }
             victim.increaseDeaths(gameName);
             playDeathSound(victim);
         }
+        broadcastDeathMessage(victim, killer);
         processPlayerExit(victim);
+    }
+
+    @SuppressWarnings("deprecation")
+    protected void broadcastDeathMessage(@NotNull Warrior victim, @Nullable Warrior killer) {
+        if (killer == null) {
+            gameManager.broadcastKey("died_by_himself", this, victim.getName());
+        } else {
+            ItemStack itemInHand = Objects.requireNonNull(killer.toOnlinePlayer()).getItemInHand();
+            String weaponName = plugin.getLang("fist", this);
+            if (itemInHand != null && itemInHand.getType() != Material.AIR) {
+                ItemMeta itemMeta = itemInHand.getItemMeta();
+                if (itemMeta != null && itemMeta.hasDisplayName()) {
+                    weaponName = itemMeta.getDisplayName();
+                }
+            }
+            gameManager.broadcastKey("killed_by", this, victim.getName(),
+                    killsCount.getOrDefault(victim, 0), killer.getName(), killsCount.get(killer), weaponName);
+        }
     }
 
     protected abstract void onLobbyEnd();
@@ -375,8 +398,8 @@ public abstract class Game {
         return killsCount;
     }
 
-    protected int increaseKills(Warrior warrior) {
-        return killsCount.compute(warrior, (p, i) -> i == null ? 1 : i + 1);
+    protected void increaseKills(Warrior warrior) {
+        killsCount.compute(warrior, (p, i) -> i == null ? 1 : i + 1);
     }
 
     public void sendMessageToParticipants(@NotNull String message) {
@@ -466,8 +489,12 @@ public abstract class Game {
     }
 
     protected void teleport(@Nullable Warrior warrior, Location destination) {
+        plugin.debug(String.format("teleport() -> destination %s", destination));
         Player player = warrior != null ? warrior.toOnlinePlayer() : null;
-        if (player == null) return;
+        if (player == null) {
+            plugin.debug(String.format("teleport() -> warrior %s", warrior));
+            return;
+        }
         player.teleport(destination);
         SoundUtils.playSound(TELEPORT, plugin.getConfig(), player);
     }
