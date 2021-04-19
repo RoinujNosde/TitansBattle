@@ -23,6 +23,7 @@
  */
 package me.roinujnosde.titansbattle.events;
 
+import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.games.Game;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
@@ -78,6 +79,9 @@ public class PlayerJoinGameEvent extends Event implements Cancellable {
      */
     @Override
     public void setCancelled(boolean cancel) {
+        if (TitansBattle.getInstance().getConfigManager().isDebug()) {
+            Thread.dumpStack();
+        }
         cancelled = cancel;
     }
 
