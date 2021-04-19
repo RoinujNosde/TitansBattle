@@ -15,6 +15,7 @@ permissions:
     default: op
     children:
       titansbattle.player: true
+      titansbattle.create: true
       titansbattle.reload: true
       titansbattle.cancel: true
       titansbattle.start: true
@@ -37,6 +38,8 @@ permissions:
   titansbattle.watchroom:
     default: false
   titansbattle.help:
+    default: false
+  titansbattle.create:
     default: false
   titansbattle.reload:
     default: false
