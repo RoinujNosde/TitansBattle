@@ -121,7 +121,11 @@ public abstract class Game {
             plugin.debug(String.format("onJoin() -> player %s %s == null", warrior.getName(), warrior.getUniqueId()));
             return;
         }
-        teleport(warrior, getConfig().getLobby());
+        if (!teleport(warrior, getConfig().getLobby())) {
+            plugin.debug(String.format("Player %s is dead: %s", player, player.isDead()), false);
+            player.sendMessage("An error ocurred while teleporting you");
+            return;
+        }
         SoundUtils.playSound(JOIN_GAME, plugin.getConfig(), player);
         playerParticipants.add(warrior);
         setKit(warrior);
@@ -492,15 +496,15 @@ public abstract class Game {
         collection.forEach(p -> teleport(p, destination));
     }
 
-    protected void teleport(@Nullable Warrior warrior, Location destination) {
+    protected boolean teleport(@Nullable Warrior warrior, Location destination) {
         plugin.debug(String.format("teleport() -> destination %s", destination));
         Player player = warrior != null ? warrior.toOnlinePlayer() : null;
         if (player == null) {
             plugin.debug(String.format("teleport() -> warrior %s", warrior));
-            return;
+            return false;
         }
-        player.teleport(destination);
         SoundUtils.playSound(TELEPORT, plugin.getConfig(), player);
+        return player.teleport(destination);
     }
 
     protected void teleportAll(Location destination) {
