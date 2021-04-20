@@ -60,45 +60,49 @@ public abstract class Game {
 
     protected boolean canJoin(@NotNull Warrior warrior) {
         Player player = warrior.toOnlinePlayer();
+        String reason = null;
         if (player == null) {
             plugin.debug(String.format("canJoin() -> player %s %s == null", warrior.getName(), warrior.getUniqueId()));
             return false;
         }
         if (!isLobby()) {
-            player.sendMessage(plugin.getLang("game_is_happening", this));
-            return false;
+            reason = plugin.getLang("game_is_happening", this);
+            plugin.debug("happening");
         }
         if (isParticipant(warrior)) {
-            player.sendMessage(plugin.getLang("already-joined", this));
-            return false;
+            reason = plugin.getLang("already-joined", this);
+            plugin.debug("already in");
         }
         if (playerParticipants.size() >= getConfig().getMaximumPlayers() && getConfig().getMaximumPlayers() > 0) {
-            player.sendMessage(plugin.getLang("maximum-players", this));
-            return false;
+            reason = plugin.getLang("maximum-players", this);
+            plugin.debug("max players");
         }
         if (config.isGroupMode()) {
             if (warrior.getGroup() == null) {
-                player.sendMessage(plugin.getLang("not_in_a_group", this));
-                return false;
+                reason = plugin.getLang("not_in_a_group", this);
+                plugin.debug("not in group");
             }
             if (getGroupParticipants().size() >= getConfig().getMaximumGroups() && getConfig().getMaximumGroups() > 0) {
-                player.sendMessage(plugin.getLang("maximum-groups", this));
-                return false;
+                reason = plugin.getLang("maximum-groups", this);
+                plugin.debug("max groups");
             }
             Integer amountOfPlayers = getGroupParticipants().getOrDefault(warrior.getGroup(), 0);
             if (amountOfPlayers >= getConfig().getMaximumPlayersPerGroup() &&
                     getConfig().getMaximumPlayersPerGroup() > 0) {
-                player.sendMessage(plugin.getLang("maximum-players-per-group", this));
-                return false;
+                reason = plugin.getLang("maximum-players-per-group", this);
+                plugin.debug("max per group");
             }
         }
         if (getConfig().isUseKits() && Kit.inventoryHasItems(player)) {
-            player.sendMessage(plugin.getLang("clear-your-inventory", this));
-            return false;
+            reason = plugin.getLang("clear-your-inventory", this);
+            plugin.debug("clear inv");
         }
+
         PlayerJoinGameEvent event = new PlayerJoinGameEvent(player, this);
         Bukkit.getPluginManager().callEvent(event);
-        return !event.isCancelled();
+        plugin.debug("cancel: " + event.isCancelled());
+        plugin.debug("reason: >>>" + reason + "<<<");
+        return reason == null && !event.isCancelled();
     }
 
     public abstract boolean isInBattle(@NotNull Warrior warrior);
