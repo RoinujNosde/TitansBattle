@@ -62,7 +62,7 @@ public abstract class Game {
         Player player = warrior.toOnlinePlayer();
         String reason = null;
         if (player == null) {
-            plugin.debug(String.format("canJoin() -> player %s %s == null", warrior.getName(), warrior.getUniqueId()));
+            plugin.debug(String.format("canJoin() -> player %s %s == null", warrior.getName(), warrior.getUniqueId()), false);
             return false;
         }
         if (!isLobby()) {
@@ -102,6 +102,9 @@ public abstract class Game {
         Bukkit.getPluginManager().callEvent(event);
         plugin.debug("cancel: " + event.isCancelled());
         plugin.debug("reason: >>>" + reason + "<<<");
+        if (reason != null) {
+            player.sendMessage(reason);
+        }
         return reason == null && !event.isCancelled();
     }
 
