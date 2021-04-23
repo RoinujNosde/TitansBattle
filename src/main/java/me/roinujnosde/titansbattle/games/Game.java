@@ -123,7 +123,7 @@ public abstract class Game {
         }
         if (!teleport(warrior, getConfig().getLobby())) {
             plugin.debug(String.format("Player %s is dead: %s", player, player.isDead()), false);
-            player.sendMessage("An error ocurred while teleporting you");
+            player.sendMessage(plugin.getLang("teleport.error", this));
             return;
         }
         SoundUtils.playSound(JOIN_GAME, plugin.getConfig(), player);
