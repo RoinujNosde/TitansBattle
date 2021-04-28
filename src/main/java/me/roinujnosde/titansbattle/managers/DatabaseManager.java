@@ -456,9 +456,9 @@ public class DatabaseManager {
             for (Date date : winnersData.keySet()) {
                 Map<WinnerType, Map<String, Object>> data = winnersData.get(date);
 
-                Map<String, UUID> killer = new HashMap<>();
-                Map<String, List<UUID>> playerWinners = new HashMap<>();
-                Map<String, String> winnerGroup = new HashMap<>();
+                Map<String, UUID> killer = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+                Map<String, List<UUID>> playerWinners = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+                Map<String, String> winnerGroup = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
                 for (WinnerType wt : data.keySet()) {
                     for (String game : data.get(wt).keySet()) {
@@ -534,9 +534,9 @@ public class DatabaseManager {
         if (date == null) {
             date = Calendar.getInstance().getTime();
         }
-        Map<String, UUID> killer = new HashMap<>();
-        Map<String, List<UUID>> playerWinners = new HashMap<>();
-        Map<String, String> winnerGroup = new HashMap<>();
+        Map<String, UUID> killer = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        Map<String, List<UUID>> playerWinners = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        Map<String, String> winnerGroup = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
         Winners w = new Winners(date, killer, playerWinners, winnerGroup);
         winners.add(w);
