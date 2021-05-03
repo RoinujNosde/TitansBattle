@@ -186,8 +186,8 @@ public class EliminationTournamentGame extends Game {
             if (player == null) return;
             setKit(warrior);
             teleport(warrior, getConfig().getLobby());
-        } else if (casualties.contains(warrior)) {
-            teleport(warrior, getConfig().getWatchroom());
+        } else {
+            super.onRespawn(warrior);
         }
     }
 

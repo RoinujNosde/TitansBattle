@@ -43,6 +43,7 @@ public abstract class Game {
     protected final List<Warrior> playerParticipants = new ArrayList<>();
     protected final HashMap<Warrior, Integer> killsCount = new HashMap<>();
     protected final Set<Warrior> casualties = new HashSet<>();
+    protected final Set<Warrior> casualtiesWatching = new HashSet<>();
     protected boolean lobby;
     private final List<BukkitTask> tasks = new ArrayList<>();
     protected boolean battle = false;
@@ -226,8 +227,9 @@ public abstract class Game {
     }
 
     public void onRespawn(@NotNull Warrior warrior) {
-        if (casualties.contains(warrior)) {
+        if (casualties.contains(warrior) && !casualtiesWatching.contains(warrior)) {
             teleport(warrior, getConfig().getWatchroom());
+            casualtiesWatching.add(warrior);
         }
     }
 
