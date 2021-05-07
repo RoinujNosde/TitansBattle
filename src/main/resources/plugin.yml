@@ -9,6 +9,7 @@ softdepend:
   - "mcMMO"
   - "PlaceholderAPI"
   - "Essentials"
+  - "Multiverse-Core"
 permissions:
   titansbattle.admin:
     description: "Gives access to administrator commands"
