@@ -323,9 +323,8 @@ public class DatabaseManager {
     }
 
     @NotNull
-    public Warrior getWarrior(@NotNull UUID uuid) {
-        OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-
+    public Warrior getWarrior(@NotNull OfflinePlayer player) {
+        UUID uuid = player.getUniqueId();
         for (Warrior warrior : warriors) {
             if (warrior.toPlayer().getUniqueId().equals(uuid)) {
                 return warrior;
@@ -336,6 +335,11 @@ public class DatabaseManager {
                 new HashMap<>());
         warriors.add(warrior);
         return warrior;
+    }
+
+    @NotNull
+    public Warrior getWarrior(@NotNull UUID uuid) {
+        return getWarrior(Bukkit.getOfflinePlayer(uuid));
     }
 
     private void loopThroughGroups() {

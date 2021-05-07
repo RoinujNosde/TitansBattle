@@ -73,7 +73,7 @@ public class PlayerCommandPreprocessListener implements Listener {
         if (game == null) {
             return;
         }
-        if (!game.isParticipant(plugin.getDatabaseManager().getWarrior(player.getUniqueId()))) {
+        if (!game.isParticipant(plugin.getDatabaseManager().getWarrior(player))) {
             return;
         }
         for (String command : cm.getAllowedCommands()) {

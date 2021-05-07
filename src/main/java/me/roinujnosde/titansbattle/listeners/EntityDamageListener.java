@@ -7,6 +7,7 @@ import me.roinujnosde.titansbattle.managers.GameManager;
 import me.roinujnosde.titansbattle.managers.GroupManager;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.utils.Helper;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
@@ -50,7 +51,7 @@ public class EntityDamageListener implements Listener {
         if (game == null || !(entity instanceof Player)) {
             return false;
         }
-        return game.isParticipant(dm.getWarrior(entity.getUniqueId()));
+        return game.isParticipant(dm.getWarrior((OfflinePlayer) entity));
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -63,7 +64,7 @@ public class EntityDamageListener implements Listener {
         @SuppressWarnings("OptionalGetWithoutIsPresent")
         Game game = gm.getCurrentGame().get();
 
-        if (!game.isInBattle(dm.getWarrior(defender.getUniqueId()))) {
+        if (!game.isInBattle(dm.getWarrior(defender))) {
             event.setCancelled(true);
             return;
         }
@@ -84,7 +85,7 @@ public class EntityDamageListener implements Listener {
             event.setCancelled(true);
             return;
         }
-        if (attacker == null || !game.isParticipant(dm.getWarrior(attacker.getUniqueId()))) {
+        if (attacker == null || !game.isParticipant(dm.getWarrior(attacker))) {
             return;
         }
 

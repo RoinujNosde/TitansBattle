@@ -429,7 +429,7 @@ public abstract class Game {
             return getPlayerParticipants().size() - 1;
         }
         int opponents = 0;
-        Warrior warrior = plugin.getDatabaseManager().getWarrior(player.getUniqueId());
+        Warrior warrior = plugin.getDatabaseManager().getWarrior(player);
         for (Map.Entry<Group, Integer> entry : getGroupParticipants().entrySet()) {
             Group group = entry.getKey();
             if (group.equals(warrior.getGroup())) {

@@ -191,14 +191,14 @@ public class TBCommands extends BaseCommand {
     @Conditions("happening")
     public void join(Player sender) {
         plugin.debug(String.format("%s used /tb join", sender.getName()));
-        gameManager.getCurrentGame().ifPresent(g -> g.onJoin(databaseManager.getWarrior(sender.getUniqueId())));
+        gameManager.getCurrentGame().ifPresent(g -> g.onJoin(databaseManager.getWarrior(sender)));
     }
 
     @Subcommand("%exit|exit|leave")
     @CommandPermission("titansbattle.exit")
     @Conditions("happening")
     public void leave(Player sender, Game game) {
-        Warrior warrior = databaseManager.getWarrior(sender.getUniqueId());
+        Warrior warrior = databaseManager.getWarrior(sender);
         if (!game.isParticipant(warrior)) {
             sender.sendMessage(plugin.getLang("not_participating", game));
             return;

@@ -17,6 +17,6 @@ public class PlayerRespawnListener implements Listener {
     @EventHandler
     public void onRespawn(PlayerRespawnEvent event) {
         plugin.getGameManager().getCurrentGame().ifPresent(game -> Bukkit.getScheduler().runTask(plugin,
-                () -> game.onRespawn(plugin.getDatabaseManager().getWarrior(event.getPlayer().getUniqueId()))));
+                () -> game.onRespawn(plugin.getDatabaseManager().getWarrior(event.getPlayer()))));
     }
 }

@@ -49,8 +49,7 @@ public class PlayerQuitListener implements Listener {
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        gm.getCurrentGame().ifPresent(game -> game.onDisconnect(plugin.getDatabaseManager()
-                .getWarrior(player.getUniqueId())));
+        gm.getCurrentGame().ifPresent(game -> game.onDisconnect(plugin.getDatabaseManager().getWarrior(player)));
         sendQuitMessage(player);
     }
 

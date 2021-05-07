@@ -67,7 +67,7 @@ public class PlayerDeathListener implements Listener {
             }
             return;
         }
-        Warrior warrior = databaseManager.getWarrior(victim.getUniqueId());
+        Warrior warrior = databaseManager.getWarrior(victim);
         if (game.shouldKeepInventoryOnDeath(warrior)) {
             event.setKeepInventory(true);
         }
@@ -75,7 +75,6 @@ public class PlayerDeathListener implements Listener {
             event.getDrops().clear();
             event.setDroppedExp(0);
         }
-        game.onDeath(warrior, killer != null ?
-                databaseManager.getWarrior(killer.getUniqueId()) : null);
+        game.onDeath(warrior, killer != null ? databaseManager.getWarrior(killer) : null);
     }
 }

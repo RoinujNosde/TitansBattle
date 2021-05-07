@@ -40,18 +40,18 @@ import java.util.function.Supplier;
 public class Warrior {
 
     private final Supplier<GroupManager> groupManager;
-    private final OfflinePlayer player;
+    private final OfflinePlayer offlinePlayer;
     private final Map<String, Integer> kills;
     private final Map<String, Integer> deaths;
     private final Map<String, Integer> victories;
 
-    public Warrior(@NotNull OfflinePlayer player,
+    public Warrior(@NotNull OfflinePlayer offlinePlayer,
                    @NotNull Supplier<GroupManager> groupManager,
                    @NotNull Map<String, Integer> kills,
                    @NotNull Map<String, Integer> deaths,
                    @NotNull Map<String, Integer> victories) {
         this.groupManager = groupManager;
-        this.player = player;
+        this.offlinePlayer = offlinePlayer;
         this.kills = kills;
         this.deaths = deaths;
         this.victories = victories;
@@ -74,7 +74,7 @@ public class Warrior {
 
     @NotNull
     public String getName() {
-        return player.getName() != null ? player.getName() : "null";
+        return offlinePlayer.getName() != null ? offlinePlayer.getName() : "null";
     }
 
     public void sendMessage(@Nullable String message) {
@@ -88,24 +88,27 @@ public class Warrior {
     @Override
     public String toString() {
         return "Warrior{" +
-                "name=" + player.getName() +
-                ", uuid=" + player.getUniqueId() +
+                "name=" + offlinePlayer.getName() +
+                ", uuid=" + offlinePlayer.getUniqueId() +
                 '}';
     }
 
     @Nullable
     public Player toOnlinePlayer() {
-        return player.getPlayer();
+        if (offlinePlayer instanceof Player) {
+            return (Player) offlinePlayer;
+        }
+        return offlinePlayer.getPlayer();
     }
 
     @NotNull
     public OfflinePlayer toPlayer() {
-        return player;
+        return offlinePlayer;
     }
 
     @NotNull
     public UUID getUniqueId() {
-        return player.getUniqueId();
+        return offlinePlayer.getUniqueId();
     }
 
     @Nullable
@@ -114,7 +117,7 @@ public class Warrior {
         if (groupManager == null) {
             return null;
         }
-        return groupManager.getGroup(player.getUniqueId());
+        return groupManager.getGroup(offlinePlayer.getUniqueId());
     }
 
     public int getKills(@NotNull String game) {
