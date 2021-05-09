@@ -34,6 +34,7 @@ import me.roinujnosde.titansbattle.types.Winners;
 import me.roinujnosde.titansbattle.utils.Helper;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
@@ -327,6 +328,9 @@ public class DatabaseManager {
         UUID uuid = player.getUniqueId();
         for (Warrior warrior : warriors) {
             if (warrior.toPlayer().getUniqueId().equals(uuid)) {
+                if (player instanceof Player) {
+                    warrior.setOnlinePlayer((Player) player);
+                }
                 return warrior;
             }
         }

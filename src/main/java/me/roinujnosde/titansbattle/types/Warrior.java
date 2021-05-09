@@ -29,6 +29,7 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
@@ -41,6 +42,7 @@ public class Warrior {
 
     private final Supplier<GroupManager> groupManager;
     private final OfflinePlayer offlinePlayer;
+    private @Nullable WeakReference<Player> playerReference;
     private final Map<String, Integer> kills;
     private final Map<String, Integer> deaths;
     private final Map<String, Integer> victories;
@@ -52,6 +54,10 @@ public class Warrior {
                    @NotNull Map<String, Integer> victories) {
         this.groupManager = groupManager;
         this.offlinePlayer = offlinePlayer;
+        Player player = offlinePlayer.getPlayer();
+        if (player != null) {
+            this.playerReference = new WeakReference<>(player);
+        }
         this.kills = kills;
         this.deaths = deaths;
         this.victories = victories;
@@ -95,10 +101,18 @@ public class Warrior {
 
     @Nullable
     public Player toOnlinePlayer() {
-        if (offlinePlayer instanceof Player) {
-            return (Player) offlinePlayer;
+        if (playerReference != null && playerReference.get() != null) {
+            return playerReference.get();
         }
         return offlinePlayer.getPlayer();
+    }
+
+    public void setOnlinePlayer(@NotNull Player player) {
+        if (!player.getUniqueId().equals(getUniqueId())) {
+            throw new IllegalArgumentException(String.format("different UUIDs: %s %s", getUniqueId(),
+                    player.getUniqueId()));
+        }
+        this.playerReference = new WeakReference<>(player);
     }
 
     @NotNull
