@@ -66,14 +66,17 @@ public class TBExpansion extends PlaceholderExpansion {
     public String getWinnerPrefix(@NotNull OfflinePlayer player, @NotNull String game) {
         GameConfiguration gameConfig = GameConfigurationDao.getInstance(plugin).getGameConfiguration(game);
         if (gameConfig == null) {
+            plugin.debug(String.format("game %s not found", game));
             return "";
         }
         Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
         List<UUID> playerWinners = latestWinners.getPlayerWinners(game);
         if (playerWinners == null || !playerWinners.contains(player.getUniqueId())) {
+            plugin.debug(String.format("player winners: %s", playerWinners));
             return "";
         }
         String prefix = gameConfig.getWinnerPrefix();
+        plugin.debug("prefix: " + prefix);
         return prefix != null ? prefix : "";
     }
 
