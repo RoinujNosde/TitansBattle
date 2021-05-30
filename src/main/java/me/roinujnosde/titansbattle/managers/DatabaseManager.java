@@ -36,6 +36,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.sql.*;
@@ -315,12 +316,7 @@ public class DatabaseManager {
 
     @NotNull
     public GroupData getGroupData(@NotNull String id) {
-        GroupData groupData = groups.get(id);
-        if (groupData == null) {
-            groupData = new GroupData(new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>());
-            groups.put(id, groupData);
-        }
-        return groupData;
+        return groups.computeIfAbsent(id, k -> new GroupData());
     }
 
     @NotNull
@@ -335,8 +331,7 @@ public class DatabaseManager {
             }
         }
 
-        Warrior warrior = new Warrior(player, plugin::getGroupManager, new HashMap<>(), new HashMap<>(),
-                new HashMap<>());
+        Warrior warrior = new Warrior(player, plugin::getGroupManager);
         warriors.add(warrior);
         return warrior;
     }
@@ -351,13 +346,13 @@ public class DatabaseManager {
         try (PreparedStatement statement = getConnection().prepareStatement(sql)) {
             ResultSet query = statement.executeQuery();
 
-            Map<String, HashMap<CountType, HashMap<String, Integer>>> dataMap = new HashMap<>();
+            Map<String, Map<CountType, Map<String, Integer>>> dataMap = new HashMap<>();
 
             while (query.next()) {
                 String id = query.getString("identification");
                 String game = String.valueOf(query.getString("game"));
                 dataMap.computeIfAbsent(id, k -> new HashMap<>());
-                final HashMap<CountType, HashMap<String, Integer>> groupData = dataMap.get(id);
+                final Map<CountType, Map<String, Integer>> groupData = dataMap.get(id);
                 for (CountType t : CountType.values()) {
                     groupData.computeIfAbsent(t, k -> new HashMap<>());
                     groupData.get(t).put(game, query.getInt(t.name()));
@@ -365,7 +360,7 @@ public class DatabaseManager {
             }
 
             for (String id : dataMap.keySet()) {
-                HashMap<CountType, HashMap<String, Integer>> data = dataMap.get(id);
+                Map<CountType, Map<String, Integer>> data = dataMap.get(id);
 
                 GroupData groupData = new GroupData(data.get(CountType.VICTORIES), data.get(CountType.DEFEATS),
                         data.get(CountType.KILLS), data.get(CountType.DEATHS));
@@ -381,13 +376,13 @@ public class DatabaseManager {
         try (Statement statement = getConnection().createStatement()) {
             ResultSet rs = statement.executeQuery(sql);
 
-            HashMap<UUID, HashMap<CountType, HashMap<String, Integer>>> players = new HashMap<>();
+            Map<UUID, Map<CountType, Map<String, Integer>>> players = new HashMap<>();
 
             while (rs.next()) {
                 UUID uuid = UUID.fromString(rs.getString("uuid"));
                 String game = String.valueOf(rs.getString("game"));
                 players.computeIfAbsent(uuid, k -> new HashMap<>());
-                final HashMap<CountType, HashMap<String, Integer>> playerData = players.get(uuid);
+                final Map<CountType, Map<String, Integer>> playerData = players.get(uuid);
                 for (CountType t : CountType.values()) {
                     if (t == CountType.DEFEATS) {
                         continue;
@@ -399,7 +394,7 @@ public class DatabaseManager {
 
             for (UUID uuid : players.keySet()) {
                 OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-                HashMap<CountType, HashMap<String, Integer>> playerData = players.get(uuid);
+                Map<CountType, Map<String, Integer>> playerData = players.get(uuid);
 
                 Warrior warrior = new Warrior(player, plugin::getGroupManager, playerData.get(CountType.KILLS),
                         playerData.get(CountType.DEATHS), playerData.get(CountType.VICTORIES));
@@ -464,9 +459,9 @@ public class DatabaseManager {
             for (Date date : winnersData.keySet()) {
                 Map<WinnerType, Map<String, Object>> data = winnersData.get(date);
 
-                Map<String, UUID> killer = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-                Map<String, List<UUID>> playerWinners = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-                Map<String, String> winnerGroup = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+                Map<String, UUID> killer = new HashMap<>();
+                Map<String, List<UUID>> playerWinners = new HashMap<>();
+                Map<String, String> winnerGroup = new HashMap<>();
 
                 for (WinnerType wt : data.keySet()) {
                     for (String game : data.get(wt).keySet()) {
@@ -538,15 +533,12 @@ public class DatabaseManager {
         return getEmptyWinners(null);
     }
 
-    private Winners getEmptyWinners(Date date) {
+    private Winners getEmptyWinners(@Nullable Date date) {
         if (date == null) {
             date = Calendar.getInstance().getTime();
         }
-        Map<String, UUID> killer = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        Map<String, List<UUID>> playerWinners = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
-        Map<String, String> winnerGroup = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
-        Winners w = new Winners(date, killer, playerWinners, winnerGroup);
+        Winners w = new Winners(date);
         winners.add(w);
         sortWinners();
         return w;

@@ -24,11 +24,14 @@
 package me.roinujnosde.titansbattle.types;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import static me.roinujnosde.titansbattle.utils.Helper.caseInsensitiveMap;
 
 /**
  *
@@ -41,14 +44,18 @@ public class Winners {
     private final Map<String, List<UUID>> playerWinners;
     private final Map<String, String> winnerGroup;
 
+    public Winners(@NotNull Date date) {
+        this(date, null, null, null);
+    }
+
     public Winners(@NotNull Date date,
-                   @NotNull Map<String, UUID> killer,
-                   @NotNull Map<String, List<UUID>> playerWinners,
-                   @NotNull Map<String, String> winnerGroup) {
+                   @Nullable Map<String, UUID> killer,
+                   @Nullable Map<String, List<UUID>> playerWinners,
+                   @Nullable Map<String, String> winnerGroup) {
         this.date = date;
-        this.killer = killer;
-        this.playerWinners = playerWinners;
-        this.winnerGroup = winnerGroup;
+        this.killer = caseInsensitiveMap(killer);
+        this.playerWinners = caseInsensitiveMap(playerWinners);
+        this.winnerGroup = caseInsensitiveMap(winnerGroup);
     }
 
     public Date getDate() {

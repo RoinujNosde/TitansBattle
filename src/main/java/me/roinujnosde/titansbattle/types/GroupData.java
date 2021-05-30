@@ -1,8 +1,11 @@
 package me.roinujnosde.titansbattle.types;
 
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
+
+import static me.roinujnosde.titansbattle.utils.Helper.caseInsensitiveMap;
 
 public class GroupData {
 
@@ -11,15 +14,19 @@ public class GroupData {
     private final Map<String, Integer> kills;
     private final Map<String, Integer> deaths;
 
+    public GroupData() {
+        this(null, null, null, null);
+    }
+    
     public GroupData(
-            @NotNull Map<String, Integer> victories,
-            @NotNull Map<String, Integer> defeats,
-            @NotNull Map<String, Integer> kills,
-            @NotNull Map<String, Integer> deaths) {
-        this.victories = victories;
-        this.kills = kills;
-        this.deaths = deaths;
-        this.defeats = defeats;
+            @Nullable Map<String, Integer> victories,
+            @Nullable Map<String, Integer> defeats,
+            @Nullable Map<String, Integer> kills,
+            @Nullable Map<String, Integer> deaths) {
+        this.victories = caseInsensitiveMap(victories);
+        this.kills = caseInsensitiveMap(kills);
+        this.deaths = caseInsensitiveMap(deaths);
+        this.defeats = caseInsensitiveMap(defeats);
     }
 
     public int getVictories(String game) {

@@ -34,6 +34,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
 
+import static me.roinujnosde.titansbattle.utils.Helper.caseInsensitiveMap;
+
 /**
  *
  * @author RoinujNosde
@@ -47,20 +49,24 @@ public class Warrior {
     private final Map<String, Integer> deaths;
     private final Map<String, Integer> victories;
 
+    public Warrior(@NotNull OfflinePlayer offlinePlayer, @NotNull Supplier<GroupManager> groupManager) {
+        this(offlinePlayer, groupManager, null, null, null);
+    }
+
     public Warrior(@NotNull OfflinePlayer offlinePlayer,
                    @NotNull Supplier<GroupManager> groupManager,
-                   @NotNull Map<String, Integer> kills,
-                   @NotNull Map<String, Integer> deaths,
-                   @NotNull Map<String, Integer> victories) {
+                   @Nullable Map<String, Integer> kills,
+                   @Nullable Map<String, Integer> deaths,
+                   @Nullable Map<String, Integer> victories) {
         this.groupManager = groupManager;
         this.offlinePlayer = offlinePlayer;
         Player player = offlinePlayer.getPlayer();
         if (player != null) {
             this.playerReference = new WeakReference<>(player);
         }
-        this.kills = kills;
-        this.deaths = deaths;
-        this.victories = victories;
+        this.kills = caseInsensitiveMap(kills);
+        this.deaths = caseInsensitiveMap(deaths);
+        this.victories = caseInsensitiveMap(victories);
     }
 
     @Override
