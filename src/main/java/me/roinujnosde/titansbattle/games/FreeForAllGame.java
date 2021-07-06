@@ -33,12 +33,12 @@ public class FreeForAllGame extends Game {
 
     @Override
     public boolean isInBattle(@NotNull Warrior warrior) {
-        return battle && playerParticipants.contains(warrior);
+        return battle && participants.contains(warrior);
     }
 
     @Override
     public @NotNull Collection<Warrior> getCurrentFighters() {
-        return playerParticipants;
+        return participants;
     }
 
     @Override
@@ -48,13 +48,13 @@ public class FreeForAllGame extends Game {
                 killer = findKiller();
                 getGroupParticipants().keySet().stream().findAny().ifPresent(g -> {
                     winnerGroup = g;
-                    getPlayerParticipants().stream().filter(p -> g.isMember(p.getUniqueId())).forEach(winners::add);
+                    getParticipants().stream().filter(p -> g.isMember(p.getUniqueId())).forEach(winners::add);
                 });
                 finish(false);
             }
-        } else if (playerParticipants.size() == 1) {
+        } else if (participants.size() == 1) {
             killer = findKiller();
-            winners = getPlayerParticipants();
+            winners = getParticipants();
             finish(false);
         }
     }
@@ -103,6 +103,6 @@ public class FreeForAllGame extends Game {
             groupsText = groupManager.buildStringFrom(getGroupParticipants().keySet());
         }
         return MessageFormat.format(plugin.getLang("game_info", this),
-                getPlayerParticipants().size(), getGroupParticipants().size(), groupsText);
+                getParticipants().size(), getGroupParticipants().size(), groupsText);
     }
 }

@@ -1,5 +1,6 @@
 package me.roinujnosde.titansbattle.types;
 
+import me.roinujnosde.titansbattle.BaseGameConfiguration;
 import me.roinujnosde.titansbattle.utils.ConfigUtils;
 import me.roinujnosde.titansbattle.utils.Path;
 import org.bukkit.Location;
@@ -14,7 +15,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
-public class GameConfiguration implements ConfigurationSerializable {
+public class GameConfiguration implements ConfigurationSerializable, BaseGameConfiguration {
 
     private String name;
     private Boolean groupMode = false;
@@ -188,7 +189,7 @@ public class GameConfiguration implements ConfigurationSerializable {
         return exit;
     }
 
-    public Location getLobby() {
+    public @NotNull Location getLobby() {
         return lobby;
     }
 

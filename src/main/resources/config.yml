@@ -9,7 +9,7 @@ sql:
         hostname: "localhost"
         port: 3306
         username: "root"
-        password: "thepassword"
+        password: ""
 
 #Language used in plugin's message
 language: en
@@ -42,6 +42,12 @@ commands:
     killer: "killer"
     groups: "groups"
     players: "players"
+    challenge: "challenge"
+    group: "group"
+    player: "player"
+    accept: "accept"
+    deny: "deny"
+    info: "info"
 
 #Sounds used in games, to disable one leave it ""
 sounds:

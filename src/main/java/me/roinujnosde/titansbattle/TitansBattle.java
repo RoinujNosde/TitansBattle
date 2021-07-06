@@ -24,6 +24,7 @@ package me.roinujnosde.titansbattle;
 import co.aikar.commands.ConditionFailedException;
 import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.PaperCommandManager;
+import me.roinujnosde.titansbattle.challenges.ArenaConfiguration;
 import me.roinujnosde.titansbattle.commands.TBCommands;
 import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
 import me.roinujnosde.titansbattle.games.Game;
@@ -67,7 +68,7 @@ public final class TitansBattle extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
+        saveDefaultConfig(); // TODO Copy defaults
         registerSerializationClasses();
         instance = this;
         gameManager = new GameManager();
@@ -95,6 +96,7 @@ public final class TitansBattle extends JavaPlugin {
     }
 
     private void registerSerializationClasses() {
+        ConfigurationSerialization.registerClass(ArenaConfiguration.class);
         ConfigurationSerialization.registerClass(GameConfiguration.Prize.class);
         ConfigurationSerialization.registerClass(GameConfiguration.class);
         ConfigurationSerialization.registerClass(Kit.class);
@@ -292,6 +294,11 @@ public final class TitansBattle extends JavaPlugin {
         return getLang(path, configFile);
     }
 
+    public String getLang(@NotNull String path, BaseGame game) {
+        // TODO Implement
+        throw new UnsupportedOperationException();
+    }
+
     /**
      * Sends a message to the console
      *
@@ -308,4 +315,5 @@ public final class TitansBattle extends JavaPlugin {
     public void debug(String message) {
         debug(message, true);
     }
+
 }

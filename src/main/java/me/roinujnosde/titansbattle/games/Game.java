@@ -1,5 +1,6 @@
 package me.roinujnosde.titansbattle.games;
 
+import me.roinujnosde.titansbattle.BaseGame;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.events.*;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
@@ -33,32 +34,23 @@ import java.util.stream.Stream;
 
 import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.*;
 
-public abstract class Game {
+public abstract class Game extends BaseGame {
 
-    protected final TitansBattle plugin;
-    protected final GroupManager groupManager;
     protected final GameManager gameManager;
     protected final DatabaseManager databaseManager;
     private final GameConfiguration config;
-    protected final List<Warrior> playerParticipants = new ArrayList<>();
-    protected final HashMap<Warrior, Integer> killsCount = new HashMap<>();
-    protected final Set<Warrior> casualties = new HashSet<>();
-    protected final Set<Warrior> casualtiesWatching = new HashSet<>();
     protected boolean lobby;
     private final List<BukkitTask> tasks = new ArrayList<>();
     protected boolean battle = false;
 
     public Game(TitansBattle plugin, GameConfiguration config) {
-        this.plugin = plugin;
+        super(plugin);
         this.config = config;
-        this.groupManager = plugin.getGroupManager();
-        if (config.isGroupMode() && groupManager == null) {
-            throw new IllegalStateException("gameManager cannot be null in a group mode game");
-        }
         this.databaseManager = plugin.getDatabaseManager();
         gameManager = plugin.getGameManager();
     }
 
+    @Override
     protected boolean canJoin(@NotNull Warrior warrior) {
         Player player = warrior.toOnlinePlayer();
         String reason = null;
@@ -74,7 +66,7 @@ public abstract class Game {
             reason = plugin.getLang("already-joined", this);
             plugin.debug("already in");
         }
-        if (playerParticipants.size() >= getConfig().getMaximumPlayers() && getConfig().getMaximumPlayers() > 0) {
+        if (participants.size() >= getConfig().getMaximumPlayers() && getConfig().getMaximumPlayers() > 0) {
             reason = plugin.getLang("maximum-players", this);
             plugin.debug("max players");
         }
@@ -112,38 +104,9 @@ public abstract class Game {
     public abstract boolean isInBattle(@NotNull Warrior warrior);
 
     public boolean isParticipant(@NotNull Warrior warrior) {
-        return playerParticipants.contains(warrior);
+        return participants.contains(warrior);
     }
 
-    public void onJoin(@NotNull Warrior warrior) {
-        if (!canJoin(warrior)) {
-            plugin.debug(String.format("Warrior %s can't join", warrior.getName()));
-            return;
-        }
-        Player player = warrior.toOnlinePlayer();
-        if (player == null) {
-            plugin.debug(String.format("onJoin() -> player %s %s == null", warrior.getName(), warrior.getUniqueId()));
-            return;
-        }
-        if (!teleport(warrior, getConfig().getLobby())) {
-            plugin.debug(String.format("Player %s is dead: %s", player, player.isDead()), false);
-            player.sendMessage(plugin.getLang("teleport.error", this));
-            return;
-        }
-        SoundUtils.playSound(JOIN_GAME, plugin.getConfig(), player);
-        playerParticipants.add(warrior);
-        setKit(warrior);
-        sendMessageToParticipants(MessageFormat.format(plugin.getLang("player_joined", this), player.getName()));
-    }
-
-    protected void setKit(@NotNull Warrior warrior) {
-        Kit kit = getConfig().getKit();
-        Player player = warrior.toOnlinePlayer();
-        if (getConfig().isUseKits() && kit != null && player != null) {
-            Kit.clearInventory(player);
-            kit.set(player);
-        }
-    }
 
     public boolean shouldClearDropsOnDeath(@NotNull Warrior warrior) {
         return isParticipant(warrior) && config.isClearItemsOnDeath();
@@ -163,7 +126,7 @@ public abstract class Game {
             PlayerExitGameEvent event = new PlayerExitGameEvent(player, this);
             Bukkit.getPluginManager().callEvent(event);
         }
-        playerParticipants.remove(warrior);
+        participants.remove(warrior);
         Group group = warrior.getGroup();
         if (!isLobby()) {
             runCommandsAfterBattle(Collections.singletonList(warrior));
@@ -283,7 +246,7 @@ public abstract class Game {
             gameManager.broadcastKey("cancelled", this, "CONSOLE");
             return false;
         }
-        if (getPlayerParticipants().size() < getConfig().getMinimumPlayers()) {
+        if (getParticipants().size() < getConfig().getMinimumPlayers()) {
             gameManager.broadcastKey("not_enough_participants", this);
             return false;
         }
@@ -374,7 +337,7 @@ public abstract class Game {
     public void finish(boolean cancelled) {
         teleportAll(getConfig().getExit());
         killTasks();
-        runCommandsAfterBattle(getPlayerParticipants());
+        runCommandsAfterBattle(getParticipants());
         if (getConfig().isUseKits()) {
             getPlayerParticipantsStream().forEach(Kit::clearInventory);
         }
@@ -389,15 +352,11 @@ public abstract class Game {
         return config;
     }
 
-    public @NotNull List<Warrior> getPlayerParticipants() {
-        return Collections.unmodifiableList(playerParticipants);
-    }
-
     public abstract @NotNull Collection<Warrior> getCurrentFighters();
 
     public Map<Group, Integer> getGroupParticipants() {
         Map<Group, Integer> groups = new HashMap<>();
-        for (Warrior w : playerParticipants) {
+        for (Warrior w : participants) {
             groups.compute(w.getGroup(), (g, i) -> i == null ? 1 : i + 1);
         }
         return groups;
@@ -415,18 +374,11 @@ public abstract class Game {
         killsCount.compute(warrior, (p, i) -> i == null ? 1 : i + 1);
     }
 
-    public void sendMessageToParticipants(@NotNull String message) {
-        getPlayerParticipantsStream().forEach(p -> p.sendMessage(message));
-    }
 
-    @NotNull
-    protected Stream<Player> getPlayerParticipantsStream() {
-        return getPlayerParticipants().stream().map(Warrior::toOnlinePlayer).filter(Objects::nonNull);
-    }
 
     protected int getRemainingOpponents(@NotNull Player player) {
         if (!getConfig().isGroupMode()) {
-            return getPlayerParticipants().size() - 1;
+            return getParticipants().size() - 1;
         }
         int opponents = 0;
         Warrior warrior = plugin.getDatabaseManager().getWarrior(player);
@@ -501,19 +453,8 @@ public abstract class Game {
         collection.forEach(p -> teleport(p, destination));
     }
 
-    protected boolean teleport(@Nullable Warrior warrior, Location destination) {
-        plugin.debug(String.format("teleport() -> destination %s", destination));
-        Player player = warrior != null ? warrior.toOnlinePlayer() : null;
-        if (player == null) {
-            plugin.debug(String.format("teleport() -> warrior %s", warrior));
-            return false;
-        }
-        SoundUtils.playSound(TELEPORT, plugin.getConfig(), player);
-        return player.teleport(destination);
-    }
-
     protected void teleportAll(Location destination) {
-        getPlayerParticipants().forEach(player -> teleport(player, destination));
+        getParticipants().forEach(player -> teleport(player, destination));
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -609,7 +550,7 @@ public abstract class Game {
             if (times > 0) {
                 Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("starting_game", Game.this),
                         seconds, getConfig().getMinimumGroups(), getConfig().getMinimumPlayers(),
-                        getGroupParticipants().size(), getPlayerParticipants().size()));
+                        getGroupParticipants().size(), getParticipants().size()));
                 times--;
             } else {
                 preLobbyEnd();

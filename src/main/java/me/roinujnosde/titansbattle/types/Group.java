@@ -9,7 +9,6 @@ import java.util.UUID;
 /**
  * Represents a Group in group {@link Game}s
  *
- * @see FactionsGroup
  * @see SimpleClansGroup
  */
 public abstract class Group {
@@ -25,6 +24,15 @@ public abstract class Group {
      * @return the {@link Group}'s name
      */
     public abstract @NotNull String getName();
+
+    /**
+     * A name that is unique to this {@link Group}
+     *
+     * @return the {@link Group}'s unique name
+     */
+    public @NotNull String getUniqueName() {
+        return getName();
+    }
 
     /**
      *

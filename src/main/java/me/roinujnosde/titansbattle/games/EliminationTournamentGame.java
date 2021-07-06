@@ -60,7 +60,7 @@ public class EliminationTournamentGame extends Game {
         List<Warrior> list = new ArrayList<>();
         if (getConfig().isGroupMode()) {
             Group winnerGroup = Objects.requireNonNull(groupDuelists.get(0).getOther(defeated.getGroup()));
-            list = getPlayerParticipants().stream().filter(p -> winnerGroup.isMember(p.getUniqueId()))
+            list = getParticipants().stream().filter(p -> winnerGroup.isMember(p.getUniqueId()))
                     .collect(Collectors.toList());
         } else {
             Warrior other = playerDuelists.get(0).getOther(defeated);
@@ -130,7 +130,7 @@ public class EliminationTournamentGame extends Game {
         battleForThirdPlace = false;
         thirdPlaceWinners = duelWinners;
         teleport(duelWinners, getConfig().getWatchroom());
-        playerParticipants.removeIf(thirdPlaceWinners::contains);
+        participants.removeIf(thirdPlaceWinners::contains);
         if (getConfig().isUseKits()) {
             thirdPlaceWinners.forEach(Kit::clearInventory);
         }
@@ -235,9 +235,9 @@ public class EliminationTournamentGame extends Game {
 
     private void kickExcessivePlayers() {
         Set<Warrior> toKick = new HashSet<>();
-        for (int i = playerParticipants.size(); i > 2; i--) {
+        for (int i = participants.size(); i > 2; i--) {
             if (!isPowerOfTwo(i)) {
-                toKick.add(playerParticipants.get(i - 1));
+                toKick.add(participants.get(i - 1));
                 continue;
             }
             break;
@@ -256,12 +256,12 @@ public class EliminationTournamentGame extends Game {
             break;
         }
         for (Group group : toKick) {
-            kickExcessive(playerParticipants.stream().filter(group::isMember).collect(Collectors.toSet()));
+            kickExcessive(participants.stream().filter(group::isMember).collect(Collectors.toSet()));
         }
     }
 
     private void kickExcessive(@NotNull Set<Warrior> warriors) {
-        playerParticipants.removeIf(warriors::contains);
+        participants.removeIf(warriors::contains);
         Set<Player> players = warriors.stream().map(Warrior::toOnlinePlayer).filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         teleport(warriors, getConfig().getWatchroom());
@@ -291,7 +291,7 @@ public class EliminationTournamentGame extends Game {
     private void generateDuelists() {
         if (getWaitingThirdPlaceCount() == 2) {
             gameManager.broadcastKey("battle_for_third_place", this);
-            playerParticipants.addAll(waitingThirdPlace);
+            participants.addAll(waitingThirdPlace);
             if (getConfig().isGroupMode()) {
                 generateDuelist(getWaitingThirdPlaceGroups(), groupDuelists);
             } else {
@@ -305,7 +305,7 @@ public class EliminationTournamentGame extends Game {
             gameManager.broadcastKey("final_battle", this);
         }
         if (!getConfig().isGroupMode()) {
-            generateDuelist(playerParticipants, playerDuelists);
+            generateDuelist(participants, playerDuelists);
         } else {
             ArrayList<Group> groups = new ArrayList<>(getGroupParticipants().keySet());
             generateDuelist(groups, groupDuelists);
@@ -341,14 +341,14 @@ public class EliminationTournamentGame extends Game {
         if (getConfig().isGroupMode()) {
             participants = getGroupParticipants().size();
         } else {
-            participants = playerParticipants.size();
+            participants = this.participants.size();
         }
         return participants;
     }
 
     @Override
     public @NotNull Collection<Warrior> getCurrentFighters() {
-        return getPlayerParticipants().stream().filter(this::isCurrentDuelist).collect(Collectors.toList());
+        return getParticipants().stream().filter(this::isCurrentDuelist).collect(Collectors.toList());
     }
 
     private void informOtherDuelists() {
@@ -358,7 +358,7 @@ public class EliminationTournamentGame extends Game {
                 warrior.sendMessage(message);
             }
         };
-        getPlayerParticipants().forEach(sendMessage);
+        getParticipants().forEach(sendMessage);
         waitingThirdPlace.forEach(sendMessage);
     }
 
@@ -369,7 +369,7 @@ public class EliminationTournamentGame extends Game {
             }
         } else {
             List<Group> duelists = groupDuelists.get(0).getDuelists();
-            getPlayerParticipants().stream().filter(player -> {
+            getParticipants().stream().filter(player -> {
                 for (Group g : duelists) {
                     if (g.isMember(player.getUniqueId())) {
                         return true;
