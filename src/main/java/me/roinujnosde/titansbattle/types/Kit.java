@@ -20,13 +20,13 @@ public class Kit implements ConfigurationSerializable {
     }
 
     public Kit(@NotNull Map<String, Object> data) {
-        contents = new ItemStack[41];
+        contents = new ItemStack[data.size()];
         for (Map.Entry<String, Object> entry : data.entrySet()) {
             if (entry.getKey().equals("==")) {
                 continue;
             }
             int index = Integer.parseInt(entry.getKey());
-            if (index >= 41) {
+            if (index >= 41) { //currently, the max size in player inventories
                 continue;
             }
             contents[index] = ((ItemStack) entry.getValue());
@@ -50,10 +50,7 @@ public class Kit implements ConfigurationSerializable {
     }
 
     public void set(@NotNull Player player) {
-        PlayerInventory inventory = player.getInventory();
-        for (int i = 0; i < contents.length; i++) {
-            inventory.setItem(i, contents[i]);
-        }
+        player.getInventory().setContents(contents);
     }
 
     public static boolean inventoryHasItems(@NotNull Player player) {
