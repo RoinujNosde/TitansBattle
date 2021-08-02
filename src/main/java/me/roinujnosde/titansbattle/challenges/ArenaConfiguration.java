@@ -1,5 +1,6 @@
 package me.roinujnosde.titansbattle.challenges;
 
+import me.roinujnosde.titansbattle.BaseGameConfiguration;
 import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.utils.ConfigUtils;
 import me.roinujnosde.titansbattle.utils.Path;
@@ -9,8 +10,9 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-public class ArenaConfiguration implements ConfigurationSerializable {
+public class ArenaConfiguration implements ConfigurationSerializable, BaseGameConfiguration {
 
+    // TODO Private fields
     public String name;
     public Boolean useKits = false;
     public Kit kit;
@@ -53,4 +55,10 @@ public class ArenaConfiguration implements ConfigurationSerializable {
     public Map<String, Object> serialize() {
         return ConfigUtils.serialize(this);
     }
+
+    @Override
+    public Integer getMaximumGroups() {
+        return 2;
+    }
+
 }

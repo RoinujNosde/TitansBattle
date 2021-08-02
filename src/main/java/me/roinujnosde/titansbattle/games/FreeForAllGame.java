@@ -61,8 +61,7 @@ public class FreeForAllGame extends Game {
 
     @Override
     protected void onLobbyEnd() {
-        Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("game_started", this),
-                getConfig().getPreparationTime()));
+        broadcastKey("game_started", getConfig().getPreparationTime());
         teleportAll(getConfig().getArena());
         startPreparationTask();
     }
@@ -90,7 +89,7 @@ public class FreeForAllGame extends Game {
         }
         today.setWinners(gameName, Helper.warriorListToUuidList(winners));
         String winnerName = getConfig().isGroupMode() ? winnerGroup.getName() : winners.get(0).getName();
-        Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("who_won", this), winnerName));
+        broadcastKey("who_won", winnerName);
         winners.forEach(w -> w.increaseVictories(gameName));
         givePrizes(FIRST, winnerGroup, winners);
     }

@@ -25,6 +25,8 @@ import co.aikar.commands.ConditionFailedException;
 import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.PaperCommandManager;
 import me.roinujnosde.titansbattle.challenges.ArenaConfiguration;
+import me.roinujnosde.titansbattle.commands.CanChallengeCondition;
+import me.roinujnosde.titansbattle.commands.ChallengeCommand;
 import me.roinujnosde.titansbattle.commands.TBCommands;
 import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
 import me.roinujnosde.titansbattle.games.Game;
@@ -64,6 +66,7 @@ public final class TitansBattle extends JavaPlugin {
     private LanguageManager languageManager;
     private DatabaseManager databaseManager;
     private @Nullable GroupManager groupManager;
+    private ChallengeManager challengeManager;
     private GameConfigurationDao gameConfigurationDao;
 
     @Override
@@ -76,6 +79,7 @@ public final class TitansBattle extends JavaPlugin {
         taskManager = new TaskManager();
         languageManager = new LanguageManager();
         databaseManager = new DatabaseManager();
+        challengeManager = new ChallengeManager();
         gameConfigurationDao = GameConfigurationDao.getInstance(this);
 
         configManager.load();
@@ -143,6 +147,7 @@ public final class TitansBattle extends JavaPlugin {
 
     private void registerCommands() {
         pcm.registerCommand(new TBCommands());
+        pcm.registerCommand(new ChallengeCommand());
     }
 
     private void registerConditions() {
@@ -152,6 +157,7 @@ public final class TitansBattle extends JavaPlugin {
                 throw new ConditionFailedException();
             }
         });
+        pcm.getCommandConditions().addCondition("can_challenge", new CanChallengeCondition(this));
     }
 
     private void registerCompletions() {
@@ -187,6 +193,7 @@ public final class TitansBattle extends JavaPlugin {
         pcm.registerDependency(GameConfigurationDao.class, gameConfigurationDao);
         pcm.registerDependency(ConfigManager.class, configManager);
         pcm.registerDependency(DatabaseManager.class, databaseManager);
+        pcm.registerDependency(ChallengeManager.class, challengeManager);
     }
 
     private void loadGroupsPlugin() {
@@ -234,6 +241,10 @@ public final class TitansBattle extends JavaPlugin {
 
     public GameManager getGameManager() {
         return gameManager;
+    }
+
+    public ChallengeManager getChallengeManager() {
+        return challengeManager;
     }
 
     public TaskManager getTaskManager() {
@@ -294,7 +305,7 @@ public final class TitansBattle extends JavaPlugin {
         return getLang(path, configFile);
     }
 
-    public String getLang(@NotNull String path, BaseGame game) {
+    public String getLang(@NotNull String path, BaseGame game, Object... args) {
         // TODO Implement
         throw new UnsupportedOperationException();
     }

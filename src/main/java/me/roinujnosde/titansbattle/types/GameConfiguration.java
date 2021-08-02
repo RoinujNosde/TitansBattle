@@ -96,7 +96,7 @@ public class GameConfiguration implements ConfigurationSerializable, BaseGameCon
         return ConfigUtils.serialize(this);
     }
 
-    public String getName() {
+    public @NotNull String getName() {
         return name;
     }
 
@@ -185,7 +185,7 @@ public class GameConfiguration implements ConfigurationSerializable, BaseGameCon
         this.watchroom = watchroom;
     }
 
-    public Location getExit() {
+    public @NotNull Location getExit() {
         return exit;
     }
 
@@ -197,7 +197,7 @@ public class GameConfiguration implements ConfigurationSerializable, BaseGameCon
         return arena;
     }
 
-    public Location getWatchroom() {
+    public @NotNull Location getWatchroom() {
         return watchroom;
     }
 
