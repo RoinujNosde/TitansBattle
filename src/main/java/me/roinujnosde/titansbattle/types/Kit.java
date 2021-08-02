@@ -50,7 +50,10 @@ public class Kit implements ConfigurationSerializable {
     }
 
     public void set(@NotNull Player player) {
-        player.getInventory().setContents(contents);
+        PlayerInventory inventory = player.getInventory();
+        for (int i = 0; i < contents.length; i++) {
+            inventory.setItem(i, contents[i]);
+        }
     }
 
     public static boolean inventoryHasItems(@NotNull Player player) {
