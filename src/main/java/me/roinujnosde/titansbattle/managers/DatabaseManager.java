@@ -266,6 +266,10 @@ public class DatabaseManager {
         ArrayList<GameConfiguration> updated = new ArrayList<>();
         String uuid = warrior.toPlayer().getUniqueId().toString();
         String name = warrior.toPlayer().getName();
+        if (name == null) {
+            plugin.debug(String.format("Name not found for %s", uuid));
+            return;
+        }
 
         String update = "UPDATE tb_warriors SET kills=?, deaths=?, victories=?, displayname=? WHERE uuid=? AND game=?;";
         try (PreparedStatement statement = getConnection().prepareStatement(update)) {
