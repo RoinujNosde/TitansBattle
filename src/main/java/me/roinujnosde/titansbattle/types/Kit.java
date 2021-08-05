@@ -20,15 +20,19 @@ public class Kit implements ConfigurationSerializable {
     }
 
     public Kit(@NotNull Map<String, Object> data) {
-        contents = new ItemStack[data.size()];
+        int size = data.keySet().stream().mapToInt(s -> {
+            try {
+                return Integer.parseInt(s);
+            } catch (NumberFormatException ex) {
+                return 0;
+            }
+        }).max().orElse(0) + 1;
+        contents = new ItemStack[size];
         for (Map.Entry<String, Object> entry : data.entrySet()) {
             if (entry.getKey().equals("==")) {
                 continue;
             }
             int index = Integer.parseInt(entry.getKey());
-            if (index >= 41) { //currently, the max size in player inventories
-                continue;
-            }
             contents[index] = ((ItemStack) entry.getValue());
         }
     }
