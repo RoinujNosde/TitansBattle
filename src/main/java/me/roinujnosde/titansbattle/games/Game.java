@@ -83,6 +83,7 @@ public abstract class Game extends BaseGame {
         addTask(lobbyTask);
     }
 
+    @Override
     public void finish(boolean cancelled) {
         teleportAll(getConfig().getExit());
         killTasks();

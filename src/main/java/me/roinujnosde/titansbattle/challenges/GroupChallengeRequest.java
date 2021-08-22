@@ -11,6 +11,11 @@ public class GroupChallengeRequest  extends ChallengeRequest<Group> {
     }
 
     @Override
+    public String getChallengerName() {
+        return challenger.getUniqueName();
+    }
+
+    @Override
     public boolean isInvited(@NotNull Warrior warrior) {
         Group group = warrior.getGroup();
         return challenger.equals(group) || challenged.equals(group);

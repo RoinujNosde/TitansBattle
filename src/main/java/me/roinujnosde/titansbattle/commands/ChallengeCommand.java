@@ -1,5 +1,6 @@
 package me.roinujnosde.titansbattle.commands;
 
+import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
 import co.aikar.commands.bukkit.contexts.OnlinePlayer;
 import me.roinujnosde.titansbattle.TitansBattle;
@@ -9,9 +10,6 @@ import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Warrior;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
-
-import co.aikar.commands.BaseCommand;
 
 import java.util.Objects;
 import java.util.Set;
@@ -22,11 +20,9 @@ import java.util.Set;
 public class ChallengeCommand extends BaseCommand {
 
     // TODO Arena context resolver
-    // TODO Group context resolver
-    // TODO Arenas completion
-    // TODO Groups completion
-    // TODO Warrior context resolver
-    // TODO ChallengeRequest completions
+    // TODO Arenas completion, suggest only Arenas that support the chosen mode (groups false or true)
+    // TODO Challenges have some interval to start
+
     @Dependency
     private TitansBattle plugin;
     @Dependency
@@ -75,14 +71,14 @@ public class ChallengeCommand extends BaseCommand {
 
     @Subcommand("%accept")
     @CommandCompletion("@requests")
-    public void accept(Player player, String challenger) {
-
+    public void accept(Warrior warrior, @Values("@requests") ChallengeRequest<?> challenger) {
+        challenger.getChallenge().onJoin(warrior);
     }
 
     @Subcommand("%deny")
     @CommandCompletion("@requests")
     public void deny( ) {
-
+        // TODO Is it necessary?
     }
 
     //TODO Shows info about an arena

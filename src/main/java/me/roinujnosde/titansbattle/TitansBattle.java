@@ -23,8 +23,10 @@ package me.roinujnosde.titansbattle;
 
 import co.aikar.commands.ConditionFailedException;
 import co.aikar.commands.InvalidCommandArgument;
+import co.aikar.commands.MessageKeys;
 import co.aikar.commands.PaperCommandManager;
 import me.roinujnosde.titansbattle.challenges.ArenaConfiguration;
+import me.roinujnosde.titansbattle.challenges.ChallengeRequest;
 import me.roinujnosde.titansbattle.commands.CanChallengeCondition;
 import me.roinujnosde.titansbattle.commands.ChallengeCommand;
 import me.roinujnosde.titansbattle.commands.TBCommands;
@@ -32,10 +34,7 @@ import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
 import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.listeners.*;
 import me.roinujnosde.titansbattle.managers.*;
-import me.roinujnosde.titansbattle.types.GameConfiguration;
-import me.roinujnosde.titansbattle.types.Kit;
-import me.roinujnosde.titansbattle.types.Prizes;
-import me.roinujnosde.titansbattle.types.Winners;
+import me.roinujnosde.titansbattle.types.*;
 import me.roinujnosde.titansbattle.utils.ConfigUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -43,6 +42,7 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -143,6 +143,33 @@ public final class TitansBattle extends JavaPlugin {
                 throw new InvalidCommandArgument();
             }
         });
+        pcm.getCommandContexts().registerContext(Group.class, supplier -> {
+            String arg = supplier.popFirstArg();
+            if (groupManager != null) {
+                for (Group group : groupManager.getGroups()) {
+                    if (arg.equalsIgnoreCase(group.getUniqueName())) {
+                        return group;
+                    }
+                }
+            }
+            throw new InvalidCommandArgument(getLang("group.not.found"));
+        });
+        pcm.getCommandContexts().registerIssuerOnlyContext(Warrior.class, supplier -> {
+            Player player = supplier.getPlayer();
+            if (player == null) {
+                throw new InvalidCommandArgument(MessageKeys.NOT_ALLOWED_ON_CONSOLE);
+            }
+            return databaseManager.getWarrior(player);
+        });
+        pcm.getCommandContexts().registerContext(ChallengeRequest.class, supplier -> {
+            String arg = supplier.popFirstArg();
+            for (ChallengeRequest<?> request : challengeManager.getRequests()) {
+                if (request.getChallengerName().equalsIgnoreCase(arg)) {
+                    return request;
+                }
+            }
+            return null;
+        });
     }
 
     private void registerCommands() {
@@ -179,6 +206,15 @@ public final class TitansBattle extends JavaPlugin {
                 list.add(String.valueOf(i + 1));
             }
             return list;
+        });
+        pcm.getCommandCompletions().registerCompletion("groups", handler -> {
+           if (groupManager == null) return Collections.emptyList();
+            return groupManager.getGroups().stream().map(Group::getUniqueName).collect(Collectors.toList());
+        });
+        pcm.getCommandCompletions().registerCompletion("requests", handler -> {
+            Warrior warrior = databaseManager.getWarrior(handler.getIssuer().getUniqueId());
+            return challengeManager.getRequests().stream().filter(cr -> cr.isInvited(warrior))
+                    .map(ChallengeRequest::getChallengerName).collect(Collectors.toList());
         });
         pcm.getCommandCompletions().registerStaticCompletion("prizes_config_fields", ConfigUtils.getEditableFields(Prizes.class));
         pcm.getCommandCompletions().registerStaticCompletion("game_config_fields", ConfigUtils.getEditableFields(GameConfiguration.class));

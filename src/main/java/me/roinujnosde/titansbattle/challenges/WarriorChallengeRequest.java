@@ -10,6 +10,11 @@ public class WarriorChallengeRequest extends ChallengeRequest<Warrior> {
     }
 
     @Override
+    public String getChallengerName() {
+        return challenger.getName();
+    }
+
+    @Override
     public boolean isInvited(@NotNull Warrior warrior) {
         return warrior.equals(challenged) || warrior.equals(challenger);
     }

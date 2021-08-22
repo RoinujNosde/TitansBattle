@@ -27,6 +27,8 @@ public abstract class ChallengeRequest<T> {
         return challenger;
     }
 
+    public abstract String getChallengerName();
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

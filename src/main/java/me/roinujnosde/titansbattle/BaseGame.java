@@ -56,6 +56,8 @@ public abstract class BaseGame {
 
     public abstract void start();
 
+    public abstract void finish(boolean cancelled);
+
     public void cancel(@NotNull CommandSender sender) {
         broadcastKey("cancelled", sender.getName());
         finish(true);

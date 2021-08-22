@@ -1,3 +1,4 @@
+group.not.found: "&c» Group not found!"
 you.must.be.in.a.group.to.challenge: "&c» You must be in a group to challenge another group!"
 challenged.you: "&a» {0} challenged you to a duel! Accept it using /tb challenge accept {0}"
 challenged.your.group: "&a» {0} challenged your group to a battle! Accept it using /tb challenge accept {0}"
