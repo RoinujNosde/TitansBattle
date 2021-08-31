@@ -88,6 +88,8 @@ public class ChallengeCommand extends BaseCommand {
 
     }
 
+    // TODO Watch room
+
     public void createArena() {}
 
 }

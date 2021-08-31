@@ -6,38 +6,73 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collection;
+import java.io.File;
 import java.util.List;
 
-public interface BaseGameConfiguration {
+public abstract class BaseGameConfiguration {
 
-    @NotNull FileConfiguration getFileConfiguration(); // TODO Does transient keeps it from being saved?
+    protected File file; // TODO Transient?
+    protected FileConfiguration fileConfiguration;  // TODO Does transient keeps it from being saved?
+    protected String name;
 
-    @NotNull String getName();
+    public @NotNull FileConfiguration getFileConfiguration() {
+        if (fileConfiguration == null) {
+            throw new IllegalStateException();
+        }
+        return fileConfiguration;
+    }
 
-    @NotNull Location getLobby();
+    public void setFileConfiguration(@NotNull FileConfiguration fileConfiguration) {
+        this.fileConfiguration = fileConfiguration;
+    }
 
-    @NotNull Location getWatchroom();
+    public @NotNull File getFile() {
+        if (file == null) {
+            throw new IllegalStateException();
+        }
+        return file;
+    }
 
-    @NotNull Location getExit();
+    public void setFile(@NotNull File file) {
+        this.file = file;
+    }
 
-    @Nullable Kit getKit();
+    @NotNull
+    public String getName() {
+        return name;
+    }
 
-    boolean isUseKits();
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    boolean isGroupMode();
+    @NotNull
+    abstract Location getLobby();
 
-    List<String> getCommandsBeforeBattle();
+    @NotNull
+    abstract Location getWatchroom();
 
-    List<String> getCommandsAfterBattle();
+    @NotNull
+    abstract Location getExit();
 
-    Integer getMinimumPlayers();
+    @Nullable
+    abstract Kit getKit();
 
-    Integer getMinimumGroups();
+    abstract boolean isUseKits();
 
-    Integer getMaximumPlayers();
+    abstract boolean isGroupMode();
 
-    Integer getMaximumPlayersPerGroup();
+    abstract List<String> getCommandsBeforeBattle();
 
-    Integer getMaximumGroups();
+    abstract List<String> getCommandsAfterBattle();
+
+    abstract Integer getMinimumPlayers();
+
+    abstract Integer getMinimumGroups();
+
+    abstract Integer getMaximumPlayers();
+
+    abstract Integer getMaximumPlayersPerGroup();
+
+    abstract Integer getMaximumGroups();
 }

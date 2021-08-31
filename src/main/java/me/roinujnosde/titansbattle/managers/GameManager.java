@@ -1,7 +1,6 @@
 package me.roinujnosde.titansbattle.managers;
 
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
 import me.roinujnosde.titansbattle.events.NewKillerEvent;
 import me.roinujnosde.titansbattle.games.EliminationTournamentGame;
 import me.roinujnosde.titansbattle.games.FreeForAllGame;
@@ -69,13 +68,13 @@ public class GameManager {
 
         if (currentTimeInSeconds == nextTimeInSeconds) {
             plugin.debug("It's time!", true);
-            GameConfigurationDao dao = GameConfigurationDao.getInstance(plugin);
-            GameConfiguration config = dao.getGameConfiguration(nextScheduler.getGameName());
-            if (config == null) {
+            Optional<GameConfiguration> config = plugin.getConfigurationDao()
+                    .getConfiguration(nextScheduler.getGameName(), GameConfiguration.class);
+            if (!config.isPresent()) {
                 plugin.debug(String.format("Game %s not found!", nextScheduler.getGameName()), false);
                 return;
             }
-            start(config);
+            start(config.get());
         } else {
             plugin.debug("It's not time yet!", true);
             tm.startSchedulerTask(nextTimeInSeconds - currentTimeInSeconds);
@@ -92,10 +91,9 @@ public class GameManager {
         if (!gameConfig.isKiller()) {
             return;
         }
-        GameConfigurationDao dao = GameConfigurationDao.getInstance(plugin);
         Bukkit.getPluginManager().callEvent(new NewKillerEvent(killer, victim));
-        Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("new_killer",
-                dao.getConfigFile(gameConfig)), killer.getName()));
+        Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("new_killer", gameConfig),
+                killer.getName()));
         plugin.getDatabaseManager().getTodaysWinners().setKiller(gameConfig.getName(), killer.getUniqueId());
     }
 

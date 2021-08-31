@@ -15,7 +15,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
-public class GameConfiguration implements ConfigurationSerializable, BaseGameConfiguration {
+public class GameConfiguration extends BaseGameConfiguration implements ConfigurationSerializable {
 
     private String name;
     private Boolean groupMode = false;
@@ -96,6 +96,7 @@ public class GameConfiguration implements ConfigurationSerializable, BaseGameCon
         return ConfigUtils.serialize(this);
     }
 
+    @Override
     public @NotNull String getName() {
         return name;
     }
@@ -104,22 +105,27 @@ public class GameConfiguration implements ConfigurationSerializable, BaseGameCon
         this.name = name;
     }
 
+    @Override
     public Integer getMinimumGroups() {
         return Math.max(2, minimumGroups);
     }
 
+    @Override
     public Integer getMinimumPlayers() {
         return Math.max(2, minimumPlayers);
     }
 
+    @Override
     public Integer getMaximumPlayers() {
         return maximumPlayers;
     }
 
+    @Override
     public Integer getMaximumGroups() {
         return maximumGroups;
     }
 
+    @Override
     public Integer getMaximumPlayersPerGroup() {
         return maximumPlayersPerGroup;
     }
@@ -132,10 +138,12 @@ public class GameConfiguration implements ConfigurationSerializable, BaseGameCon
         return expirationTime;
     }
 
+    @Override
     public @Nullable List<String> getCommandsBeforeBattle() {
         return commandsBeforeBattle;
     }
 
+    @Override
     public @Nullable List<String> getCommandsAfterBattle() {
         return commandsAfterBattle;
     }
@@ -161,6 +169,7 @@ public class GameConfiguration implements ConfigurationSerializable, BaseGameCon
         return prizes;
     }
 
+    @Override
     public @Nullable Kit getKit() {
         return kit;
     }
@@ -185,10 +194,12 @@ public class GameConfiguration implements ConfigurationSerializable, BaseGameCon
         this.watchroom = watchroom;
     }
 
+    @Override
     public @NotNull Location getExit() {
         return exit;
     }
 
+    @Override
     public @NotNull Location getLobby() {
         return lobby;
     }
@@ -196,12 +207,13 @@ public class GameConfiguration implements ConfigurationSerializable, BaseGameCon
     public Location getArena() {
         return arena;
     }
-
+    @Override
     public @NotNull Location getWatchroom() {
         return watchroom;
     }
 
-    public Boolean isUseKits() {
+    @Override
+    public boolean isUseKits() {
         return useKits;
     }
 
@@ -213,7 +225,8 @@ public class GameConfiguration implements ConfigurationSerializable, BaseGameCon
         return powerOfTwo;
     }
 
-    public Boolean isGroupMode() {
+    @Override
+    public boolean isGroupMode() {
         return groupMode;
     }
 

@@ -7,43 +7,45 @@ import me.roinujnosde.titansbattle.utils.Path;
 import org.bukkit.Location;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
-public class ArenaConfiguration implements ConfigurationSerializable, BaseGameConfiguration {
+@SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
+public class ArenaConfiguration extends BaseGameConfiguration implements ConfigurationSerializable {
 
     // TODO Private fields
-    public String name;
-    public Boolean useKits = false;
-    public Kit kit;
-    public Boolean groupMode = false;
-    public Boolean pvp = true;
-    public Boolean clearItemsOnDeath = false;
+    private String name;
+    private Boolean useKits = false;
+    private Kit kit;
+    private Boolean groupMode = false;
+    private Boolean pvp = true;
+    private Boolean clearItemsOnDeath = false;
 
     @Path("damage-type.melee")
-    public Boolean meleeDamage = true;
+    private Boolean meleeDamage = true;
     @Path("damage-type.ranged")
-    public Boolean rangedDamage = true;
+    private Boolean rangedDamage = true;
     @Path("minimum.players")
-    public Integer minimumPlayers = 2;
+    private Integer minimumPlayers = 2;
     @Path("maximum.players")
-    public Integer maximumPlayers = 100;
+    private Integer maximumPlayers = 100;
 
     @Path("time.expiration")
-    public Integer expirationTime = 3600;
+    private Integer expirationTime = 3600;
     @Path("time.preparation")
-    public Integer preparationTime = 30;
+    private Integer preparationTime = 30;
 
     @Path("destination.entrance.1")
-    public Location entrance1;
+    private Location entrance1;
     @Path("destination.entrance.2")
-    public Location entrance2;
+    private Location entrance2;
     @Path("destination.watchroom")
-    public Location watchroom;
+    private Location watchroom;
     @Path("destination.exit")
-    public Location exit;
+    private Location exit;
     @Path("destination.lobby")
-    public Location lobby;
+    private Location lobby;
 
     public ArenaConfiguration() {}
 
@@ -54,6 +56,64 @@ public class ArenaConfiguration implements ConfigurationSerializable, BaseGameCo
     @Override
     public Map<String, Object> serialize() {
         return ConfigUtils.serialize(this);
+    }
+
+    @Override
+    public @NotNull String getName() {
+        return name;
+    }
+
+    @Override
+    public @NotNull Location getLobby() {
+        return lobby;
+    }
+
+    @Override
+    public @NotNull Location getWatchroom() {
+        return watchroom;
+    }
+
+    @Override
+    public @NotNull Location getExit() {
+        return exit;
+    }
+
+    @Override
+    public @Nullable Kit getKit() {
+        return kit;
+    }
+
+    @Override
+    public boolean isUseKits() {
+        return useKits;
+    }
+
+    @Override
+    public boolean isGroupMode() {
+        return groupMode;
+    }
+
+    @Override
+    public Integer getMinimumPlayers() {
+        return minimumPlayers;
+    }
+
+    @Override
+    public Integer getMinimumGroups() {
+        if (isGroupMode()) {
+            return 2;
+        }
+        return 0;
+    }
+
+    @Override
+    public Integer getMaximumPlayers() {
+        return maximumPlayers;
+    }
+
+    @Override
+    public Integer getMaximumPlayersPerGroup() {
+        return getMaximumPlayers() / 2;
     }
 
     @Override

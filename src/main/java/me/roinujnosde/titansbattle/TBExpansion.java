@@ -1,7 +1,6 @@
 package me.roinujnosde.titansbattle;
 
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Winners;
 import org.bukkit.OfflinePlayer;
