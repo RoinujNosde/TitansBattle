@@ -16,7 +16,13 @@ public class Kit implements ConfigurationSerializable {
     private final ItemStack[] contents;
 
     public Kit(@NotNull PlayerInventory inventory) {
-        contents = inventory.getContents().clone();
+        ItemStack[] invContents = inventory.getContents();
+        this.contents = new ItemStack[invContents.length];
+
+        for (int i = 0; i < invContents.length; i++) {
+            ItemStack itemStack = invContents[i];
+            this.contents[i] = itemStack != null ? itemStack.clone() : null;
+        }
     }
 
     public Kit(@NotNull Map<String, Object> data) {
