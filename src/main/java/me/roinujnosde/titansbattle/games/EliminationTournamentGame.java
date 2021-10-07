@@ -1,6 +1,8 @@
 package me.roinujnosde.titansbattle.games;
 
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.events.GroupWinEvent;
+import me.roinujnosde.titansbattle.events.PlayerWinEvent;
 import me.roinujnosde.titansbattle.types.*;
 import me.roinujnosde.titansbattle.types.GameConfiguration.Prize;
 import me.roinujnosde.titansbattle.utils.Helper;
@@ -418,7 +420,11 @@ public class EliminationTournamentGame extends Game {
         if (getConfig().isGroupMode() && firstGroup != null) {
             casualties.stream().filter(firstGroup::isMember).forEach(firstPlaceWinners::add);
             todaysWinners.setWinnerGroup(getConfig().getName(), firstGroup.getName());
+            GroupWinEvent event = new GroupWinEvent(firstGroup);
+            Bukkit.getPluginManager().callEvent(event);
         }
+        PlayerWinEvent event = new PlayerWinEvent(this, firstPlaceWinners);
+        Bukkit.getPluginManager().callEvent(event);
         todaysWinners.setWinners(getConfig().getName(), Helper.warriorListToUuidList(firstPlaceWinners));
         givePrizes(Prize.FIRST, firstGroup, firstPlaceWinners);
         givePrizes(Prize.SECOND, getAnyGroup(secondPlaceWinners), secondPlaceWinners);
