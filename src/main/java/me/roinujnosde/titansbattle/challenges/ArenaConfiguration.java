@@ -9,34 +9,18 @@ import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.List;
 import java.util.Map;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal"})
 public class ArenaConfiguration extends BaseGameConfiguration implements ConfigurationSerializable {
 
-    // TODO Private fields
     private String name;
     private Boolean useKits = false;
     private Kit kit;
-    private Boolean groupMode = false;
     private Boolean pvp = true;
-    private Boolean clearItemsOnDeath = false;
 
-    @Path("damage-type.melee")
-    private Boolean meleeDamage = true;
-    @Path("damage-type.ranged")
-    private Boolean rangedDamage = true;
-    @Path("minimum.players")
-    private Integer minimumPlayers = 2;
-    @Path("maximum.players")
-    private Integer maximumPlayers = 100;
-
-    @Path("time.expiration")
-    private Integer expirationTime = 3600;
-    @Path("time.preparation")
-    private Integer preparationTime = 30;
-
-    @Path("destination.entrance.1")
+    @Path("destination.entrance.1") // TODO Make all games support multiple entrances
     private Location entrance1;
     @Path("destination.entrance.2")
     private Location entrance2;
@@ -46,6 +30,11 @@ public class ArenaConfiguration extends BaseGameConfiguration implements Configu
     private Location exit;
     @Path("destination.lobby")
     private Location lobby;
+
+    @Path("run_commands.before_battle")
+    private @Nullable List<String> commandsBeforeBattle;
+    @Path("run_commands.after_battle")
+    private @Nullable List<String> commandsAfterBattle;
 
     public ArenaConfiguration() {}
 
@@ -121,4 +110,13 @@ public class ArenaConfiguration extends BaseGameConfiguration implements Configu
         return 2;
     }
 
+    @Override
+    public List<String> getCommandsBeforeBattle() {
+        return commandsBeforeBattle;
+    }
+
+    @Override
+    public List<String> getCommandsAfterBattle() {
+        return commandsAfterBattle;
+    }
 }

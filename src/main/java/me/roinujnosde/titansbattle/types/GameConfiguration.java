@@ -17,32 +17,20 @@ import java.util.logging.Logger;
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
 public class GameConfiguration extends BaseGameConfiguration implements ConfigurationSerializable {
 
-    private String name;
-    private Boolean groupMode = false;
     private Boolean eliminationTournament = false;
     private Boolean powerOfTwo = false;
     private Boolean killer = true;
     private Boolean pvp = true;
-    private Boolean clearItemsOnDeath = false;
-    @Path("damage-type.melee")
-    private Boolean meleeDamage = true;
-    @Path("damage-type.ranged")
-    private Boolean rangedDamage = true;
+
     @Path("minimum.groups")
     private Integer minimumGroups = 2;
     @Path("maximum.groups")
     private Integer maximumGroups = 0;
     @Path("maximum.players_per_group")
     private Integer maximumPlayersPerGroup = 0;
-    @Path("minimum.players")
-    private Integer minimumPlayers = 10;
-    @Path("maximum.players")
-    private Integer maximumPlayers = 100;
+
     private Boolean deleteGroups = false;
-    @Path("time.expiration")
-    private Integer expirationTime = 3600;
-    @Path("time.preparation")
-    private Integer preparationTime = 30;
+
     @Path("run_commands.before_battle")
     private @Nullable List<String> commandsBeforeBattle;
     @Path("run_commands.after_battle")
