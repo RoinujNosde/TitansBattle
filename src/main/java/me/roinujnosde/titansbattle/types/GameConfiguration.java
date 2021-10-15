@@ -10,17 +10,15 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
-public class GameConfiguration extends BaseGameConfiguration implements ConfigurationSerializable {
+public class GameConfiguration extends BaseGameConfiguration {
 
     private Boolean eliminationTournament = false;
     private Boolean powerOfTwo = false;
     private Boolean killer = true;
-    private Boolean pvp = true;
 
     @Path("minimum.groups")
     private Integer minimumGroups = 2;
@@ -31,25 +29,8 @@ public class GameConfiguration extends BaseGameConfiguration implements Configur
 
     private Boolean deleteGroups = false;
 
-    @Path("run_commands.before_battle")
-    private @Nullable List<String> commandsBeforeBattle;
-    @Path("run_commands.after_battle")
-    private @Nullable List<String> commandsAfterBattle;
-
-    private Boolean useKits = false;
-    private Kit kit;
-
     @Path("prizes")
     private Map<String, Prizes> prizesMap = createPrizesMap();
-
-    @Path("destination.exit")
-    private Location exit;
-    @Path("destination.lobby")
-    private Location lobby;
-    @Path("destination.watchroom")
-    private Location watchroom;
-    @Path("destination.arena")
-    private Location arena;
 
     @Path("announcement.starting.times")
     private Integer announcementStartingTimes = 5;
@@ -73,20 +54,17 @@ public class GameConfiguration extends BaseGameConfiguration implements Configur
     @Path("message.winner.quit")
     private Boolean winnerQuitMessage = false;
 
-    public GameConfiguration() {}
+    public GameConfiguration() {
+        this(Collections.emptyMap());
+    }
 
     public GameConfiguration(@NotNull Map<String, Object> data) {
-        ConfigUtils.deserialize(this, data);
+        super(data);
     }
 
     @Override
     public Map<String, Object> serialize() {
         return ConfigUtils.serialize(this);
-    }
-
-    @Override
-    public @NotNull String getName() {
-        return name;
     }
 
     public void setName(@NotNull String name) {
@@ -99,13 +77,8 @@ public class GameConfiguration extends BaseGameConfiguration implements Configur
     }
 
     @Override
-    public Integer getMinimumPlayers() {
-        return Math.max(2, minimumPlayers);
-    }
-
-    @Override
-    public Integer getMaximumPlayers() {
-        return maximumPlayers;
+    public Integer getMaximumPlayersPerGroup() {
+        return maximumPlayersPerGroup;
     }
 
     @Override
@@ -114,8 +87,8 @@ public class GameConfiguration extends BaseGameConfiguration implements Configur
     }
 
     @Override
-    public Integer getMaximumPlayersPerGroup() {
-        return maximumPlayersPerGroup;
+    public Integer getMinimumPlayers() {
+        return Math.max(2, minimumPlayers);
     }
 
     public Integer getPreparationTime() {
@@ -124,16 +97,6 @@ public class GameConfiguration extends BaseGameConfiguration implements Configur
 
     public Integer getExpirationTime() {
         return expirationTime;
-    }
-
-    @Override
-    public @Nullable List<String> getCommandsBeforeBattle() {
-        return commandsBeforeBattle;
-    }
-
-    @Override
-    public @Nullable List<String> getCommandsAfterBattle() {
-        return commandsAfterBattle;
     }
 
     public Integer getAnnouncementStartingInterval() {
@@ -182,56 +145,12 @@ public class GameConfiguration extends BaseGameConfiguration implements Configur
         this.watchroom = watchroom;
     }
 
-    @Override
-    public @NotNull Location getExit() {
-        return exit;
-    }
-
-    @Override
-    public @NotNull Location getLobby() {
-        return lobby;
-    }
-
-    public Location getArena() {
-        return arena;
-    }
-    @Override
-    public @NotNull Location getWatchroom() {
-        return watchroom;
-    }
-
-    @Override
-    public boolean isUseKits() {
-        return useKits;
-    }
-
     public Boolean isEliminationTournament() {
         return eliminationTournament;
     }
 
     public Boolean isPowerOfTwo() {
         return powerOfTwo;
-    }
-
-    @Override
-    public boolean isGroupMode() {
-        return groupMode;
-    }
-
-    public Boolean isPvP() {
-        return pvp;
-    }
-
-    public Boolean isClearItemsOnDeath() {
-        return clearItemsOnDeath;
-    }
-
-    public Boolean isMeleeDamage() {
-        return meleeDamage;
-    }
-
-    public Boolean isRangedDamage() {
-        return rangedDamage;
     }
 
     public Boolean isKiller() {
@@ -270,9 +189,6 @@ public class GameConfiguration extends BaseGameConfiguration implements Configur
         return winnerPrefix;
     }
 
-    public Boolean locationsSet() {
-        return arena != null && exit != null && lobby != null && watchroom != null;
-    }
 
     private Map<String, Prizes> createPrizesMap() {
         LinkedHashMap<String, Prizes> map = new LinkedHashMap<>();

@@ -96,7 +96,12 @@ public class ConfigUtils {
         List<Field> fields = new ArrayList<>();
         Class<?> clazz = obj.getClass();
         while (clazz != Object.class) {
-            fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+            for (Field field : clazz.getDeclaredFields()) {
+                if (Modifier.isTransient(field.getModifiers())) {
+                    continue;
+                }
+                fields.add(field);
+            }
             clazz = clazz.getSuperclass();
         }
         return fields;
