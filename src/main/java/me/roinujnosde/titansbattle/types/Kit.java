@@ -2,6 +2,7 @@ package me.roinujnosde.titansbattle.types;
 
 import org.bukkit.Material;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.configuration.serialization.SerializableAs;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
@@ -11,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Map;
 import java.util.TreeMap;
 
+@SerializableAs("kit")
 public class Kit implements ConfigurationSerializable {
 
     private final ItemStack[] contents;

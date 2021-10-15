@@ -2,11 +2,13 @@ package me.roinujnosde.titansbattle.challenges;
 
 import me.roinujnosde.titansbattle.BaseGameConfiguration;
 import me.roinujnosde.titansbattle.utils.ConfigUtils;
+import org.bukkit.configuration.serialization.SerializableAs;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collections;
 import java.util.Map;
 
+@SerializableAs("arena")
 public class ArenaConfiguration extends BaseGameConfiguration {
 
     public ArenaConfiguration() {

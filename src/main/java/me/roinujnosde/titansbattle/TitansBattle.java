@@ -71,7 +71,7 @@ public final class TitansBattle extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        saveDefaultConfig(); // TODO Copy defaults
+        setupConfig();
         registerSerializationClasses();
         instance = this;
         gameManager = new GameManager();
@@ -99,10 +99,17 @@ public final class TitansBattle extends JavaPlugin {
         }
     }
 
+    private void setupConfig() {
+        saveDefaultConfig();
+        //loads the config and copies default values
+        getConfig().options().copyDefaults(true);
+        //saves it back (to add new values)
+        saveConfig();
+    }
+
     private void registerSerializationClasses() {
-        ConfigurationSerialization.registerClass(ArenaConfiguration.class);
         ConfigurationSerialization.registerClass(GameConfiguration.Prize.class);
-        ConfigurationSerialization.registerClass(GameConfiguration.class);
+        ConfigurationSerialization.registerClass(BaseGameConfiguration.class);
         ConfigurationSerialization.registerClass(Kit.class);
         ConfigurationSerialization.registerClass(Prizes.class);
     }

@@ -5,6 +5,7 @@ import me.roinujnosde.titansbattle.utils.ConfigUtils;
 import me.roinujnosde.titansbattle.utils.Path;
 import org.bukkit.Location;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.configuration.serialization.SerializableAs;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.logging.Logger;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
+@SerializableAs("game")
 public class GameConfiguration extends BaseGameConfiguration {
 
     private Boolean eliminationTournament = false;
