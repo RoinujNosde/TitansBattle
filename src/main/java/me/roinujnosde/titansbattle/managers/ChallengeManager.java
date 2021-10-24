@@ -35,7 +35,7 @@ public class ChallengeManager {
         if (challenges.contains(challenge)) {
             throw new IllegalStateException("cannot add another challenge in the same arena");
         }
-        requests.add(request); // TODO Remove from request after?
+        requests.add(request);
         challenges.add(challenge);
         challenge.start();
     }
@@ -45,4 +45,8 @@ public class ChallengeManager {
         challenges.remove(request.getChallenge());
     }
 
+    public void remove(final Challenge challenge) {
+        challenges.remove(challenge);
+        requests.removeIf(r -> r.getChallenge().equals(challenge));
+    }
 }

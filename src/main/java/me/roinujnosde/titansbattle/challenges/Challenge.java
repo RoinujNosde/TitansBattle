@@ -2,14 +2,13 @@ package me.roinujnosde.titansbattle.challenges;
 
 import me.roinujnosde.titansbattle.BaseGame;
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.types.Kit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class Challenge extends BaseGame {
 
     private final ArenaConfiguration config;
-
-    // TODO Remove from ChallengeManager#challenges on finish
 
     public Challenge(@NotNull TitansBattle plugin, @NotNull ArenaConfiguration config) {
         super(plugin);
@@ -37,6 +36,7 @@ public class Challenge extends BaseGame {
     @Override
     public void finish(boolean cancelled) {
         // TODO Implement finish logic
-        plugin.getChallengeManager().remove();
+        super.finish(cancelled);
+        plugin.getChallengeManager().remove(this);
     }
 }

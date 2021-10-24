@@ -56,7 +56,15 @@ public abstract class BaseGame {
 
     public abstract void start();
 
-    public abstract void finish(boolean cancelled);
+    public void finish(boolean cancelled) {
+        teleportAll(getConfig().getExit());
+        killTasks();
+        runCommandsAfterBattle(getParticipants());
+        if (getConfig().isUseKits()) {
+            getPlayerParticipantsStream().forEach(Kit::clearInventory);
+        }
+        Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getDatabaseManager().saveAll(), 1);
+    }
 
     public void cancel(@NotNull CommandSender sender) {
         broadcastKey("cancelled", sender.getName());

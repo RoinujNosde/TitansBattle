@@ -6,7 +6,6 @@ import me.roinujnosde.titansbattle.events.LobbyStartEvent;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Group;
-import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.types.Warrior;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -85,17 +84,11 @@ public abstract class Game extends BaseGame {
 
     @Override
     public void finish(boolean cancelled) {
-        teleportAll(getConfig().getExit());
-        killTasks();
-        runCommandsAfterBattle(getParticipants());
-        if (getConfig().isUseKits()) {
-            getPlayerParticipantsStream().forEach(Kit::clearInventory);
-        }
+        super.finish(cancelled);
         gameManager.setCurrentGame(null);
         if (!cancelled) {
             processWinners();
         }
-        plugin.getDatabaseManager().saveAll();
     }
 
     private void deleteGroups() {
