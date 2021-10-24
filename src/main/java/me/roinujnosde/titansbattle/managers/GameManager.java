@@ -9,6 +9,7 @@ import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Scheduler;
 import me.roinujnosde.titansbattle.types.Warrior;
+import me.roinujnosde.titansbattle.utils.ActionBar;
 import me.roinujnosde.titansbattle.utils.Helper;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -94,8 +95,11 @@ public class GameManager {
         }
         GameConfigurationDao dao = GameConfigurationDao.getInstance(plugin);
         Bukkit.getPluginManager().callEvent(new NewKillerEvent(killer, victim));
-        Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("new_killer",
+
+        /* Code changes - Kawl [ 23/10/2021 ] */
+        ActionBar.sendPlayersActionBar(MessageFormat.format(plugin.getLang("new_killer",
                 dao.getConfigFile(gameConfig)), killer.getName()));
+
         plugin.getDatabaseManager().getTodaysWinners().setKiller(gameConfig.getName(), killer.getUniqueId());
     }
 
