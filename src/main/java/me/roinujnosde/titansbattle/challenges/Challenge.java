@@ -33,4 +33,10 @@ public class Challenge extends BaseGame {
     public ArenaConfiguration getConfig() {
         return config;
     }
+
+    @Override
+    public void finish(boolean cancelled) {
+        // TODO Implement finish logic
+        plugin.getChallengeManager().remove();
+    }
 }

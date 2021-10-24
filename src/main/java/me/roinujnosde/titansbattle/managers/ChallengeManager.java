@@ -30,7 +30,7 @@ public class ChallengeManager {
         return null;
     }
 
-    public void addRequest(@NotNull ChallengeRequest<?> request) {
+    public void add(@NotNull ChallengeRequest<?> request) {
         Challenge challenge = request.getChallenge();
         if (challenges.contains(challenge)) {
             throw new IllegalStateException("cannot add another challenge in the same arena");
@@ -38,6 +38,11 @@ public class ChallengeManager {
         requests.add(request); // TODO Remove from request after?
         challenges.add(challenge);
         challenge.start();
+    }
+
+    public void remove(@NotNull ChallengeRequest<?> request) {
+        requests.remove(request);
+        challenges.remove(request.getChallenge());
     }
 
 }

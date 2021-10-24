@@ -39,7 +39,7 @@ public class ChallengeCommand extends BaseCommand {
         Warrior challenged = databaseManager.getWarrior(target.player);
         WarriorChallengeRequest request = new WarriorChallengeRequest(challenge, challenger, challenged);
 
-        challengeManager.addRequest(request);
+        challengeManager.add(request);
 
         challenger.sendMessage(plugin.getLang("you.challenged.player", challenge, target.player.getName()));
         target.player.sendMessage(plugin.getLang("challenged.you", challenge, challenger.getName()));
@@ -55,7 +55,7 @@ public class ChallengeCommand extends BaseCommand {
         Group challenger = Objects.requireNonNull(sender.getGroup());
         GroupChallengeRequest request = new GroupChallengeRequest(challenge, challenger, target);
 
-        challengeManager.addRequest(request);
+        challengeManager.add(request);
 
         sender.sendMessage(plugin.getLang("you.challenged.group", challenge, target.getName()));
         String msgRivals = plugin.getLang("challenged.your.group", challenge, challenger.getName(),
