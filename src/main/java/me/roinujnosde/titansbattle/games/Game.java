@@ -2,12 +2,10 @@ package me.roinujnosde.titansbattle.games;
 
 import me.roinujnosde.titansbattle.BaseGame;
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.events.LobbyStartEvent;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Warrior;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -63,21 +61,10 @@ public abstract class Game extends BaseGame {
 
     @Override
     public void start() {
-        LobbyStartEvent event = new LobbyStartEvent(this);
-        Bukkit.getPluginManager().callEvent(event);
-        if (event.isCancelled()) {
-            return;
-        }
-        if (getConfig().isGroupMode() && plugin.getGroupManager() == null) {
-            throw new IllegalStateException("You cannot start a group based game without a supported Groups plugin!");
-        }
-        if (!getConfig().locationsSet()) {
-            throw new IllegalStateException("You didn't set all locations!");
-        }
+        super.start();
         gameManager.setCurrentGame(this);
-        lobby = true;
-        Integer interval = config.getAnnouncementStartingInterval();
-        BukkitTask lobbyTask = new LobbyAnnouncementTask(config.getAnnouncementStartingTimes(), interval)
+        Integer interval = getConfig().getAnnouncementStartingInterval();
+        BukkitTask lobbyTask = new Game.LobbyAnnouncementTask(config.getAnnouncementStartingTimes(), interval)
                 .runTaskTimer(plugin, 0, interval * 20);
         addTask(lobbyTask);
     }
@@ -132,12 +119,6 @@ public abstract class Game extends BaseGame {
 
     public @NotNull GameConfiguration getConfig() {
         return config;
-    }
-
-    protected void startPreparationTask() {
-        addTask(new PreparationTimeTask().runTaskLater(plugin, config.getPreparationTime() * 20));
-        addTask(new CountdownTitleTask(getCurrentFighters(), getConfig().getPreparationTime())
-                .runTaskTimer(plugin, 0L, 20L));
     }
 
     @Override

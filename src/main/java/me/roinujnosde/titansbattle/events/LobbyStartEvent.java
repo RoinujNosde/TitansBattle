@@ -23,7 +23,7 @@
  */
 package me.roinujnosde.titansbattle.events;
 
-import me.roinujnosde.titansbattle.games.Game;
+import me.roinujnosde.titansbattle.BaseGame;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -37,10 +37,10 @@ public class LobbyStartEvent extends Event implements Cancellable {
 
     private static final HandlerList HANDLERS = new HandlerList();
     private boolean cancelled = false;
-    private final Game game;
+    private final BaseGame game;
     
 
-    public LobbyStartEvent(@NotNull Game game) {
+    public LobbyStartEvent(@NotNull BaseGame game) {
         this.game = game;
     }
     
@@ -48,7 +48,7 @@ public class LobbyStartEvent extends Event implements Cancellable {
      * Returns the Game
      * @return the Game
      */
-    public Game getGame() {
+    public BaseGame getGame() {
         return game;
     }
 
@@ -71,6 +71,7 @@ public class LobbyStartEvent extends Event implements Cancellable {
         cancelled = cancel;
     }
 
+    @SuppressWarnings("unused")
     public static HandlerList getHandlerList() {
         return HANDLERS;
     }

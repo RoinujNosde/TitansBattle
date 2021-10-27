@@ -408,7 +408,7 @@ public class EliminationTournamentGame extends Game {
 
     @Override
     protected void processWinners() {
-        Winners todaysWinners = databaseManager.getTodaysWinners();
+        Winners todayWinners = databaseManager.getTodaysWinners();
 
         Group firstGroup = getAnyGroup(firstPlaceWinners);
         //we must clear the inventory before adding the casualties, otherwise the already dead would lose their items again
@@ -417,9 +417,9 @@ public class EliminationTournamentGame extends Game {
         }
         if (getConfig().isGroupMode() && firstGroup != null) {
             casualties.stream().filter(firstGroup::isMember).forEach(firstPlaceWinners::add);
-            todaysWinners.setWinnerGroup(getConfig().getName(), firstGroup.getName());
+            todayWinners.setWinnerGroup(getConfig().getName(), firstGroup.getName());
         }
-        todaysWinners.setWinners(getConfig().getName(), Helper.warriorListToUuidList(firstPlaceWinners));
+        todayWinners.setWinners(getConfig().getName(), Helper.warriorListToUuidList(firstPlaceWinners));
         givePrizes(Prize.FIRST, firstGroup, firstPlaceWinners);
         givePrizes(Prize.SECOND, getAnyGroup(secondPlaceWinners), secondPlaceWinners);
         givePrizes(Prize.THIRD, getAnyGroup(thirdPlaceWinners), thirdPlaceWinners);
@@ -430,7 +430,7 @@ public class EliminationTournamentGame extends Game {
             givePrizes(Prize.KILLER, null, Collections.singletonList(killer));
             gameManager.setKiller(getConfig(), killer, null);
             SoundUtils.playSound(SoundUtils.Type.VICTORY, plugin.getConfig(), killer.toOnlinePlayer());
-            todaysWinners.setKiller(getConfig().getName(), killer.getUniqueId());
+            todayWinners.setKiller(getConfig().getName(), killer.getUniqueId());
         }
         gameManager.broadcastKey("who_won_tournament", this, getWinnerName(firstPlaceWinners),
                 getWinnerName(secondPlaceWinners), getWinnerName(thirdPlaceWinners));

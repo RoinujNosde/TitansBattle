@@ -54,7 +54,20 @@ public abstract class BaseGame {
         }
     }
 
-    public abstract void start();
+    public void start() {
+        if (getConfig().isGroupMode() && plugin.getGroupManager() == null) {
+            throw new IllegalStateException("You cannot start a group based game without a supported Groups plugin!");
+        }
+        if (!getConfig().locationsSet()) {
+            throw new IllegalStateException("You didn't set all locations!");
+        }
+        LobbyStartEvent event = new LobbyStartEvent(this);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            return;
+        }
+        lobby = true;
+    }
 
     public void finish(boolean cancelled) {
         teleportAll(getConfig().getExit());
@@ -463,6 +476,12 @@ public abstract class BaseGame {
             broadcastKey("killed_by", victim.getName(), killsCount.getOrDefault(victim, 0),
                     killer.getName(), killsCount.get(killer), weaponName);
         }
+    }
+
+    protected void startPreparationTask() {
+        addTask(new PreparationTimeTask().runTaskLater(plugin, getConfig().getPreparationTime() * 20));
+        addTask(new CountdownTitleTask(getCurrentFighters(), getConfig().getPreparationTime())
+                .runTaskTimer(plugin, 0L, 20L));
     }
 
     public class PreparationTimeTask extends BukkitRunnable {
