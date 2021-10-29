@@ -536,6 +536,7 @@ public abstract class Game {
     }
 
     protected void startPreparationTask() {
+        runCommandsBeforeBattle(getCurrentFighters());
         addTask(new PreparationTimeTask().runTaskLater(plugin, config.getPreparationTime() * 20));
         addTask(new CountdownTitleTask(getCurrentFighters(), getConfig().getPreparationTime())
                 .runTaskTimer(plugin, 0L, 20L));
@@ -546,7 +547,6 @@ public abstract class Game {
         @Override
         public void run() {
             Bukkit.getServer().broadcastMessage(plugin.getLang("preparation_over", Game.this));
-            runCommandsBeforeBattle(getCurrentFighters());
             battle = true;
         }
     }
