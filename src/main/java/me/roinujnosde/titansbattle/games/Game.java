@@ -9,9 +9,8 @@ import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.types.Warrior;
+import me.roinujnosde.titansbattle.utils.MessageUtils;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -109,6 +108,7 @@ public abstract class Game {
         return reason == null && !event.isCancelled();
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public abstract boolean isInBattle(@NotNull Warrior warrior);
 
     public boolean isParticipant(@NotNull Warrior warrior) {
@@ -465,18 +465,14 @@ public abstract class Game {
     }
 
     protected void sendRemainingOpponentsCount() {
-        try {
-            getPlayerParticipantsStream().forEach(p -> {
-                int remaining = getRemainingOpponents(p);
-                if (remaining <= 0) {
-                    return;
-                }
-                p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(
-                        MessageFormat.format(plugin.getLang("action-bar-remaining-opponents", this),
-                                remaining)));
-            });
-        } catch (NoSuchMethodError ignored) {
-        }
+        getPlayerParticipantsStream().forEach(p -> {
+            int remaining = getRemainingOpponents(p);
+            if (remaining <= 0) {
+                return;
+            }
+            MessageUtils.sendActionBar(p, MessageFormat.format(plugin.getLang("action-bar-remaining-opponents",
+                    this), remaining));
+        });
     }
 
     protected void runCommandsBeforeBattle(@NotNull Collection<Warrior> warriors) {

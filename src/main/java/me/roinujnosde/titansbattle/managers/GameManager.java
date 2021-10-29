@@ -10,6 +10,7 @@ import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Scheduler;
 import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.Helper;
+import me.roinujnosde.titansbattle.utils.MessageUtils;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
@@ -96,10 +97,8 @@ public class GameManager {
         }
         GameConfigurationDao dao = GameConfigurationDao.getInstance(plugin);
         Bukkit.getPluginManager().callEvent(new NewKillerEvent(killer, victim));
-        Bukkit.getServer().getOnlinePlayers().forEach((p) -> {
-            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(
-                    MessageFormat.format(plugin.getLang("new_killer", dao.getConfigFile(gameConfig)), killer.getName())));
-        });
+        Bukkit.getServer().getOnlinePlayers().forEach((p) -> MessageUtils.sendActionBar(p,
+                MessageFormat.format(plugin.getLang("new_killer", dao.getConfigFile(gameConfig)), killer.getName())));
         plugin.getDatabaseManager().getTodaysWinners().setKiller(gameConfig.getName(), killer.getUniqueId());
     }
 
