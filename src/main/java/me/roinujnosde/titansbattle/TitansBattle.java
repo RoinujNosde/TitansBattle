@@ -201,6 +201,7 @@ public final class TitansBattle extends JavaPlugin {
         pm.registerEvents(new PlayerJoinListener(), this);
         pm.registerEvents(new PlayerDeathListener(), this);
         pm.registerEvents(new EntityDamageListener(), this);
+        pm.registerEvents(new BlockUpdateListener(), this);
         pm.registerEvents(new PlayerRespawnListener(), this);
         pm.registerEvents(new PlayerTeleportListener(), this);
     }
