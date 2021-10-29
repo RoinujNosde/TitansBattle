@@ -25,26 +25,30 @@ public class BlockUpdateListener implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBreak(BlockBreakEvent event) {
-        if (dispatch(event.getPlayer())) event.setCancelled(true);
+        if (shouldCancel(event.getPlayer())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlace(BlockPlaceEvent event) {
-        if (dispatch(event.getPlayer())) event.setCancelled(true);
+        if (shouldCancel(event.getPlayer())) {
+            event.setCancelled(true);
+        }
     }
 
-    private boolean dispatch(Player p) {
+    private boolean shouldCancel(Player player) {
         Game game = gm.getCurrentGame().orElse(null);
         if (game == null) {
             return false;
         }
 
-        Warrior defender = dm.getWarrior(p);
-        if (!game.isParticipant(defender)) {
+        Warrior warrior = dm.getWarrior(player);
+        if (!game.isParticipant(warrior)) {
             return false;
         }
 
-        return !game.isInBattle(defender);
+        return !game.isInBattle(warrior);
     }
 
 }
