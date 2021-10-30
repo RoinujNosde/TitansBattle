@@ -43,7 +43,7 @@ public class MessageUtils {
             Field playerConnectionField = handle.getClass().getField("playerConnection");
             Object playerConnection = playerConnectionField.get(handle);
 
-            Method sendPacket = playerConnection.getClass().getMethod("sendPacket", packetClass);
+            Method sendPacket = playerConnection.getClass().getMethod("sendPacket", packetClass.getSuperclass());
             Method serializer = chatSerializerClass.getMethod("a", String.class);
             Object baseComponent = serializer.invoke(null, jsonMessage);
 
