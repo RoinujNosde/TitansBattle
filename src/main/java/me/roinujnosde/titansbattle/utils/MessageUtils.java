@@ -17,7 +17,7 @@ public class MessageUtils {
     static {
         try {
             baseComponentClass = Class.forName("net.minecraft.server.v1_8_R3.IChatBaseComponent");
-            chatSerializerClass = Class.forName("net.minecraft.server.v1_8_R3.IChatBaseComponent.ChatSerializer");
+            chatSerializerClass = Class.forName("net.minecraft.server.v1_8_R3.IChatBaseComponent$ChatSerializer");
             packetClass = Class.forName("net.minecraft.server.v1_8_R3.PacketPlayOutChat");
         } catch (ClassNotFoundException ignored) {
         }
