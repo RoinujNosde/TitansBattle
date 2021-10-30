@@ -13,12 +13,14 @@ public class MessageUtils {
     private static Class<?> baseComponentClass;
     private static Class<?> chatSerializerClass;
     private static Class<?> packetClass;
+    private static Class<?> chatPacketClass;
 
     static {
         try {
             baseComponentClass = Class.forName("net.minecraft.server.v1_8_R3.IChatBaseComponent");
             chatSerializerClass = Class.forName("net.minecraft.server.v1_8_R3.IChatBaseComponent$ChatSerializer");
-            packetClass = Class.forName("net.minecraft.server.v1_8_R3.PacketPlayOutChat");
+            packetClass = Class.forName("net.minecraft.server.v1_8_R3.Packet");
+            chatPacketClass = Class.forName("net.minecraft.server.v1_8_R3.PacketPlayOutChat");
         } catch (ClassNotFoundException ignored) {
         }
     }
@@ -43,11 +45,11 @@ public class MessageUtils {
             Field playerConnectionField = handle.getClass().getField("playerConnection");
             Object playerConnection = playerConnectionField.get(handle);
 
-            Method sendPacket = playerConnection.getClass().getMethod("sendPacket", packetClass.getSuperclass());
+            Method sendPacket = playerConnection.getClass().getMethod("sendPacket", packetClass);
             Method serializer = chatSerializerClass.getMethod("a", String.class);
             Object baseComponent = serializer.invoke(null, jsonMessage);
 
-            Object packet = packetClass.getConstructor(baseComponentClass, byte.class).newInstance(baseComponent,
+            Object packet = chatPacketClass.getConstructor(baseComponentClass, byte.class).newInstance(baseComponent,
                     (byte) 2);
             sendPacket.invoke(playerConnection, packet);
         } catch (ReflectiveOperationException e) {
