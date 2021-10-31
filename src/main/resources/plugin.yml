@@ -22,6 +22,7 @@ permissions:
       titansbattle.start: true
       titansbattle.setdestination: true
       titansbattle.setinventory: true
+      titansbattle.command-bypass: true
   titansbattle.player:
     description: "Gives access to player commands"
     default: false
@@ -50,6 +51,9 @@ permissions:
     default: false
   titansbattle.setdestination:
     default: false
+  titansbattle.command-bypass:
+    default: false
+    description: Bypasses command restrictions in games
   titansbattle.winners:
     default: false
   titansbattle.setinventory:
