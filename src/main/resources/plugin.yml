@@ -23,6 +23,7 @@ permissions:
       titansbattle.setdestination: true
       titansbattle.setinventory: true
       titansbattle.command-bypass: true
+      titansbattle.kick: true
   titansbattle.player:
     description: "Gives access to player commands"
     default: false
@@ -49,6 +50,9 @@ permissions:
     default: false
   titansbattle.start:
     default: false
+  titansbattle.kick:
+    default: false
+    description: Allows kicking players from games
   titansbattle.setdestination:
     default: false
   titansbattle.command-bypass:

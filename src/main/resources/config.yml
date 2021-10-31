@@ -22,6 +22,7 @@ commands:
     titansbattle: "titansbattle"
     create: "create"
     join: "join"
+    kick: "kick"
     exit: "exit"
     start: "start"
     cancel: "cancel"

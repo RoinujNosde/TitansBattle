@@ -226,6 +226,19 @@ public abstract class Game {
         processPlayerExit(warrior);
     }
 
+    public void onKick(@NotNull Warrior warrior) {
+        if (!isParticipant(warrior)) {
+            return;
+        }
+        Player player = Objects.requireNonNull(warrior.toOnlinePlayer());
+        if (getConfig().isUseKits()) {
+            Kit.clearInventory(player);
+        }
+        SoundUtils.playSound(LEAVE_GAME, plugin.getConfig(), player);
+        player.sendMessage(plugin.getLang("you_have_been_kicked", this));
+        processPlayerExit(warrior);
+    }
+
     public void onRespawn(@NotNull Warrior warrior) {
         if (casualties.contains(warrior) && !casualtiesWatching.contains(warrior)) {
             teleport(warrior, getConfig().getWatchroom());
