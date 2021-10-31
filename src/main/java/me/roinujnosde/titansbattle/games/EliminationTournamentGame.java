@@ -290,7 +290,7 @@ public class EliminationTournamentGame extends Game {
 
     private void generateDuelists() {
         if (getWaitingThirdPlaceCount() == 2) {
-            gameManager.broadcastKey("battle_for_third_place", this);
+            broadcastKey("battle_for_third_place", this);
             participants.addAll(waitingThirdPlace);
             if (getConfig().isGroupMode()) {
                 generateDuelist(getWaitingThirdPlaceGroups(), groupDuelists);
@@ -302,7 +302,7 @@ public class EliminationTournamentGame extends Game {
             return;
         }
         if (getPlayerOrGroupCount() == 2) {
-            gameManager.broadcastKey("final_battle", this);
+            broadcastKey("final_battle", this);
         }
         if (!getConfig().isGroupMode()) {
             generateDuelist(participants, playerDuelists);
@@ -432,7 +432,7 @@ public class EliminationTournamentGame extends Game {
             SoundUtils.playSound(SoundUtils.Type.VICTORY, plugin.getConfig(), killer.toOnlinePlayer());
             todayWinners.setKiller(getConfig().getName(), killer.getUniqueId());
         }
-        gameManager.broadcastKey("who_won_tournament", this, getWinnerName(firstPlaceWinners),
+        broadcastKey("who_won_tournament", this, getWinnerName(firstPlaceWinners),
                 getWinnerName(secondPlaceWinners), getWinnerName(thirdPlaceWinners));
         firstPlaceWinners.forEach(warrior -> warrior.increaseVictories(getConfig().getName()));
     }

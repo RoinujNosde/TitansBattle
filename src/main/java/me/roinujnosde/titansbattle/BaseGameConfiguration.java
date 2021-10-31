@@ -119,7 +119,7 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
         return kit;
     }
 
-    public Boolean isPvp() {
+    public Boolean isPvP() {
         return pvp;
     }
 

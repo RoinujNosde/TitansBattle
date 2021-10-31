@@ -10,7 +10,6 @@ import me.roinujnosde.titansbattle.types.Scheduler;
 import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.Helper;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -118,36 +117,4 @@ public class GameManager {
         game.start();
     }
 
-    public void broadcastKey(@NotNull String messageKey, @Nullable FileConfiguration config, Object... args) {
-        String message = MessageFormat.format(plugin.getLang(messageKey, config), args);
-        if (message.isEmpty()) {
-            return;
-        }
-        Bukkit.broadcastMessage(message);
-    }
-
-    public void broadcast(@NotNull String message, @Nullable Game game) {
-        broadcast(message, game, false);
-    }
-
-    public void broadcast(@NotNull String message, @Nullable Game game, boolean participantsOnly) {
-        if (message.isEmpty()) {
-            return;
-        }
-        if (game != null && participantsOnly) {
-            game.sendMessageToParticipants(message);
-            return;
-        }
-        Bukkit.broadcastMessage(message);
-    }
-
-    public void broadcastKey(@NotNull String messageKey, @Nullable Game game, Object... args) {
-        broadcastKey(messageKey, game, false, args);
-    }
-
-    public void broadcastKey(@NotNull String messageKey, @Nullable Game game, boolean participantsOnly, Object... args) {
-        String message = plugin.getLang(messageKey, game);
-        message = MessageFormat.format(message, args);
-        broadcast(message, game, participantsOnly);
-    }
 }

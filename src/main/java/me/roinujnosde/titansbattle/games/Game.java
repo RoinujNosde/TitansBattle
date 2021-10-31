@@ -169,7 +169,7 @@ public abstract class Game extends BaseGame {
 
         @Override
         public void run() {
-            gameManager.broadcast(getGameInfoMessage(), Game.this);
+            broadcast(getGameInfoMessage(), Game.this);
         }
     }
 

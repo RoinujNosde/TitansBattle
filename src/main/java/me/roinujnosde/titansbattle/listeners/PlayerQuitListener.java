@@ -26,6 +26,7 @@ package me.roinujnosde.titansbattle.listeners;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.GameManager;
 import me.roinujnosde.titansbattle.utils.Helper;
+import me.roinujnosde.titansbattle.utils.MessageUtils;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -60,19 +61,19 @@ public class PlayerQuitListener implements Listener {
             FileConfiguration config = Helper.getConfigFromWinnerOrKiller(player);
             if (Helper.isKiller(player) && Helper.isWinner(player)) {
                 if (Helper.isKillerPriority(player) && killerQuitMessageEnabled) {
-                    gm.broadcastKey("killer-has-left", config, player.getName());
+                    MessageUtils.broadcastKey("killer-has-left", config, player.getName());
                     return;
                 }
                 if (winnerQuitMessageEnabled) {
-                    gm.broadcastKey("winner-has-left", config, player.getName());
+                    MessageUtils.broadcastKey("winner-has-left", config, player.getName());
                 }
                 return;
             }
             if (Helper.isKiller(player) && killerQuitMessageEnabled) {
-                gm.broadcastKey("killer-has-left", config, player.getName());
+                MessageUtils.broadcastKey("killer-has-left", config, player.getName());
             }
             if (Helper.isWinner(player) && winnerQuitMessageEnabled) {
-                gm.broadcastKey("winner-has-left", config, player.getName());
+                MessageUtils.broadcastKey("winner-has-left", config, player.getName());
             }
         }
     }
