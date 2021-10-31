@@ -48,10 +48,9 @@ public class TBCommands extends BaseCommand {
     public void create(CommandSender sender, String game) {
         game = game.replace(" ", "_").replace(".", "");
         if (configDao.create(game, GameConfiguration.class)) {
-            sender.sendMessage(String.format(ChatColor.GREEN + "[TitansBattle] Created game %s! Now edit its file in " +
-                    "the games folder and reload.", game)); // TODO Add to messages file
+            sender.sendMessage(plugin.getLang("game-created", game));
         } else {
-            // TODO Send message
+            sender.sendMessage(plugin.getLang("config-creation-error"));
         }
     }
 
@@ -127,6 +126,7 @@ public class TBCommands extends BaseCommand {
         game.cancel(sender);
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     @Subcommand("%setdestination|setdestination GENERAL_EXIT")
     @CommandPermission("titansbattle.setdestination")
     public void setGeneralExit(Player player) {
@@ -135,6 +135,7 @@ public class TBCommands extends BaseCommand {
         player.sendMessage(MessageFormat.format(plugin.getLang("destination_setted"), "GENERAL_EXIT"));
     }
 
+    @SuppressWarnings("SpellCheckingInspection")
     @Subcommand("%setdestination|setdestination")
     @CommandPermission("titansbattle.setdestination")
     @CommandCompletion("@games")

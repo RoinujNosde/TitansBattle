@@ -25,7 +25,6 @@ import co.aikar.commands.ConditionFailedException;
 import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.MessageKeys;
 import co.aikar.commands.PaperCommandManager;
-import me.roinujnosde.titansbattle.challenges.ArenaConfiguration;
 import me.roinujnosde.titansbattle.challenges.ChallengeRequest;
 import me.roinujnosde.titansbattle.commands.CanChallengeCondition;
 import me.roinujnosde.titansbattle.commands.ChallengeCommand;

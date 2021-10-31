@@ -240,7 +240,7 @@ public abstract class BaseGame {
     }
 
     protected @Nullable String getLang(@NotNull String key) {
-        throw new UnsupportedOperationException(); //TODO Implement
+        return plugin.getLang(key, this);
     }
 
     protected boolean teleport(@Nullable Warrior warrior, @NotNull Location destination) {
@@ -270,7 +270,6 @@ public abstract class BaseGame {
     protected abstract void onLobbyEnd();
 
     protected boolean canStartBattle() {
-        // TODO Fix broadcast methods to respect challenge mode
         GameStartEvent event = new GameStartEvent(this);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
