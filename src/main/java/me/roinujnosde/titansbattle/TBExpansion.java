@@ -7,6 +7,7 @@ import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -63,8 +64,8 @@ public class TBExpansion extends PlaceholderExpansion {
 
     @NotNull
     public String getWinnerPrefix(@NotNull OfflinePlayer player, @NotNull String game) {
-        GameConfiguration gameConfig = GameConfigurationDao.getInstance(plugin).getGameConfiguration(game);
-        if (gameConfig == null) {
+        Optional<GameConfiguration> config = plugin.getConfigurationDao().getConfiguration(game, GameConfiguration.class);
+        if (!config.isPresent()) {
             plugin.debug(String.format("game %s not found", game));
             return "";
         }
@@ -74,15 +75,15 @@ public class TBExpansion extends PlaceholderExpansion {
             plugin.debug(String.format("player winners: %s", playerWinners));
             return "";
         }
-        String prefix = gameConfig.getWinnerPrefix();
+        String prefix = config.get().getWinnerPrefix();
         plugin.debug("prefix: " + prefix);
         return prefix != null ? prefix : "";
     }
 
     @NotNull
     public String getKillerPrefix(@NotNull OfflinePlayer player, @NotNull String game) {
-        GameConfiguration gameConfig = GameConfigurationDao.getInstance(plugin).getGameConfiguration(game);
-        if (gameConfig == null) {
+        Optional<GameConfiguration> config = plugin.getConfigurationDao().getConfiguration(game, GameConfiguration.class);
+        if (!config.isPresent()) {
             return "";
         }
         Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
@@ -90,7 +91,7 @@ public class TBExpansion extends PlaceholderExpansion {
         if (killerUuid == null || !killerUuid.equals(player.getUniqueId())) {
             return "";
         }
-        String prefix = gameConfig.getKillerPrefix();
+        String prefix = config.get().getKillerPrefix();
         return prefix != null ? prefix : "";
     }
 }
