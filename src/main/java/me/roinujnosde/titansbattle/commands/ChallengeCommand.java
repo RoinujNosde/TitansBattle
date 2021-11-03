@@ -9,8 +9,6 @@ import me.roinujnosde.titansbattle.managers.ChallengeManager;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Warrior;
-import org.bukkit.command.CommandSender;
-
 import java.util.Objects;
 import java.util.Set;
 
@@ -19,8 +17,6 @@ import java.util.Set;
 // TODO Permissions
 public class ChallengeCommand extends BaseCommand {
 
-    // TODO Arena context resolver
-    // TODO Arenas completion, suggest only Arenas that support the chosen mode (groups false or true)
     // TODO Challenges have some interval to start
 
     @Dependency
@@ -31,10 +27,10 @@ public class ChallengeCommand extends BaseCommand {
     private DatabaseManager databaseManager;
 
     @Subcommand("%player")
-    @CommandCompletion("@players @arenas")
+    @CommandCompletion("@players @arenas:group=false")
     @Conditions("can_challenge:group=false")
-    // TODO Condition: arena not in use (condition or @Values?)
-    public void challengePlayer(Warrior challenger, OnlinePlayer target, ArenaConfiguration arena) {
+    public void challengePlayer(Warrior challenger, OnlinePlayer target,
+            @Conditions("not_in_use") ArenaConfiguration arena) {
         Challenge challenge = new Challenge(plugin, arena);
         Warrior challenged = databaseManager.getWarrior(target.player);
         WarriorChallengeRequest request = new WarriorChallengeRequest(challenge, challenger, challenged);
@@ -47,10 +43,9 @@ public class ChallengeCommand extends BaseCommand {
     }
 
     @Subcommand("%group")
-    @CommandCompletion("@groups @arenas")
+    @CommandCompletion("@groups @arenas:group=true")
     @Conditions("can_challenge:group=true")
-    // TODO Condition: arena not in use (condition or @Values?)
-    public void challengeGroup(Warrior sender, Group target, ArenaConfiguration arena) {
+    public void challengeGroup(Warrior sender, Group target, @Conditions("not_in_use") ArenaConfiguration arena) {
         Challenge challenge = new Challenge(plugin, arena);
         Group challenger = Objects.requireNonNull(sender.getGroup());
         GroupChallengeRequest request = new GroupChallengeRequest(challenge, challenger, target);
@@ -77,19 +72,13 @@ public class ChallengeCommand extends BaseCommand {
 
     @Subcommand("%deny")
     @CommandCompletion("@requests")
-    public void deny( ) {
+    public void deny() {
         // TODO Is it necessary?
-    }
-
-    //TODO Shows info about an arena
-    @Subcommand("%info")
-    @CommandCompletion("@arenas")
-    public void info(CommandSender sender, ArenaConfiguration arena) {
-
     }
 
     // TODO Watch room
 
-    public void createArena() {}
+    public void createArena() {
+    }
 
 }

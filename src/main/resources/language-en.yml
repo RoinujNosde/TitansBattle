@@ -5,6 +5,7 @@ challenged.your.group: "&a» {0} challenged your group to a battle! Accept it us
 your.group.challenged: "&a» Your group challenged {1}! Join the battle using /tb challenge accept {0}"
 you.challenged.player: "&a» You challenged {0} to a duel!"
 you.challenged.group: "&a» You challenged the group {0} to a battle!"
+arena.in.use: "&c» This arena is already in use!"
 already.challenged: "&c» You already challenged someone!"
 teleport.error: "&c» An error occurred while teleporting you"
 title.fight: "Fight!"
