@@ -25,6 +25,8 @@ import co.aikar.commands.ConditionFailedException;
 import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.MessageKeys;
 import co.aikar.commands.PaperCommandManager;
+import me.roinujnosde.titansbattle.challenges.ArenaConfiguration;
+import me.roinujnosde.titansbattle.challenges.Challenge;
 import me.roinujnosde.titansbattle.challenges.ChallengeRequest;
 import me.roinujnosde.titansbattle.commands.CanChallengeCondition;
 import me.roinujnosde.titansbattle.commands.ChallengeCommand;
@@ -100,9 +102,9 @@ public final class TitansBattle extends JavaPlugin {
 
     private void setupConfig() {
         saveDefaultConfig();
-        //loads the config and copies default values
+        // loads the config and copies default values
         getConfig().options().copyDefaults(true);
-        //saves it back (to add new values)
+        // saves it back (to add new values)
         saveConfig();
     }
 
@@ -140,7 +142,8 @@ public final class TitansBattle extends JavaPlugin {
     }
 
     private void registerContexts() {
-        pcm.getCommandContexts().registerIssuerOnlyContext(Game.class, supplier -> gameManager.getCurrentGame().orElse(null));
+        pcm.getCommandContexts().registerIssuerOnlyContext(Game.class,
+                supplier -> gameManager.getCurrentGame().orElse(null));
         pcm.getCommandContexts().registerContext(Date.class, supplier -> {
             try {
                 return new SimpleDateFormat(configManager.getDateFormat()).parse(supplier.popFirstArg());
@@ -176,8 +179,10 @@ public final class TitansBattle extends JavaPlugin {
             }
             return null;
         });
-        pcm.getCommandContexts().registerContext(GameConfiguration.class, supplier -> configurationDao.
-                getConfiguration(supplier.popFirstArg(), GameConfiguration.class).orElse(null));
+        pcm.getCommandContexts().registerContext(ArenaConfiguration.class, supplier -> configurationDao
+                .getConfiguration(supplier.popFirstArg(), ArenaConfiguration.class).orElse(null));
+        pcm.getCommandContexts().registerContext(GameConfiguration.class, supplier -> configurationDao
+                .getConfiguration(supplier.popFirstArg(), GameConfiguration.class).orElse(null));
     }
 
     private void registerCommands() {
@@ -193,12 +198,20 @@ public final class TitansBattle extends JavaPlugin {
             }
         });
         pcm.getCommandConditions().addCondition("can_challenge", new CanChallengeCondition(this));
+        pcm.getCommandConditions().addCondition(ArenaConfiguration.class, "not_in_use", (cc, cec, v) -> {
+            boolean matches = challengeManager.getRequests().stream().map(ChallengeRequest::getChallenge)
+                    .map(Challenge::getConfig).anyMatch(config -> config.equals(v));
+            if (matches) {
+                cec.getIssuer().sendMessage(getLang("arena.in.use"));
+                throw new ConditionFailedException();
+            }
+        });
     }
 
     private void registerCompletions() {
-        pcm.getCommandCompletions().registerCompletion("winners_dates", handler -> databaseManager.getWinners()
-                .stream().map(Winners::getDate).map(new SimpleDateFormat(configManager.getDateFormat())::format)
-                .collect(Collectors.toList()));
+        pcm.getCommandCompletions().registerCompletion("winners_dates",
+                handler -> databaseManager.getWinners().stream().map(Winners::getDate)
+                        .map(new SimpleDateFormat(configManager.getDateFormat())::format).collect(Collectors.toList()));
         pcm.getCommandCompletions().registerCompletion("group_pages", handler -> {
             int pages = databaseManager.getGroups().size() / configManager.getPageLimitRanking();
             ArrayList<String> list = new ArrayList<>();
@@ -216,7 +229,8 @@ public final class TitansBattle extends JavaPlugin {
             return list;
         });
         pcm.getCommandCompletions().registerCompletion("groups", handler -> {
-           if (groupManager == null) return Collections.emptyList();
+            if (groupManager == null)
+                return Collections.emptyList();
             return groupManager.getGroups().stream().map(Group::getUniqueName).collect(Collectors.toList());
         });
         pcm.getCommandCompletions().registerCompletion("requests", handler -> {
@@ -224,13 +238,27 @@ public final class TitansBattle extends JavaPlugin {
             return challengeManager.getRequests().stream().filter(cr -> cr.isInvited(warrior))
                     .map(ChallengeRequest::getChallengerName).collect(Collectors.toList());
         });
-        pcm.getCommandCompletions().registerStaticCompletion("prizes_config_fields", ConfigUtils.getEditableFields(Prizes.class));
-        pcm.getCommandCompletions().registerStaticCompletion("game_config_fields", ConfigUtils.getEditableFields(GameConfiguration.class));
+        pcm.getCommandCompletions().registerStaticCompletion("prizes_config_fields",
+                ConfigUtils.getEditableFields(Prizes.class));
+        pcm.getCommandCompletions().registerStaticCompletion("game_config_fields",
+                ConfigUtils.getEditableFields(GameConfiguration.class));
         pcm.getCommandCompletions().registerStaticCompletion("warrior_order", Arrays.asList("kills", "deaths"));
-        pcm.getCommandCompletions().registerStaticCompletion("group_order", Arrays.asList("kills", "deaths", "defeats"));
-        pcm.getCommandCompletions().registerCompletion("games", handler -> configurationDao.
-                getConfigurations(GameConfiguration.class).stream().map(GameConfiguration::getName)
-                .collect(Collectors.toList()));
+        pcm.getCommandCompletions().registerStaticCompletion("group_order",
+                Arrays.asList("kills", "deaths", "defeats"));
+        pcm.getCommandCompletions().registerCompletion("games",
+                handler -> configurationDao.getConfigurations(GameConfiguration.class).stream()
+                        .map(GameConfiguration::getName).collect(Collectors.toList()));
+        pcm.getCommandCompletions().registerCompletion("arenas", handler -> {
+            boolean group = Boolean.valueOf(handler.getConfig("group"));
+            List<String> arenas = configurationDao.getConfigurations(ArenaConfiguration.class).stream()
+                    .filter(a -> a.isGroupMode() == group).map(ArenaConfiguration::getName)
+                    .collect(Collectors.toList());
+            List<String> inUse = challengeManager.getRequests().stream()
+                    .map(cr -> cr.getChallenge().getConfig().getName()).collect(Collectors.toList());
+
+            arenas.removeAll(inUse);
+            return arenas;
+        });
     }
 
     private void registerDependencies() {
