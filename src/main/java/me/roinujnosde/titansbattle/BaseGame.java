@@ -289,7 +289,7 @@ public abstract class BaseGame {
         return true;
     }
 
-    @SuppressWarnings({"BooleanMethodIsAlwaysInverted"}) // TODO Report possible bug on ConstantConditions
+    @SuppressWarnings({"BooleanMethodIsAlwaysInverted"})
     protected boolean canJoin(@NotNull Warrior warrior) {
         Player player = warrior.toOnlinePlayer();
         String reason = null;

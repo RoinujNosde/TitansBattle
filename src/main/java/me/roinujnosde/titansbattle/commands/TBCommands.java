@@ -5,6 +5,7 @@ import co.aikar.commands.CommandHelp;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.*;
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.BaseGameConfiguration.Destination;
 import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
@@ -46,7 +47,6 @@ public class TBCommands extends BaseCommand {
     @Subcommand("%create|create")
     @CommandPermission("titansbattle.create")
     public void create(CommandSender sender, String game) {
-        game = game.replace(" ", "_").replace(".", "");
         if (configDao.create(game, GameConfiguration.class)) {
             sender.sendMessage(plugin.getLang("game-created", game));
         } else {
@@ -132,10 +132,9 @@ public class TBCommands extends BaseCommand {
     public void setGeneralExit(Player player) {
         configManager.setGeneralExit(player.getLocation());
         configManager.save();
-        player.sendMessage(MessageFormat.format(plugin.getLang("destination_setted"), "GENERAL_EXIT"));
+        player.sendMessage(plugin.getLang("destination_set", "GENERAL_EXIT"));
     }
 
-    @SuppressWarnings("SpellCheckingInspection")
     @Subcommand("%setdestination|setdestination")
     @CommandPermission("titansbattle.setdestination")
     @CommandCompletion("@games")
@@ -156,7 +155,7 @@ public class TBCommands extends BaseCommand {
                 break;
         }
         configDao.save(game);
-        player.sendMessage(MessageFormat.format(plugin.getLang("destination_setted"), destination));
+        player.sendMessage(plugin.getLang("destination_set", destination));
     }
 
     @Subcommand("%reload|reload")
@@ -558,10 +557,6 @@ public class TBCommands extends BaseCommand {
         Location watchroom = game.getConfig().getWatchroom();
         sender.teleport(watchroom);
         SoundUtils.playSound(SoundUtils.Type.WATCH, plugin.getConfig(), sender);
-    }
-
-    public enum Destination {
-        EXIT, ARENA, LOBBY, WATCHROOM
     }
 
     public enum PrizeReceiver {

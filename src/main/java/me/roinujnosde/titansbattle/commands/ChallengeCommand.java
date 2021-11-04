@@ -4,20 +4,26 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
 import co.aikar.commands.bukkit.contexts.OnlinePlayer;
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.BaseGameConfiguration.Destination;
 import me.roinujnosde.titansbattle.challenges.*;
+import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.managers.ChallengeManager;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.types.Group;
+import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.types.Warrior;
+import me.roinujnosde.titansbattle.utils.SoundUtils;
+
 import java.util.Objects;
 import java.util.Set;
 
-@CommandAlias("%titansbattle|tb")
-@Subcommand("%challenge")
-// TODO Permissions
-public class ChallengeCommand extends BaseCommand {
+import org.bukkit.Location;
+import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 
-    // TODO Challenges have some interval to start
+@CommandAlias("%titansbattle|tb")
+@Subcommand("%challenge|challenge")
+public class ChallengeCommand extends BaseCommand {
 
     @Dependency
     private TitansBattle plugin;
@@ -25,10 +31,13 @@ public class ChallengeCommand extends BaseCommand {
     private ChallengeManager challengeManager;
     @Dependency
     private DatabaseManager databaseManager;
+    @Dependency
+    private ConfigurationDao configDao;
 
-    @Subcommand("%player")
+    @Subcommand("%player|player")
     @CommandCompletion("@players @arenas:group=false")
     @Conditions("can_challenge:group=false")
+    @CommandPermission("titansbattle.challenge.player")
     public void challengePlayer(Warrior challenger, OnlinePlayer target,
             @Conditions("not_in_use") ArenaConfiguration arena) {
         Challenge challenge = new Challenge(plugin, arena);
@@ -42,9 +51,10 @@ public class ChallengeCommand extends BaseCommand {
         challenge.onJoin(challenger);
     }
 
-    @Subcommand("%group")
+    @Subcommand("%group|group")
     @CommandCompletion("@groups @arenas:group=true")
     @Conditions("can_challenge:group=true")
+    @CommandPermission("titansbattle.challenge.group")
     public void challengeGroup(Warrior sender, Group target, @Conditions("not_in_use") ArenaConfiguration arena) {
         Challenge challenge = new Challenge(plugin, arena);
         Group challenger = Objects.requireNonNull(sender.getGroup());
@@ -64,21 +74,70 @@ public class ChallengeCommand extends BaseCommand {
         challenge.onJoin(sender);
     }
 
-    @Subcommand("%accept")
+    @Subcommand("%accept|accept")
     @CommandCompletion("@requests")
+    @CommandPermission("titansbattle.challenge.accept")
+    @Conditions("is_invited")
     public void accept(Warrior warrior, @Values("@requests") ChallengeRequest<?> challenger) {
         challenger.getChallenge().onJoin(warrior);
     }
 
-    @Subcommand("%deny")
-    @CommandCompletion("@requests")
-    public void deny() {
-        // TODO Is it necessary?
+    @Subcommand("%watch|watch")
+    @CommandPermission("titansbattle.watch")
+    @CommandCompletion("@arenas:in_use")
+    public void watch(Player sender, ArenaConfiguration arena) {
+        Location watchroom = arena.getWatchroom();
+        if (watchroom == null) {
+            sender.sendMessage(plugin.getLang("teleport.error"));
+            return;
+        }
+        sender.teleport(watchroom);
+        SoundUtils.playSound(SoundUtils.Type.WATCH, plugin.getConfig(), sender);
     }
 
-    // TODO Watch room
+    @Subcommand("%create|create")
+    @CommandPermission("titansbattle.create")
+    public void create(CommandSender sender, String arena) {
+        if (configDao.create(arena, ArenaConfiguration.class)) {
+            sender.sendMessage(plugin.getLang("arena-created"));
+        } else {
+            sender.sendMessage(plugin.getLang("config-creation-error"));
+        }
+    }
 
-    public void createArena() {
+    @Subcommand("%setdestination|setdestination")
+    @CommandPermission("titansbattle.setdestination")
+    @CommandCompletion("@arenas")
+    public void setDestination(Player player, @Values("@arenas") ArenaConfiguration arena, Destination destination) {
+        Location loc = player.getLocation();
+        switch (destination) {
+            case EXIT:
+                arena.setExit(loc);
+                break;
+            case ARENA:
+                arena.setArena(loc);
+                break;
+            case LOBBY:
+                arena.setLobby(loc);
+                break;
+            case WATCHROOM:
+                arena.setWatchroom(loc);
+                break;
+        }
+        configDao.save(arena);
+        player.sendMessage(plugin.getLang("destination_set", destination));
+    }
+
+    @Subcommand("%setkit|setkit")
+    @CommandPermission("titansbattle.setinventory")
+    @CommandCompletion("@arenas")
+    public void setKit(Player sender, @Values("@arenas") ArenaConfiguration arena) {
+        arena.setKit(new Kit(sender.getInventory()));
+        if (configDao.save(arena)) {
+            sender.sendMessage(plugin.getLang("inventory-set"));
+        } else {
+            sender.sendMessage(plugin.getLang("error-saving-config"));
+        }
     }
 
 }

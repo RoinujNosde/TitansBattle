@@ -206,6 +206,13 @@ public final class TitansBattle extends JavaPlugin {
                 throw new ConditionFailedException();
             }
         });
+        pcm.getCommandConditions().addCondition(Warrior.class, "is_invited", (cc, cec, v) -> {
+            boolean invited = challengeManager.getRequests().stream().anyMatch(r -> r.isInvited(v));
+            if (!invited) {
+                cec.getIssuer().sendMessage(getLang("no.challenge.to.accept"));
+                throw new ConditionFailedException();
+            }
+        });
     }
 
     private void registerCompletions() {
@@ -249,12 +256,16 @@ public final class TitansBattle extends JavaPlugin {
                 handler -> configurationDao.getConfigurations(GameConfiguration.class).stream()
                         .map(GameConfiguration::getName).collect(Collectors.toList()));
         pcm.getCommandCompletions().registerCompletion("arenas", handler -> {
+            List<String> inUse = challengeManager.getRequests().stream()
+                    .map(cr -> cr.getChallenge().getConfig().getName()).collect(Collectors.toList());
+            if (handler.hasConfig("in_use")) {
+                return inUse;
+            }
+            
             boolean group = Boolean.valueOf(handler.getConfig("group"));
             List<String> arenas = configurationDao.getConfigurations(ArenaConfiguration.class).stream()
                     .filter(a -> a.isGroupMode() == group).map(ArenaConfiguration::getName)
                     .collect(Collectors.toList());
-            List<String> inUse = challengeManager.getRequests().stream()
-                    .map(cr -> cr.getChallenge().getConfig().getName()).collect(Collectors.toList());
 
             arenas.removeAll(inUse);
             return arenas;

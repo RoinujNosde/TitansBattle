@@ -122,31 +122,6 @@ public class GameConfiguration extends BaseGameConfiguration {
         return prizes;
     }
 
-    @Override
-    public @Nullable Kit getKit() {
-        return kit;
-    }
-
-    public void setKit(Kit kit) {
-        this.kit = kit;
-    }
-
-    public void setExit(Location exit) {
-        this.exit = exit;
-    }
-
-    public void setLobby(Location lobby) {
-        this.lobby = lobby;
-    }
-
-    public void setArena(Location arena) {
-        this.arena = arena;
-    }
-
-    public void setWatchroom(Location watchroom) {
-        this.watchroom = watchroom;
-    }
-
     public Boolean isEliminationTournament() {
         return eliminationTournament;
     }

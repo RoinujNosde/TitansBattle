@@ -15,6 +15,10 @@ import java.util.Map;
 
 public abstract class BaseGameConfiguration implements ConfigurationSerializable {
 
+    public enum Destination {
+        EXIT, ARENA, LOBBY, WATCHROOM
+    }
+
     protected transient File file;
     protected transient FileConfiguration fileConfiguration;
 
@@ -115,8 +119,12 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
         return useKits;
     }
 
-    public Kit getKit() {
+    public @Nullable Kit getKit() {
         return kit;
+    }
+
+    public void setKit(Kit kit) {
+        this.kit = kit;
     }
 
     public Boolean isPvP() {
@@ -153,6 +161,22 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
 
     public Location getArena() {
         return arena;
+    }
+
+    public void setExit(Location exit) {
+        this.exit = exit;
+    }
+
+    public void setLobby(Location lobby) {
+        this.lobby = lobby;
+    }
+
+    public void setArena(Location arena) {
+        this.arena = arena;
+    }
+
+    public void setWatchroom(Location watchroom) {
+        this.watchroom = watchroom;
     }
 
     public Integer getPreparationTime() {

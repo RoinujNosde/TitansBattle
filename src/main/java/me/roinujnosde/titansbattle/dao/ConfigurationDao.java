@@ -72,6 +72,7 @@ public class ConfigurationDao {
     }
 
     public <T extends BaseGameConfiguration> boolean create(@NotNull String name, @NotNull Class<T> clazz) {
+        name = name.replace(" ", "_").replace(".", "");
         Metadata metadata = metadataMap.get(clazz);
         if (metadata == null) {
             throw new IllegalArgumentException(String.format("Invalid config class: %s", clazz.getName()));
