@@ -56,10 +56,14 @@ public class PlayerCommandPreprocessListener implements Listener {
         if (game == null) {
             return;
         }
+        Player player = event.getPlayer();
+        if (canBypassCommandRestrictions(player)) {
+            return;
+        }
         for (String command : cm.getBlockedCommandsEveryone()) {
             if (event.getMessage().startsWith(command)) {
-                event.getPlayer().sendMessage(MessageFormat.format(plugin.getLang("command-blocked-for-everyone",
-                        game), event.getMessage()));
+                player.sendMessage(MessageFormat.format(plugin.getLang("command-blocked-for-everyone", game),
+                        event.getMessage()));
                 event.setCancelled(true);
                 break;
             }
@@ -81,8 +85,14 @@ public class PlayerCommandPreprocessListener implements Listener {
                 return;
             }
         }
-        player.sendMessage(MessageFormat.format(plugin.getLang("command-not-allowed", game), event.getMessage()));
-        event.setCancelled(true);
+        if (!canBypassCommandRestrictions(player)) {
+            player.sendMessage(MessageFormat.format(plugin.getLang("command-not-allowed", game), event.getMessage()));
+            event.setCancelled(true);
+        }
+    }
+
+    private boolean canBypassCommandRestrictions(Player player) {
+        return player.hasPermission("titansbattle.command-bypass");
     }
 
 }

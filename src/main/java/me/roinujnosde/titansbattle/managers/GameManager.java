@@ -9,6 +9,7 @@ import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Scheduler;
 import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.Helper;
+import me.roinujnosde.titansbattle.utils.MessageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
@@ -91,8 +92,8 @@ public class GameManager {
             return;
         }
         Bukkit.getPluginManager().callEvent(new NewKillerEvent(killer, victim));
-        Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("new_killer", gameConfig),
-                killer.getName()));
+        Bukkit.getServer().getOnlinePlayers().forEach((p) -> MessageUtils.sendActionBar(p,
+                MessageFormat.format(plugin.getLang("new_killer", gameConfig.getFileConfiguration()), killer.getName())));
         plugin.getDatabaseManager().getTodaysWinners().setKiller(gameConfig.getName(), killer.getUniqueId());
     }
 

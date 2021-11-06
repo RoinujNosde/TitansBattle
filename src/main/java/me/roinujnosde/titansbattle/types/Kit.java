@@ -18,19 +18,29 @@ public class Kit implements ConfigurationSerializable {
     private final ItemStack[] contents;
 
     public Kit(@NotNull PlayerInventory inventory) {
-        contents = inventory.getContents().clone();
+        ItemStack[] invContents = inventory.getContents();
+        this.contents = new ItemStack[invContents.length];
+
+        for (int i = 0; i < invContents.length; i++) {
+            ItemStack itemStack = invContents[i];
+            this.contents[i] = itemStack != null ? itemStack.clone() : null;
+        }
     }
 
     public Kit(@NotNull Map<String, Object> data) {
-        contents = new ItemStack[41];
+        int size = data.keySet().stream().mapToInt(s -> {
+            try {
+                return Integer.parseInt(s);
+            } catch (NumberFormatException ex) {
+                return 0;
+            }
+        }).max().orElse(0) + 1;
+        contents = new ItemStack[size];
         for (Map.Entry<String, Object> entry : data.entrySet()) {
             if (entry.getKey().equals("==")) {
                 continue;
             }
             int index = Integer.parseInt(entry.getKey());
-            if (index >= 41) {
-                continue;
-            }
             contents[index] = ((ItemStack) entry.getValue());
         }
     }

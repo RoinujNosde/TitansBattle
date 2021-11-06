@@ -4,6 +4,7 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.CommandHelp;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.*;
+import co.aikar.commands.bukkit.contexts.OnlinePlayer;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.BaseGameConfiguration.Destination;
 import me.roinujnosde.titansbattle.dao.ConfigurationDao;
@@ -117,6 +118,20 @@ public class TBCommands extends BaseCommand {
         }
 
         gameManager.start(game);
+    }
+
+    @Subcommand("%kick|kick")
+    @CommandPermission("titansbattle.kick")
+    @Conditions("happening")
+    public void kick(CommandSender sender, Game game, OnlinePlayer player) {
+        Warrior warrior = databaseManager.getWarrior(player.getPlayer());
+        String wName = warrior.getName();
+        if (!game.isParticipant(warrior)) {
+            sender.sendMessage(MessageFormat.format(plugin.getLang("player_not_participating", game), wName));
+            return;
+        }
+        game.onKick(warrior);
+        sender.sendMessage(MessageFormat.format(plugin.getLang("has_been_kicked"), wName));
     }
 
     @Subcommand("%cancel|cancel")

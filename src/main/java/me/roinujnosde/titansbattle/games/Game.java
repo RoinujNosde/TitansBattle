@@ -5,7 +5,10 @@ import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Group;
+import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.types.Warrior;
+import me.roinujnosde.titansbattle.utils.SoundUtils;
+
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -17,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
+
+import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.LEAVE_GAME;
 
 public abstract class Game extends BaseGame {
 
@@ -76,6 +81,19 @@ public abstract class Game extends BaseGame {
         if (!cancelled) {
             processWinners();
         }
+    }
+
+    public void onKick(@NotNull Warrior warrior) {
+        if (!isParticipant(warrior)) {
+            return;
+        }
+        Player player = Objects.requireNonNull(warrior.toOnlinePlayer());
+        if (getConfig().isUseKits()) {
+            Kit.clearInventory(player);
+        }
+        SoundUtils.playSound(LEAVE_GAME, plugin.getConfig(), player);
+        player.sendMessage(plugin.getLang("you_have_been_kicked", this));
+        processPlayerExit(warrior);
     }
 
     private void deleteGroups() {

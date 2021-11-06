@@ -419,4 +419,16 @@ public class Helper {
         boolean sameDay = d1.get(Calendar.DAY_OF_MONTH) == d2.get(Calendar.DAY_OF_MONTH);
         return sameDay && sameMonth && sameYear;
     }
+
+    public static <V> @NotNull Map<String, V> caseInsensitiveMap() {
+        return caseInsensitiveMap(null);
+    }
+
+    public static <V> @NotNull Map<String, V> caseInsensitiveMap(@Nullable Map<String, V> map) {
+        TreeMap<String, V> treeMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        if (map != null) {
+            treeMap.putAll(map);
+        }
+        return treeMap;
+    }
 }
