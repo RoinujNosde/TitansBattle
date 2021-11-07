@@ -5,6 +5,7 @@ import me.roinujnosde.titansbattle.utils.ConfigUtils;
 import me.roinujnosde.titansbattle.utils.Path;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.configuration.serialization.SerializableAs;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -14,6 +15,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 @SuppressWarnings({"FieldCanBeLocal", "unused", "FieldMayBeFinal"})
+@SerializableAs("prize")
 public class Prizes implements ConfigurationSerializable {
     private static final Map<Player, Collection<ItemStack>> ITEMS_NOT_GIVEN = new HashMap<>();
 

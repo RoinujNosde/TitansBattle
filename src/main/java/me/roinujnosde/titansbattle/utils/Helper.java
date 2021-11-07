@@ -1,7 +1,7 @@
 package me.roinujnosde.titansbattle.utils;
 
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
+import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Warrior;
@@ -43,8 +43,8 @@ public class Helper {
             return null;
         }
         final UUID uniqueId = player.getUniqueId();
-        GameConfigurationDao dao = GameConfigurationDao.getInstance(plugin);
-        for (GameConfiguration game : dao.getGameConfigurations().values()) {
+        ConfigurationDao dao = plugin.getConfigurationDao();
+        for (GameConfiguration game : dao.getConfigurations(GameConfiguration.class)) {
             String gameName = game.getName();
             Winners w = plugin.getDatabaseManager().getLatestWinners();
             if (w.getKiller(gameName) == null) {
@@ -69,10 +69,9 @@ public class Helper {
         if (player == null) {
             return null;
         }
-        GameConfigurationDao dao = GameConfigurationDao.getInstance(plugin);
         GameConfiguration gameConfig = getGameConfigurationFromWinnerOrKiller(player);
         if (gameConfig != null) {
-            return dao.getConfigFile(gameConfig);
+            return gameConfig.getFileConfiguration();
         }
         return null;
     }
@@ -84,7 +83,8 @@ public class Helper {
      * @return true if he is a Winner
      */
     public static boolean isWinner(Player player) {
-        for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
+        ConfigurationDao dao = plugin.getConfigurationDao();
+        for (GameConfiguration game : dao.getConfigurations(GameConfiguration.class)) {
             List<UUID> winners = plugin.getDatabaseManager().getLatestWinners().getPlayerWinners(game.getName());
             if (winners == null) {
                 continue;
@@ -103,7 +103,8 @@ public class Helper {
      * @return true if he is a Winner
      */
     public static boolean isKiller(Player player) {
-        for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
+        ConfigurationDao dao = plugin.getConfigurationDao();
+        for (GameConfiguration game : dao.getConfigurations(GameConfiguration.class)) {
             Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
             UUID killer = latestWinners.getKiller(game.getName());
             if (killer == null) {
@@ -124,7 +125,8 @@ public class Helper {
      */
     public static boolean isKillerPriority(Player player) {
         if (isKiller(player)) {
-            for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
+            ConfigurationDao dao = plugin.getConfigurationDao();
+            for (GameConfiguration game : dao.getConfigurations(GameConfiguration.class)) {
                 Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
                 UUID killer = latestWinners.getKiller(game.getName());
                 if (killer == null) {
@@ -146,7 +148,8 @@ public class Helper {
      */
     public static boolean isKillerJoinMessageEnabled(Player player) {
         if (isKiller(player)) {
-            for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
+            ConfigurationDao dao = plugin.getConfigurationDao();
+            for (GameConfiguration game : dao.getConfigurations(GameConfiguration.class)) {
                 Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
                 UUID killer = latestWinners.getKiller(game.getName());
                 if (killer == null) {
@@ -168,7 +171,8 @@ public class Helper {
      */
     public static boolean isKillerQuitMessageEnabled(Player player) {
         if (isKiller(player)) {
-            for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
+            ConfigurationDao dao = plugin.getConfigurationDao();
+            for (GameConfiguration game : dao.getConfigurations(GameConfiguration.class)) {
                 Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
                 UUID killer = latestWinners.getKiller(game.getName());
                 if (killer == null) {
@@ -244,7 +248,8 @@ public class Helper {
      */
     public static boolean isWinnerJoinMessageEnabled(Player player) {
         if (isKiller(player)) {
-            for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
+            ConfigurationDao dao = plugin.getConfigurationDao();
+            for (GameConfiguration game : dao.getConfigurations(GameConfiguration.class)) {
                 Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
                 List<UUID> playerWinners = latestWinners.getPlayerWinners(game.getName());
                 if (playerWinners == null) {
@@ -266,7 +271,8 @@ public class Helper {
      */
     public static boolean isWinnerQuitMessageEnabled(Player player) {
         if (isWinner(player)) {
-            for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
+            ConfigurationDao dao = plugin.getConfigurationDao();
+            for (GameConfiguration game : dao.getConfigurations(GameConfiguration.class)) {
                 Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
                 List<UUID> playerWinners = latestWinners.getPlayerWinners(game.getName());
                 if (playerWinners == null) {

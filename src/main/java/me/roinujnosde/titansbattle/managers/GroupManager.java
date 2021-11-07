@@ -4,7 +4,9 @@ import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.types.GroupData;
+import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.Helper;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,7 +24,6 @@ import java.util.stream.Collectors;
  * An instance of this class should be registered using {@link TitansBattle#setGroupManager(GroupManager)}.
  *
  * @see SimpleClansGroupManager
- * @see FactionsGroupManager
  */
 public abstract class GroupManager {
 
@@ -56,6 +57,16 @@ public abstract class GroupManager {
      * @return true if they belong to the same {@link Group}
      */
     public abstract boolean sameGroup(@NotNull UUID player1, @NotNull UUID player2);
+
+    /**
+     * Returns the members of the {@link Group}
+     * @param group the Group
+     * @return the members
+     */
+    public Set<Warrior> getWarriors(@NotNull final Group group) {
+        DatabaseManager dm = plugin.getDatabaseManager();
+        return Bukkit.getOnlinePlayers().stream().map(dm::getWarrior).filter(group::isMember).collect(Collectors.toSet());
+    }
 
     /**
      * Builds a String from a Collection of {@link Group}s

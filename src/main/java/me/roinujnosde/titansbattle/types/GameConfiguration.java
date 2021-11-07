@@ -1,66 +1,38 @@
 package me.roinujnosde.titansbattle.types;
 
+import me.roinujnosde.titansbattle.BaseGameConfiguration;
 import me.roinujnosde.titansbattle.utils.ConfigUtils;
 import me.roinujnosde.titansbattle.utils.Path;
 import org.bukkit.Location;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
+import org.bukkit.configuration.serialization.SerializableAs;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
-public class GameConfiguration implements ConfigurationSerializable {
+@SerializableAs("game")
+public class GameConfiguration extends BaseGameConfiguration {
 
-    private String name;
-    private Boolean groupMode = false;
     private Boolean eliminationTournament = false;
     private Boolean powerOfTwo = false;
     private Boolean killer = true;
-    private Boolean pvp = true;
-    private Boolean clearItemsOnDeath = false;
-    @Path("damage-type.melee")
-    private Boolean meleeDamage = true;
-    @Path("damage-type.ranged")
-    private Boolean rangedDamage = true;
+
     @Path("minimum.groups")
     private Integer minimumGroups = 2;
     @Path("maximum.groups")
     private Integer maximumGroups = 0;
     @Path("maximum.players_per_group")
     private Integer maximumPlayersPerGroup = 0;
-    @Path("minimum.players")
-    private Integer minimumPlayers = 10;
-    @Path("maximum.players")
-    private Integer maximumPlayers = 100;
-    private Boolean deleteGroups = false;
-    @Path("time.expiration")
-    private Integer expirationTime = 3600;
-    @Path("time.preparation")
-    private Integer preparationTime = 30;
-    @Path("run_commands.before_battle")
-    private @Nullable List<String> commandsBeforeBattle;
-    @Path("run_commands.after_battle")
-    private @Nullable List<String> commandsAfterBattle;
 
-    private Boolean useKits = false;
-    private Kit kit;
+    private Boolean deleteGroups = false;
 
     @Path("prizes")
     private Map<String, Prizes> prizesMap = createPrizesMap();
-
-    @Path("destination.exit")
-    private Location exit;
-    @Path("destination.lobby")
-    private Location lobby;
-    @Path("destination.watchroom")
-    private Location watchroom;
-    @Path("destination.arena")
-    private Location arena;
 
     @Path("announcement.starting.times")
     private Integer announcementStartingTimes = 5;
@@ -84,10 +56,12 @@ public class GameConfiguration implements ConfigurationSerializable {
     @Path("message.winner.quit")
     private Boolean winnerQuitMessage = false;
 
-    public GameConfiguration() {}
+    public GameConfiguration() {
+        this(Collections.emptyMap());
+    }
 
     public GameConfiguration(@NotNull Map<String, Object> data) {
-        ConfigUtils.deserialize(this, data);
+        super(data);
     }
 
     @Override
@@ -95,32 +69,28 @@ public class GameConfiguration implements ConfigurationSerializable {
         return ConfigUtils.serialize(this);
     }
 
-    public String getName() {
-        return name;
-    }
-
     public void setName(@NotNull String name) {
         this.name = name;
     }
 
+    @Override
     public Integer getMinimumGroups() {
         return Math.max(2, minimumGroups);
     }
 
-    public Integer getMinimumPlayers() {
-        return Math.max(2, minimumPlayers);
+    @Override
+    public Integer getMaximumPlayersPerGroup() {
+        return maximumPlayersPerGroup;
     }
 
-    public Integer getMaximumPlayers() {
-        return maximumPlayers;
-    }
-
+    @Override
     public Integer getMaximumGroups() {
         return maximumGroups;
     }
 
-    public Integer getMaximumPlayersPerGroup() {
-        return maximumPlayersPerGroup;
+    @Override
+    public Integer getMinimumPlayers() {
+        return Math.max(2, minimumPlayers);
     }
 
     public Integer getPreparationTime() {
@@ -129,14 +99,6 @@ public class GameConfiguration implements ConfigurationSerializable {
 
     public Integer getExpirationTime() {
         return expirationTime;
-    }
-
-    public @Nullable List<String> getCommandsBeforeBattle() {
-        return commandsBeforeBattle;
-    }
-
-    public @Nullable List<String> getCommandsAfterBattle() {
-        return commandsAfterBattle;
     }
 
     public Integer getAnnouncementStartingInterval() {
@@ -160,76 +122,12 @@ public class GameConfiguration implements ConfigurationSerializable {
         return prizes;
     }
 
-    public @Nullable Kit getKit() {
-        return kit;
-    }
-
-    public void setKit(Kit kit) {
-        this.kit = kit;
-    }
-
-    public void setExit(Location exit) {
-        this.exit = exit;
-    }
-
-    public void setLobby(Location lobby) {
-        this.lobby = lobby;
-    }
-
-    public void setArena(Location arena) {
-        this.arena = arena;
-    }
-
-    public void setWatchroom(Location watchroom) {
-        this.watchroom = watchroom;
-    }
-
-    public Location getExit() {
-        return exit;
-    }
-
-    public Location getLobby() {
-        return lobby;
-    }
-
-    public Location getArena() {
-        return arena;
-    }
-
-    public Location getWatchroom() {
-        return watchroom;
-    }
-
-    public Boolean isUseKits() {
-        return useKits;
-    }
-
     public Boolean isEliminationTournament() {
         return eliminationTournament;
     }
 
     public Boolean isPowerOfTwo() {
         return powerOfTwo;
-    }
-
-    public Boolean isGroupMode() {
-        return groupMode;
-    }
-
-    public Boolean isPvP() {
-        return pvp;
-    }
-
-    public Boolean isClearItemsOnDeath() {
-        return clearItemsOnDeath;
-    }
-
-    public Boolean isMeleeDamage() {
-        return meleeDamage;
-    }
-
-    public Boolean isRangedDamage() {
-        return rangedDamage;
     }
 
     public Boolean isKiller() {
@@ -268,9 +166,6 @@ public class GameConfiguration implements ConfigurationSerializable {
         return winnerPrefix;
     }
 
-    public Boolean locationsSet() {
-        return arena != null && exit != null && lobby != null && watchroom != null;
-    }
 
     private Map<String, Prizes> createPrizesMap() {
         LinkedHashMap<String, Prizes> map = new LinkedHashMap<>();

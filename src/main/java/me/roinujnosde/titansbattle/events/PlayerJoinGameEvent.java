@@ -23,8 +23,8 @@
  */
 package me.roinujnosde.titansbattle.events;
 
+import me.roinujnosde.titansbattle.BaseGame;
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.games.Game;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
@@ -40,9 +40,9 @@ public class PlayerJoinGameEvent extends Event implements Cancellable {
     private static final HandlerList HANDLERS = new HandlerList();
     private boolean cancelled = false;
     private final Player player;
-    private final Game game;
+    private final BaseGame game;
 
-    public PlayerJoinGameEvent(@NotNull Player player, @NotNull Game game) {
+    public PlayerJoinGameEvent(@NotNull Player player, @NotNull BaseGame game) {
         this.player = player;
         this.game = game;
     }
@@ -51,7 +51,7 @@ public class PlayerJoinGameEvent extends Event implements Cancellable {
      * Returns the Game
      * @return the Game
      */
-    public Game getGame() {
+    public BaseGame getGame() {
         return game;
     }
     

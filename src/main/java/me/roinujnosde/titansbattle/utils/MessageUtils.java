@@ -1,12 +1,18 @@
 package me.roinujnosde.titansbattle.utils;
 
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.entity.Player;
-import org.jetbrains.annotations.NotNull;
-
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.text.MessageFormat;
+
+import org.bukkit.Bukkit;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import me.roinujnosde.titansbattle.TitansBattle;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 
 public class MessageUtils {
 
@@ -26,6 +32,19 @@ public class MessageUtils {
     }
 
     private MessageUtils() {
+    }
+
+    public static void broadcastKey(@NotNull String messageKey, @Nullable FileConfiguration config, Object... args) {
+        String message = TitansBattle.getInstance().getLang(messageKey, config);
+        broadcast(message, config, args);
+    }
+
+    public static void broadcast(@Nullable String message, @Nullable FileConfiguration config, Object... args) {
+        if (message == null || message.isEmpty()) {
+            return;
+        }
+        message = MessageFormat.format(message, args);
+        Bukkit.broadcastMessage(message);
     }
 
     public static void sendActionBar(@NotNull Player player, @NotNull String message) {

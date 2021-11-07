@@ -6,10 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 public class ConfigUtils {
 
@@ -17,15 +14,15 @@ public class ConfigUtils {
     }
 
     public static void deserialize(@NotNull Object instance, @NotNull Map<String, Object> data) {
-        for (Field declaredField : instance.getClass().getDeclaredFields()) {
-            if (Modifier.isStatic(declaredField.getModifiers())) {
+        for (Field field : getFields(instance)) {
+            if (Modifier.isStatic(field.getModifiers())) {
                 continue;
             }
             try {
-                declaredField.setAccessible(true);
-                Object value = data.get(ConfigUtils.getPath(declaredField));
+                field.setAccessible(true);
+                Object value = data.get(getPath(field));
                 if (value != null) {
-                    declaredField.set(instance, value);
+                    field.set(instance, value);
                 }
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
@@ -35,13 +32,13 @@ public class ConfigUtils {
 
     public static Map<String, Object> serialize(@NotNull Object instance) {
         TreeMap<String, Object> data = new TreeMap<>();
-        for (Field declaredField : instance.getClass().getDeclaredFields()) {
-            if (Modifier.isStatic(declaredField.getModifiers())) {
+        for (Field field : getFields(instance)) {
+            if (Modifier.isStatic(field.getModifiers())) {
                 continue;
             }
             try {
-                declaredField.setAccessible(true);
-                data.put(ConfigUtils.getPath(declaredField), declaredField.get(instance));
+                field.setAccessible(true);
+                data.put(getPath(field), field.get(instance));
             } catch (IllegalAccessException e) {
                 e.printStackTrace();
             }
@@ -93,6 +90,21 @@ public class ConfigUtils {
             }
         }
         return name;
+    }
+
+    private static List<Field> getFields(Object obj) {
+        List<Field> fields = new ArrayList<>();
+        Class<?> clazz = obj.getClass();
+        while (clazz != Object.class) {
+            for (Field field : clazz.getDeclaredFields()) {
+                if (Modifier.isTransient(field.getModifiers())) {
+                    continue;
+                }
+                fields.add(field);
+            }
+            clazz = clazz.getSuperclass();
+        }
+        return fields;
     }
 
 }

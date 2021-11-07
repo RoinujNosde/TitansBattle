@@ -1,7 +1,6 @@
 package me.roinujnosde.titansbattle.managers;
 
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
 import me.roinujnosde.titansbattle.events.NewKillerEvent;
 import me.roinujnosde.titansbattle.games.EliminationTournamentGame;
 import me.roinujnosde.titansbattle.games.FreeForAllGame;
@@ -11,10 +10,7 @@ import me.roinujnosde.titansbattle.types.Scheduler;
 import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.Helper;
 import me.roinujnosde.titansbattle.utils.MessageUtils;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -72,13 +68,13 @@ public class GameManager {
 
         if (currentTimeInSeconds == nextTimeInSeconds) {
             plugin.debug("It's time!", true);
-            GameConfigurationDao dao = GameConfigurationDao.getInstance(plugin);
-            GameConfiguration config = dao.getGameConfiguration(nextScheduler.getGameName());
-            if (config == null) {
+            Optional<GameConfiguration> config = plugin.getConfigurationDao()
+                    .getConfiguration(nextScheduler.getGameName(), GameConfiguration.class);
+            if (!config.isPresent()) {
                 plugin.debug(String.format("Game %s not found!", nextScheduler.getGameName()), false);
                 return;
             }
-            start(config);
+            start(config.get());
         } else {
             plugin.debug("It's not time yet!", true);
             tm.startSchedulerTask(nextTimeInSeconds - currentTimeInSeconds);
@@ -95,10 +91,9 @@ public class GameManager {
         if (!gameConfig.isKiller()) {
             return;
         }
-        GameConfigurationDao dao = GameConfigurationDao.getInstance(plugin);
         Bukkit.getPluginManager().callEvent(new NewKillerEvent(killer, victim));
         Bukkit.getServer().getOnlinePlayers().forEach((p) -> MessageUtils.sendActionBar(p,
-                MessageFormat.format(plugin.getLang("new_killer", dao.getConfigFile(gameConfig)), killer.getName())));
+                MessageFormat.format(plugin.getLang("new_killer", gameConfig.getFileConfiguration()), killer.getName())));
         plugin.getDatabaseManager().getTodaysWinners().setKiller(gameConfig.getName(), killer.getUniqueId());
     }
 
@@ -123,36 +118,4 @@ public class GameManager {
         game.start();
     }
 
-    public void broadcastKey(@NotNull String messageKey, @Nullable FileConfiguration config, Object... args) {
-        String message = MessageFormat.format(plugin.getLang(messageKey, config), args);
-        if (message.isEmpty()) {
-            return;
-        }
-        Bukkit.broadcastMessage(message);
-    }
-
-    public void broadcast(@NotNull String message, @Nullable Game game) {
-        broadcast(message, game, false);
-    }
-
-    public void broadcast(@NotNull String message, @Nullable Game game, boolean participantsOnly) {
-        if (message.isEmpty()) {
-            return;
-        }
-        if (game != null && participantsOnly) {
-            game.sendMessageToParticipants(message);
-            return;
-        }
-        Bukkit.broadcastMessage(message);
-    }
-
-    public void broadcastKey(@NotNull String messageKey, @Nullable Game game, Object... args) {
-        broadcastKey(messageKey, game, false, args);
-    }
-
-    public void broadcastKey(@NotNull String messageKey, @Nullable Game game, boolean participantsOnly, Object... args) {
-        String message = plugin.getLang(messageKey, game);
-        message = MessageFormat.format(message, args);
-        broadcast(message, game, participantsOnly);
-    }
 }

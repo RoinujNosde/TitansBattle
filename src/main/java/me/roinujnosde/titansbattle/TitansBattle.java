@@ -23,28 +23,31 @@ package me.roinujnosde.titansbattle;
 
 import co.aikar.commands.ConditionFailedException;
 import co.aikar.commands.InvalidCommandArgument;
+import co.aikar.commands.MessageKeys;
 import co.aikar.commands.PaperCommandManager;
+import me.roinujnosde.titansbattle.challenges.ArenaConfiguration;
+import me.roinujnosde.titansbattle.challenges.Challenge;
+import me.roinujnosde.titansbattle.challenges.ChallengeRequest;
+import me.roinujnosde.titansbattle.commands.CanChallengeCondition;
+import me.roinujnosde.titansbattle.commands.ChallengeCommand;
 import me.roinujnosde.titansbattle.commands.TBCommands;
-import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
+import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.listeners.*;
 import me.roinujnosde.titansbattle.managers.*;
-import me.roinujnosde.titansbattle.types.GameConfiguration;
-import me.roinujnosde.titansbattle.types.Kit;
-import me.roinujnosde.titansbattle.types.Prizes;
-import me.roinujnosde.titansbattle.types.Winners;
+import me.roinujnosde.titansbattle.types.*;
 import me.roinujnosde.titansbattle.utils.ConfigUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
-import org.bukkit.plugin.PluginManager;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.text.MessageFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -64,11 +67,12 @@ public final class TitansBattle extends JavaPlugin {
     private LanguageManager languageManager;
     private DatabaseManager databaseManager;
     private @Nullable GroupManager groupManager;
-    private GameConfigurationDao gameConfigurationDao;
+    private ChallengeManager challengeManager;
+    private ConfigurationDao configurationDao;
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
+        setupConfig();
         registerSerializationClasses();
         instance = this;
         gameManager = new GameManager();
@@ -76,7 +80,8 @@ public final class TitansBattle extends JavaPlugin {
         taskManager = new TaskManager();
         languageManager = new LanguageManager();
         databaseManager = new DatabaseManager();
-        gameConfigurationDao = GameConfigurationDao.getInstance(this);
+        challengeManager = new ChallengeManager();
+        configurationDao = new ConfigurationDao(getDataFolder());
 
         configManager.load();
         languageManager.setup();
@@ -95,9 +100,17 @@ public final class TitansBattle extends JavaPlugin {
         }
     }
 
+    private void setupConfig() {
+        saveDefaultConfig();
+        // loads the config and copies default values
+        getConfig().options().copyDefaults(true);
+        // saves it back (to add new values)
+        saveConfig();
+    }
+
     private void registerSerializationClasses() {
         ConfigurationSerialization.registerClass(GameConfiguration.Prize.class);
-        ConfigurationSerialization.registerClass(GameConfiguration.class);
+        ConfigurationSerialization.registerClass(BaseGameConfiguration.class);
         ConfigurationSerialization.registerClass(Kit.class);
         ConfigurationSerialization.registerClass(Prizes.class);
     }
@@ -129,7 +142,8 @@ public final class TitansBattle extends JavaPlugin {
     }
 
     private void registerContexts() {
-        pcm.getCommandContexts().registerIssuerOnlyContext(Game.class, supplier -> gameManager.getCurrentGame().orElse(null));
+        pcm.getCommandContexts().registerIssuerOnlyContext(Game.class,
+                supplier -> gameManager.getCurrentGame().orElse(null));
         pcm.getCommandContexts().registerContext(Date.class, supplier -> {
             try {
                 return new SimpleDateFormat(configManager.getDateFormat()).parse(supplier.popFirstArg());
@@ -138,10 +152,42 @@ public final class TitansBattle extends JavaPlugin {
                 throw new InvalidCommandArgument();
             }
         });
+        pcm.getCommandContexts().registerContext(Group.class, supplier -> {
+            String arg = supplier.popFirstArg();
+            if (groupManager != null) {
+                for (Group group : groupManager.getGroups()) {
+                    if (arg.equalsIgnoreCase(group.getUniqueName())) {
+                        return group;
+                    }
+                }
+            }
+            throw new InvalidCommandArgument(getLang("group.not.found"));
+        });
+        pcm.getCommandContexts().registerIssuerOnlyContext(Warrior.class, supplier -> {
+            Player player = supplier.getPlayer();
+            if (player == null) {
+                throw new InvalidCommandArgument(MessageKeys.NOT_ALLOWED_ON_CONSOLE);
+            }
+            return databaseManager.getWarrior(player);
+        });
+        pcm.getCommandContexts().registerContext(ChallengeRequest.class, supplier -> {
+            String arg = supplier.popFirstArg();
+            for (ChallengeRequest<?> request : challengeManager.getRequests()) {
+                if (request.getChallengerName().equalsIgnoreCase(arg)) {
+                    return request;
+                }
+            }
+            return null;
+        });
+        pcm.getCommandContexts().registerContext(ArenaConfiguration.class, supplier -> configurationDao
+                .getConfiguration(supplier.popFirstArg(), ArenaConfiguration.class).orElse(null));
+        pcm.getCommandContexts().registerContext(GameConfiguration.class, supplier -> configurationDao
+                .getConfiguration(supplier.popFirstArg(), GameConfiguration.class).orElse(null));
     }
 
     private void registerCommands() {
         pcm.registerCommand(new TBCommands());
+        pcm.registerCommand(new ChallengeCommand());
     }
 
     private void registerConditions() {
@@ -151,12 +197,28 @@ public final class TitansBattle extends JavaPlugin {
                 throw new ConditionFailedException();
             }
         });
+        pcm.getCommandConditions().addCondition("can_challenge", new CanChallengeCondition(this));
+        pcm.getCommandConditions().addCondition(ArenaConfiguration.class, "not_in_use", (cc, cec, v) -> {
+            boolean matches = challengeManager.getRequests().stream().map(ChallengeRequest::getChallenge)
+                    .map(Challenge::getConfig).anyMatch(config -> config.equals(v));
+            if (matches) {
+                cec.getIssuer().sendMessage(getLang("arena.in.use"));
+                throw new ConditionFailedException();
+            }
+        });
+        pcm.getCommandConditions().addCondition(Warrior.class, "is_invited", (cc, cec, v) -> {
+            boolean invited = challengeManager.getRequests().stream().anyMatch(r -> r.isInvited(v));
+            if (!invited) {
+                cec.getIssuer().sendMessage(getLang("no.challenge.to.accept"));
+                throw new ConditionFailedException();
+            }
+        });
     }
 
     private void registerCompletions() {
-        pcm.getCommandCompletions().registerCompletion("winners_dates", handler -> databaseManager.getWinners()
-                .stream().map(Winners::getDate).map(new SimpleDateFormat(configManager.getDateFormat())::format)
-                .collect(Collectors.toList()));
+        pcm.getCommandCompletions().registerCompletion("winners_dates",
+                handler -> databaseManager.getWinners().stream().map(Winners::getDate)
+                        .map(new SimpleDateFormat(configManager.getDateFormat())::format).collect(Collectors.toList()));
         pcm.getCommandCompletions().registerCompletion("group_pages", handler -> {
             int pages = databaseManager.getGroups().size() / configManager.getPageLimitRanking();
             ArrayList<String> list = new ArrayList<>();
@@ -173,19 +235,49 @@ public final class TitansBattle extends JavaPlugin {
             }
             return list;
         });
-        pcm.getCommandCompletions().registerStaticCompletion("prizes_config_fields", ConfigUtils.getEditableFields(Prizes.class));
-        pcm.getCommandCompletions().registerStaticCompletion("game_config_fields", ConfigUtils.getEditableFields(GameConfiguration.class));
+        pcm.getCommandCompletions().registerCompletion("groups", handler -> {
+            if (groupManager == null)
+                return Collections.emptyList();
+            return groupManager.getGroups().stream().map(Group::getUniqueName).collect(Collectors.toList());
+        });
+        pcm.getCommandCompletions().registerCompletion("requests", handler -> {
+            Warrior warrior = databaseManager.getWarrior(handler.getIssuer().getUniqueId());
+            return challengeManager.getRequests().stream().filter(cr -> cr.isInvited(warrior))
+                    .map(ChallengeRequest::getChallengerName).collect(Collectors.toList());
+        });
+        pcm.getCommandCompletions().registerStaticCompletion("prizes_config_fields",
+                ConfigUtils.getEditableFields(Prizes.class));
+        pcm.getCommandCompletions().registerStaticCompletion("game_config_fields",
+                ConfigUtils.getEditableFields(GameConfiguration.class));
         pcm.getCommandCompletions().registerStaticCompletion("warrior_order", Arrays.asList("kills", "deaths"));
-        pcm.getCommandCompletions().registerStaticCompletion("group_order", Arrays.asList("kills", "deaths", "defeats"));
-        pcm.getCommandCompletions().registerCompletion("games", handler -> gameConfigurationDao.getGameConfigurations()
-                .keySet());
+        pcm.getCommandCompletions().registerStaticCompletion("group_order",
+                Arrays.asList("kills", "deaths", "defeats"));
+        pcm.getCommandCompletions().registerCompletion("games",
+                handler -> configurationDao.getConfigurations(GameConfiguration.class).stream()
+                        .map(GameConfiguration::getName).collect(Collectors.toList()));
+        pcm.getCommandCompletions().registerCompletion("arenas", handler -> {
+            List<String> inUse = challengeManager.getRequests().stream()
+                    .map(cr -> cr.getChallenge().getConfig().getName()).collect(Collectors.toList());
+            if (handler.hasConfig("in_use")) {
+                return inUse;
+            }
+            
+            boolean group = Boolean.valueOf(handler.getConfig("group"));
+            List<String> arenas = configurationDao.getConfigurations(ArenaConfiguration.class).stream()
+                    .filter(a -> a.isGroupMode() == group).map(ArenaConfiguration::getName)
+                    .collect(Collectors.toList());
+
+            arenas.removeAll(inUse);
+            return arenas;
+        });
     }
 
     private void registerDependencies() {
         pcm.registerDependency(GameManager.class, gameManager);
-        pcm.registerDependency(GameConfigurationDao.class, gameConfigurationDao);
+        pcm.registerDependency(ConfigurationDao.class, configurationDao);
         pcm.registerDependency(ConfigManager.class, configManager);
         pcm.registerDependency(DatabaseManager.class, databaseManager);
+        pcm.registerDependency(ChallengeManager.class, challengeManager);
     }
 
     private void loadGroupsPlugin() {
@@ -195,15 +287,12 @@ public final class TitansBattle extends JavaPlugin {
     }
 
     private void registerEvents() {
-        PluginManager pm = Bukkit.getPluginManager();
-        pm.registerEvents(new PlayerCommandPreprocessListener(), this);
-        pm.registerEvents(new PlayerQuitListener(), this);
-        pm.registerEvents(new PlayerJoinListener(), this);
-        pm.registerEvents(new PlayerDeathListener(), this);
-        pm.registerEvents(new EntityDamageListener(), this);
-        pm.registerEvents(new BlockUpdateListener(), this);
-        pm.registerEvents(new PlayerRespawnListener(), this);
-        pm.registerEvents(new PlayerTeleportListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerCommandPreprocessListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerDeathListener(), this);
+        Bukkit.getPluginManager().registerEvents(new EntityDamageListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerRespawnListener(), this);
     }
 
     public DatabaseManager getDatabaseManager() {
@@ -238,6 +327,10 @@ public final class TitansBattle extends JavaPlugin {
         return gameManager;
     }
 
+    public ChallengeManager getChallengeManager() {
+        return challengeManager;
+    }
+
     public TaskManager getTaskManager() {
         return taskManager;
     }
@@ -250,14 +343,18 @@ public final class TitansBattle extends JavaPlugin {
         return languageManager;
     }
 
+    public ConfigurationDao getConfigurationDao() {
+        return configurationDao;
+    }
+
     /**
      * Returns the language for the path on the config
      *
-     * @param path where the String is
+     * @param path   where the String is
      * @param config a FileConfiguration to access
      * @return the language from the config, with its color codes (&) translated
      */
-    public @NotNull String getLang(@NotNull String path, @Nullable FileConfiguration config) {
+    public @NotNull String getLang(@NotNull String path, @Nullable FileConfiguration config, Object... args) {
         String language = null;
         if (config != null) {
             language = config.getString("language." + path);
@@ -266,40 +363,36 @@ public final class TitansBattle extends JavaPlugin {
             language = getLanguageManager().getConfig().getString(path,
                     getLanguageManager().getEnglishLanguageFile().getString(path, "<MISSING KEY: " + path + ">"));
         }
-        return ChatColor.translateAlternateColorCodes('&', language);
+        return ChatColor.translateAlternateColorCodes('&', MessageFormat.format(language, args));
+    }
+
+    public String getLang(@NotNull String path, Object... args) {
+        return getLang(path, (FileConfiguration) null, args);
     }
 
     /**
-     * Returns the language for the path
+     * Returns the language for the path on the BaseGame config file
      *
      * @param path where the String is
-     * @return the language from the default language file
-     */
-    public String getLang(@NotNull String path) {
-        return getLang(path, (FileConfiguration) null);
-    }
-
-    /**
-     * Returns the language for the path on the Game config file
-     *
-     * @param path where the String is
-     * @param game the Game to find the String
-     * @return the overrider language if found, or from the default language
-     * file
+     * @param game the BaseGame to find the String
+     * @return the overrider language if found, or from the default language file
      */
     @NotNull
-    public String getLang(@NotNull String path, Game game) {
-        YamlConfiguration configFile = null;
-        if (game != null) {
-            configFile = gameConfigurationDao.getConfigFile(game.getConfig());
+    public String getLang(@NotNull String path, @Nullable BaseGame game, Object... args) {
+        if (game == null) {
+            return getLang(path, (FileConfiguration) null, args);
         }
-        return getLang(path, configFile);
+        return getLang(path, game.getConfig().getFileConfiguration(), args);
+    }
+
+    public String getLang(@NotNull String path, @NotNull BaseGameConfiguration config, Object... args) {
+        return getLang(path, config.getFileConfiguration(), args);
     }
 
     /**
      * Sends a message to the console
      *
-     * @param message message to send
+     * @param message             message to send
      * @param respectUserDecision should the message be sent if debug is false?
      */
     public void debug(String message, boolean respectUserDecision) {
@@ -312,4 +405,5 @@ public final class TitansBattle extends JavaPlugin {
     public void debug(String message) {
         debug(message, true);
     }
+
 }

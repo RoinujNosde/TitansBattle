@@ -26,7 +26,6 @@ package me.roinujnosde.titansbattle.managers;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.GroupData;
 import me.roinujnosde.titansbattle.types.Warrior;
@@ -60,7 +59,7 @@ public class DatabaseManager {
     private final List<Winners> winners = new ArrayList<>();
 
     public DatabaseManager() {
-        games = GameConfigurationDao.getInstance(plugin).getGameConfigurations().values();
+        games = plugin.getConfigurationDao().getConfigurations(GameConfiguration.class);
     }
 
     private enum CountType {

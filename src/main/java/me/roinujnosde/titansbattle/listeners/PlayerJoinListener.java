@@ -25,9 +25,9 @@ package me.roinujnosde.titansbattle.listeners;
 
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
-import me.roinujnosde.titansbattle.managers.GameManager;
 import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.utils.Helper;
+import me.roinujnosde.titansbattle.utils.MessageUtils;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
@@ -43,12 +43,10 @@ public class PlayerJoinListener implements Listener {
 
     private final ConfigManager cm;
     private final TitansBattle plugin;
-    private final GameManager gameManager;
 
     public PlayerJoinListener() {
         plugin = TitansBattle.getInstance();
         cm = plugin.getConfigManager();
-        gameManager = plugin.getGameManager();
     }
 
     @EventHandler
@@ -66,19 +64,19 @@ public class PlayerJoinListener implements Listener {
             FileConfiguration config = Helper.getConfigFromWinnerOrKiller(player);
             if (Helper.isKiller(player) && Helper.isWinner(player)) {
                 if (Helper.isKillerPriority(player) && killerJoinMessageEnabled) {
-                    gameManager.broadcastKey("killer-has-joined", config, player.getName());
+                    MessageUtils.broadcastKey("killer-has-joined", config, player.getName());
                     return;
                 }
                 if (winnerJoinMessageEnabled) {
-                    gameManager.broadcastKey("winner-has-joined", config, player.getName());
+                    MessageUtils.broadcastKey("winner-has-joined", config, player.getName());
                 }
                 return;
             }
             if (Helper.isKiller(player) && killerJoinMessageEnabled) {
-                gameManager.broadcastKey("killer-has-joined", config, player.getName());
+                MessageUtils.broadcastKey("killer-has-joined", config, player.getName());
             }
             if (Helper.isWinner(player) && winnerJoinMessageEnabled) {
-                gameManager.broadcastKey("winner-has-joined", config, player.getName());
+                MessageUtils.broadcastKey("winner-has-joined", config, player.getName());
             }
         }
     }
