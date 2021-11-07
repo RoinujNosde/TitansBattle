@@ -47,6 +47,7 @@ public class TBCommands extends BaseCommand {
 
     @Subcommand("%create|create")
     @CommandPermission("titansbattle.create")
+    @Description("{@@command.description.create}")
     public void create(CommandSender sender, String game) {
         if (configDao.create(game, GameConfiguration.class)) {
             sender.sendMessage(plugin.getLang("game-created", game));
@@ -58,6 +59,7 @@ public class TBCommands extends BaseCommand {
     @Subcommand("%edit|edit %prize|prize")
     @CommandPermission("titansbattle.edit")
     @CommandCompletion("@games @prizes_config_fields")
+    @Description("{@@command.description.edit.prize}")
     public void editPrizes(CommandSender sender,
                            @Values("@games") GameConfiguration game,
                            Prize prize,
@@ -75,6 +77,7 @@ public class TBCommands extends BaseCommand {
     @Subcommand("%setprize|setprize")
     @CommandPermission("titansbattle.setinventory")
     @CommandCompletion("@games")
+    @Description("{@@command.description.setprize}")
     public void setPrizeInventory(Player sender,
                                   @Values("@games") GameConfiguration game,
                                   Prize prize,
@@ -95,6 +98,7 @@ public class TBCommands extends BaseCommand {
     @Subcommand("%edit|edit %game|game")
     @CommandPermission("titansbattle.edit")
     @CommandCompletion("@games @game_config_fields")
+    @Description("{@@command.description.edit.game}")
     public void editGame(CommandSender sender,
                          @Values("@games") GameConfiguration game,
                          @Values("@game_config_fields") String field,
@@ -110,6 +114,7 @@ public class TBCommands extends BaseCommand {
     @Subcommand("%start|start")
     @CommandPermission("titansbattle.start")
     @CommandCompletion("@games")
+    @Description("{@@command.description.start}")
     public void start(CommandSender sender, @Values("@games") GameConfiguration game) {
         java.util.Optional<Game> currentGame = gameManager.getCurrentGame();
         if (currentGame.isPresent()) {
@@ -123,6 +128,7 @@ public class TBCommands extends BaseCommand {
     @Subcommand("%kick|kick")
     @CommandPermission("titansbattle.kick")
     @Conditions("happening")
+    @Description("{@@command.description.kick}")
     public void kick(CommandSender sender, Game game, OnlinePlayer player) {
         Warrior warrior = databaseManager.getWarrior(player.getPlayer());
         String wName = warrior.getName();
@@ -137,6 +143,7 @@ public class TBCommands extends BaseCommand {
     @Subcommand("%cancel|cancel")
     @CommandPermission("titansbattle.cancel")
     @Conditions("happening")
+    @Description("{@@command.description.cancel}")
     public void cancelGame(CommandSender sender, Game game) {
         game.cancel(sender);
     }
@@ -144,6 +151,7 @@ public class TBCommands extends BaseCommand {
     @SuppressWarnings("SpellCheckingInspection")
     @Subcommand("%setdestination|setdestination GENERAL_EXIT")
     @CommandPermission("titansbattle.setdestination")
+    @Description("{@@command.description.setdestination.general}")
     public void setGeneralExit(Player player) {
         configManager.setGeneralExit(player.getLocation());
         configManager.save();
@@ -153,6 +161,7 @@ public class TBCommands extends BaseCommand {
     @Subcommand("%setdestination|setdestination")
     @CommandPermission("titansbattle.setdestination")
     @CommandCompletion("@games")
+    @Description("{@@command.description.setdestination}")
     public void setDestination(Player player, @Values("@games") GameConfiguration game, Destination destination) {
         Location loc = player.getLocation();
         switch (destination) {
@@ -175,6 +184,7 @@ public class TBCommands extends BaseCommand {
 
     @Subcommand("%reload|reload")
     @CommandPermission("titansbattle.reload")
+    @Description("{@@command.description.reload}")
     public void reload(CommandSender sender) {
         gameManager.getCurrentGame().ifPresent(game -> game.cancel(sender));
         plugin.saveDefaultConfig();
@@ -187,6 +197,7 @@ public class TBCommands extends BaseCommand {
     @Subcommand("%setkit|setkit")
     @CommandPermission("titansbattle.setinventory")
     @CommandCompletion("@games")
+    @Description("{@@command.description.setkit}")
     public void setKit(Player sender, @Values("@games") GameConfiguration game) {
         Objects.requireNonNull(game);
         game.setKit(new Kit(sender.getInventory()));
@@ -204,6 +215,7 @@ public class TBCommands extends BaseCommand {
     @Subcommand("%join|join")
     @CommandPermission("titansbattle.join")
     @Conditions("happening")
+    @Description("{@@command.description.join}")
     public void join(Player sender) {
         plugin.debug(String.format("%s used /tb join", sender.getName()));
         gameManager.getCurrentGame().ifPresent(g -> g.onJoin(databaseManager.getWarrior(sender)));
@@ -212,6 +224,7 @@ public class TBCommands extends BaseCommand {
     @Subcommand("%exit|exit|leave")
     @CommandPermission("titansbattle.exit")
     @Conditions("happening")
+    @Description("{@@command.description.exit}")
     public void leave(Player sender, Game game) {
         Warrior warrior = databaseManager.getWarrior(sender);
         if (!game.isParticipant(warrior)) {
@@ -221,7 +234,10 @@ public class TBCommands extends BaseCommand {
         game.onLeave(warrior);
     }
 
-    @HelpCommand
+    @Subcommand("%help|help")
+    @CatchUnknown
+    @Default
+    @Description("{@@command.description.help}")
     public void doHelp(CommandHelp help) {
         help.showHelp();
     }
@@ -446,6 +462,7 @@ public class TBCommands extends BaseCommand {
         @Subcommand("%groups|groups")
         @CommandPermission("titansbattle.ranking")
         @CommandCompletion("@games @group_order @group_pages")
+        @Description("{@@command.description.ranking.groups}")
         public void groupsRanking(CommandSender sender,
                                   @Values("@games") String game,
                                   @Values("@group_order") @Optional @Nullable String order,
@@ -492,6 +509,7 @@ public class TBCommands extends BaseCommand {
         @Subcommand("%players|players")
         @CommandPermission("titansbattle.ranking")
         @CommandCompletion("@games @warrior_order @warrior_pages")
+        @Description("{@@command.description.ranking.players}")
         public void playersRanking(CommandSender sender,
                                    @Values("@games") String game,
                                    @Values("@warrior_order") @Optional @Nullable String order,
@@ -534,6 +552,7 @@ public class TBCommands extends BaseCommand {
     @Subcommand("%winners|winners")
     @CommandPermission("titansbattle.winners")
     @CommandCompletion("@games @winners_dates")
+    @Description("{@@command.description.winners}")
     public void winners(CommandSender sender, @Values("@games") GameConfiguration game, @Optional @Nullable Date date) {
         Winners winners = databaseManager.getLatestWinners();
         if (date != null) {
@@ -568,6 +587,7 @@ public class TBCommands extends BaseCommand {
     @Subcommand("%watch|watch")
     @CommandPermission("titansbattle.watch")
     @Conditions("happening")
+    @Description("{@@command.description.watch}")
     public void watch(Player sender, Game game) {
         Location watchroom = game.getConfig().getWatchroom();
         sender.teleport(watchroom);

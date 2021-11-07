@@ -21,8 +21,10 @@
  ***************************************************************************** */
 package me.roinujnosde.titansbattle;
 
+import co.aikar.commands.BukkitLocales;
 import co.aikar.commands.ConditionFailedException;
 import co.aikar.commands.InvalidCommandArgument;
+import co.aikar.commands.Locales;
 import co.aikar.commands.MessageKeys;
 import co.aikar.commands.PaperCommandManager;
 import me.roinujnosde.titansbattle.challenges.ArenaConfiguration;
@@ -124,10 +126,14 @@ public final class TitansBattle extends JavaPlugin {
         registerConditions();
         registerCommands();
     }
-
+    
     private void setDefaultLocale() {
-        String[] s = configManager.getLanguage().split("_");
-        pcm.getLocales().setDefaultLocale(new Locale(s[0]));
+        Locale defaultLocale = new Locale(configManager.getLanguage().split("_")[0]);
+        BukkitLocales locales = pcm.getLocales();
+        
+        locales.setDefaultLocale(defaultLocale);
+        locales.loadLanguage(getLanguageManager().getEnglishLanguageFile(), Locales.ENGLISH);
+        locales.loadLanguage(getLanguageManager().getConfig(), defaultLocale);
     }
 
     private void registerReplacements() {

@@ -25,7 +25,7 @@ public class GameManager {
     private @Nullable Game currentGame;
 
     /**
-     * Gets the current game, or null, if there is no one happening
+     * Gets the current game
      *
      * @return the current game
      */

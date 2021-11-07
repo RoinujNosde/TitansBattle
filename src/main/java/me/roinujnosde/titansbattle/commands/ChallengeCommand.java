@@ -38,6 +38,7 @@ public class ChallengeCommand extends BaseCommand {
     @CommandCompletion("@players @arenas:group=false")
     @Conditions("can_challenge:group=false")
     @CommandPermission("titansbattle.challenge.player")
+    @Description("{@@command.description.challenge.player}")
     public void challengePlayer(Warrior challenger, OnlinePlayer target,
             @Conditions("not_in_use") ArenaConfiguration arena) {
         Challenge challenge = new Challenge(plugin, arena);
@@ -55,6 +56,7 @@ public class ChallengeCommand extends BaseCommand {
     @CommandCompletion("@groups @arenas:group=true")
     @Conditions("can_challenge:group=true")
     @CommandPermission("titansbattle.challenge.group")
+    @Description("{@@command.description.challenge.group}")
     public void challengeGroup(Warrior sender, Group target, @Conditions("not_in_use") ArenaConfiguration arena) {
         Challenge challenge = new Challenge(plugin, arena);
         Group challenger = Objects.requireNonNull(sender.getGroup());
@@ -78,6 +80,7 @@ public class ChallengeCommand extends BaseCommand {
     @CommandCompletion("@requests")
     @CommandPermission("titansbattle.challenge.accept")
     @Conditions("is_invited")
+    @Description("{@@command.description.challenge.accept}")
     public void accept(Warrior warrior, @Values("@requests") ChallengeRequest<?> challenger) {
         challenger.getChallenge().onJoin(warrior);
     }
@@ -85,6 +88,7 @@ public class ChallengeCommand extends BaseCommand {
     @Subcommand("%watch|watch")
     @CommandPermission("titansbattle.watch")
     @CommandCompletion("@arenas:in_use")
+    @Description("{@@command.description.challenge.watch}")
     public void watch(Player sender, ArenaConfiguration arena) {
         Location watchroom = arena.getWatchroom();
         if (watchroom == null) {
@@ -97,6 +101,7 @@ public class ChallengeCommand extends BaseCommand {
 
     @Subcommand("%create|create")
     @CommandPermission("titansbattle.create")
+    @Description("{@@command.description.challenge.create}")
     public void create(CommandSender sender, String arena) {
         if (configDao.create(arena, ArenaConfiguration.class)) {
             sender.sendMessage(plugin.getLang("arena-created"));
@@ -108,6 +113,7 @@ public class ChallengeCommand extends BaseCommand {
     @Subcommand("%setdestination|setdestination")
     @CommandPermission("titansbattle.setdestination")
     @CommandCompletion("@arenas")
+    @Description("{@@command.description.challenge.setdestination}")
     public void setDestination(Player player, @Values("@arenas") ArenaConfiguration arena, Destination destination) {
         Location loc = player.getLocation();
         switch (destination) {
@@ -131,6 +137,7 @@ public class ChallengeCommand extends BaseCommand {
     @Subcommand("%setkit|setkit")
     @CommandPermission("titansbattle.setinventory")
     @CommandCompletion("@arenas")
+    @Description("{@@command.description.challenge.setkit}")
     public void setKit(Player sender, @Values("@arenas") ArenaConfiguration arena) {
         arena.setKit(new Kit(sender.getInventory()));
         if (configDao.save(arena)) {
