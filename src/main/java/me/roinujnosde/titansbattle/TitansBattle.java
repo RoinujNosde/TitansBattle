@@ -204,11 +204,20 @@ public final class TitansBattle extends JavaPlugin {
             }
         });
         pcm.getCommandConditions().addCondition("can_challenge", new CanChallengeCondition(this));
-        pcm.getCommandConditions().addCondition(ArenaConfiguration.class, "not_in_use", (cc, cec, v) -> {
+        pcm.getCommandConditions().addCondition(ArenaConfiguration.class, "ready", (cc, cec, v) -> {
             boolean matches = challengeManager.getRequests().stream().map(ChallengeRequest::getChallenge)
                     .map(Challenge::getConfig).anyMatch(config -> config.equals(v));
             if (matches) {
                 cec.getIssuer().sendMessage(getLang("arena.in.use"));
+                throw new ConditionFailedException();
+            }
+            if (!v.locationsSet()) {
+                cc.getIssuer().sendMessage(getLang("this.arena.isnt.ready"));
+                throw new ConditionFailedException();
+            }
+            boolean groupMode = Boolean.valueOf(cc.getConfigValue("group", "false"));
+            if (groupMode != v.isGroupMode()) {
+                cc.getIssuer().sendMessage(getLang("group.mode.not.supported"));
                 throw new ConditionFailedException();
             }
         });

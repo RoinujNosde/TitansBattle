@@ -40,7 +40,7 @@ public class ChallengeCommand extends BaseCommand {
     @CommandPermission("titansbattle.challenge.player")
     @Description("{@@command.description.challenge.player}")
     public void challengePlayer(Warrior challenger, OnlinePlayer target,
-            @Conditions("not_in_use") ArenaConfiguration arena) {
+            @Conditions("ready:group=false") ArenaConfiguration arena) {
         Challenge challenge = new Challenge(plugin, arena);
         Warrior challenged = databaseManager.getWarrior(target.player);
         WarriorChallengeRequest request = new WarriorChallengeRequest(challenge, challenger, challenged);
@@ -57,7 +57,7 @@ public class ChallengeCommand extends BaseCommand {
     @Conditions("can_challenge:group=true")
     @CommandPermission("titansbattle.challenge.group")
     @Description("{@@command.description.challenge.group}")
-    public void challengeGroup(Warrior sender, Group target, @Conditions("not_in_use") ArenaConfiguration arena) {
+    public void challengeGroup(Warrior sender, Group target, @Conditions("ready:group=true") ArenaConfiguration arena) {
         Challenge challenge = new Challenge(plugin, arena);
         Group challenger = Objects.requireNonNull(sender.getGroup());
         GroupChallengeRequest request = new GroupChallengeRequest(challenge, challenger, target);
