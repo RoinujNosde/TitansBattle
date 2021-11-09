@@ -520,6 +520,7 @@ public abstract class BaseGame {
                 player.sendTitle(getLang("border.title"), getLang("border.subtitle"));
                 SoundUtils.playSound(BORDER, getConfig().getFileConfiguration(), player);
             });
+            currentSize = newSize;
         }
 
     }
