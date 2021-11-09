@@ -59,6 +59,7 @@ sounds:
   victory: "UI_TOAST_CHALLENGE_COMPLETE"
   enemy_death: "ENTITY_WOLF_GROWL"
   ally_death: "ENTITY_WOLF_HOWL"
+  border: "ENTITY_GHAST_SCREAM"
 
 #Date format used on /tb winners command
 date-format: "dd/MM/yyyy"

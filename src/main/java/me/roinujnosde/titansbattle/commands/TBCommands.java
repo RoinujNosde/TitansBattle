@@ -177,6 +177,9 @@ public class TBCommands extends BaseCommand {
             case WATCHROOM:
                 game.setWatchroom(loc);
                 break;
+            case BORDER_CENTER:
+                game.setBorderCenter(loc);
+                break;
         }
         configDao.save(game);
         player.sendMessage(plugin.getLang("destination_set", destination));

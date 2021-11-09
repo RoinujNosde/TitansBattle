@@ -13,6 +13,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.WorldBorder;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -75,6 +76,9 @@ public abstract class BaseGame {
         runCommandsAfterBattle(getParticipants());
         if (getConfig().isUseKits()) {
             getPlayerParticipantsStream().forEach(Kit::clearInventory);
+        }
+        if (getConfig().isWorldBorder()) {
+            getConfig().getBorderCenter().getWorld().getWorldBorder().reset();
         }
         Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getDatabaseManager().saveAll(), 1);
     }
@@ -477,10 +481,47 @@ public abstract class BaseGame {
         }
     }
 
-    protected void startPreparationTask() {
+    protected void startPreparation() {
         addTask(new PreparationTimeTask().runTaskLater(plugin, getConfig().getPreparationTime() * 20));
         addTask(new CountdownTitleTask(getCurrentFighters(), getConfig().getPreparationTime())
                 .runTaskTimer(plugin, 0L, 20L));
+        if (getConfig().isWorldBorder()) {
+            long borderInterval = getConfig().getBorderInterval() * 20L;
+            WorldBorder worldBorder = getConfig().getBorderCenter().getWorld().getWorldBorder();
+            addTask(new BorderTask(worldBorder).runTaskTimer(plugin, borderInterval, borderInterval));
+        }
+    }
+
+    public class BorderTask extends BukkitRunnable {
+
+        private final WorldBorder worldBorder;
+        private int currentSize;
+
+        public BorderTask(WorldBorder worldBorder) {
+            this.worldBorder = worldBorder;
+            currentSize = getConfig().getBorderInitialSize();
+            worldBorder.setCenter(getConfig().getBorderCenter());
+            worldBorder.setSize(currentSize);
+            worldBorder.setDamageAmount(getConfig().getBorderDamage());
+        }
+
+        @Override
+        @SuppressWarnings("deprecation")
+        public void run() {
+            int shrinkSize = getConfig().getBorderShrinkSize();
+            int newSize = currentSize - shrinkSize;
+
+            if (getConfig().getBorderFinalSize() > newSize) {
+                this.cancel();
+                return;
+            }
+            worldBorder.setSize(newSize, shrinkSize);
+            getPlayerParticipantsStream().forEach(player -> {
+                player.sendTitle(getLang("border.title"), getLang("border.subtitle"));
+                SoundUtils.playSound(BORDER, getConfig().getFileConfiguration(), player);
+            });
+        }
+
     }
 
     public class PreparationTimeTask extends BukkitRunnable {

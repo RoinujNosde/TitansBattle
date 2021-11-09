@@ -335,7 +335,7 @@ public class EliminationTournamentGame extends Game {
         generateDuelists();
         teleportNextDuelists();
         informOtherDuelists();
-        startPreparationTask();
+        startPreparation();
     }
 
     private int getPlayerOrGroupCount() {

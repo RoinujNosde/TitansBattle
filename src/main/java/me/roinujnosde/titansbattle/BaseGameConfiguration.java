@@ -16,7 +16,7 @@ import java.util.Map;
 public abstract class BaseGameConfiguration implements ConfigurationSerializable {
 
     public enum Destination {
-        EXIT, ARENA, LOBBY, WATCHROOM
+        EXIT, ARENA, LOBBY, WATCHROOM, BORDER_CENTER
     }
 
     protected transient File file;
@@ -46,6 +46,8 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
     protected Location lobby;
     @Path("destination.arena")
     protected Location arena; // TODO Make all games support multiple entrances
+    @Path("destination.border_center")
+    protected Location borderCenter;
 
     @Path("time.preparation")
     protected Integer preparationTime = 30;
@@ -56,6 +58,19 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
     protected @Nullable List<String> commandsBeforeBattle;
     @Path("run_commands.after_battle")
     protected @Nullable List<String> commandsAfterBattle;
+
+    @Path("worldborder.enable")
+    protected Boolean worldBorder = false;
+    @Path("worldborder.initial_size")
+    protected Integer borderInitialSize = 5000;
+    @Path("worldborder.final_size")
+    protected Integer borderFinalSize = 500;
+    @Path("worldborder.shrink")
+    protected Integer borderShrink = 25;
+    @Path("worldborder.interval")
+    protected Integer borderInterval = 120;
+    @Path("worldborder.damage")
+    protected Double borderDamage = 5.0;
 
     public BaseGameConfiguration(Map<String, Object> data) {
         ConfigUtils.deserialize(this, data);
@@ -98,7 +113,8 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
     }
 
     public Boolean locationsSet() {
-        return arena != null && exit != null && lobby != null && watchroom != null;
+        return arena != null && exit != null && lobby != null && watchroom != null
+                && (!worldBorder || borderCenter != null);
     }
 
     public abstract Integer getMinimumGroups();
@@ -163,6 +179,10 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
         return arena;
     }
 
+    public Location getBorderCenter() {
+        return borderCenter;
+    }
+
     public void setExit(Location exit) {
         this.exit = exit;
     }
@@ -179,6 +199,10 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
         this.watchroom = watchroom;
     }
 
+    public void setBorderCenter(Location borderCenter) {
+        this.borderCenter = borderCenter;
+    }
+
     public Integer getPreparationTime() {
         return preparationTime;
     }
@@ -193,5 +217,29 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
 
     public @Nullable List<String> getCommandsAfterBattle() {
         return commandsAfterBattle;
+    }
+
+    public Boolean isWorldBorder() {
+        return worldBorder;
+    }
+
+    public Integer getBorderInterval() {
+        return borderInterval;
+    }
+
+    public Integer getBorderInitialSize() {
+        return borderInitialSize;
+    }
+
+    public Integer getBorderFinalSize() {
+        return borderFinalSize;
+    }
+
+    public Integer getBorderShrinkSize() {
+        return borderShrink;
+    }
+
+    public Double getBorderDamage() {
+        return borderDamage;
     }
 }

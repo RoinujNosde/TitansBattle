@@ -40,7 +40,7 @@ public class Challenge extends BaseGame {
     protected void onLobbyEnd() {
         broadcastKey("game_started", getConfig().getPreparationTime());
         teleportAll(getConfig().getArena());
-        startPreparationTask();
+        startPreparation();
     }
 
     @Override

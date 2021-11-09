@@ -129,6 +129,9 @@ public class ChallengeCommand extends BaseCommand {
             case WATCHROOM:
                 arena.setWatchroom(loc);
                 break;
+            case BORDER_CENTER:
+                arena.setBorderCenter(loc);
+                break;
         }
         configDao.save(arena);
         player.sendMessage(plugin.getLang("destination_set", destination));
