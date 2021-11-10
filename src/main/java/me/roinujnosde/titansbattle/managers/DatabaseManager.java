@@ -50,17 +50,12 @@ import java.util.*;
 public class DatabaseManager {
 
     private final TitansBattle plugin = TitansBattle.getInstance();
-    private final Collection<GameConfiguration> games;
 
     private Connection connection;
 
     private final Map<String, GroupData> groups = new HashMap<>();
     private final Set<Warrior> warriors = new HashSet<>();
     private final List<Winners> winners = new ArrayList<>();
-
-    public DatabaseManager() {
-        games = plugin.getConfigurationDao().getConfigurations(GameConfiguration.class);
-    }
 
     private enum CountType {
         KILLS, DEATHS, VICTORIES, DEFEATS
@@ -151,7 +146,7 @@ public class DatabaseManager {
 
         String update = "UPDATE tb_winners SET killer=?, player_winners=?, winner_group=? WHERE date=? AND game=?;";
         try (PreparedStatement statement = getConnection().prepareStatement(update)) {
-            for (GameConfiguration game : games) {
+            for (GameConfiguration game : getGames()) {
                 String killer = null;
                 if (winners.getKiller(game.getName()) != null) {
                     killer = winners.getKiller(game.getName()).toString();
@@ -181,7 +176,7 @@ public class DatabaseManager {
 
         String insert = "INSERT INTO tb_winners (killer, player_winners, winner_group, date, game) VALUES (?, ?, ?, ?, ?);";
         try (PreparedStatement statement = getConnection().prepareStatement(insert)) {
-            for (GameConfiguration game : games) {
+            for (GameConfiguration game : getGames()) {
                 if (!updated.contains(game)) {
                     String gameName = game.getName();
                     String killer = null;
@@ -216,7 +211,7 @@ public class DatabaseManager {
         String update = "UPDATE tb_groups SET kills=?, deaths=?, victories=?,"
                 + " defeats=? WHERE identification=? AND game=?;";
         try (PreparedStatement statement = getConnection().prepareStatement(update)) {
-            for (GameConfiguration game : games) {
+            for (GameConfiguration game : getGames()) {
                 String gameName = game.getName();
                 int kills = data.getKills(gameName);
                 int deaths = data.getDeaths(gameName);
@@ -239,7 +234,7 @@ public class DatabaseManager {
         }
         String insert = "INSERT INTO tb_groups (identification, kills, deaths, victories, game, defeats) VALUES (?,?,?,?,?,?);";
         try (PreparedStatement statement = getConnection().prepareStatement(insert)) {
-            for (GameConfiguration game : games) {
+            for (GameConfiguration game : getGames()) {
                 if (!updated.contains(game)) {
                     String gameName = game.getName();
                     int kills = data.getKills(gameName);
@@ -272,7 +267,7 @@ public class DatabaseManager {
 
         String update = "UPDATE tb_warriors SET kills=?, deaths=?, victories=?, displayname=? WHERE uuid=? AND game=?;";
         try (PreparedStatement statement = getConnection().prepareStatement(update)) {
-            for (GameConfiguration game : games) {
+            for (GameConfiguration game : getGames()) {
                 String gameName = game.getName();
                 int kills = warrior.getKills(gameName);
                 int deaths = warrior.getDeaths(gameName);
@@ -296,7 +291,7 @@ public class DatabaseManager {
 
         String insert = "INSERT INTO tb_warriors (uuid, kills, deaths, victories, game, displayname) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement statement = getConnection().prepareStatement(insert)) {
-            for (GameConfiguration game : games) {
+            for (GameConfiguration game : getGames()) {
                 if (!updated.contains(game)) {
                     String gameName = game.getName();
                     int kills = warrior.getKills(gameName);
@@ -566,5 +561,9 @@ public class DatabaseManager {
 
     public List<Winners> getWinners() {
         return winners;
+    }
+
+    private Set<GameConfiguration> getGames() {
+        return plugin.getConfigurationDao().getConfigurations(GameConfiguration.class);
     }
 }
