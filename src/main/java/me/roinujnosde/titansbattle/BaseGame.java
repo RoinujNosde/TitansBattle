@@ -37,6 +37,7 @@ public abstract class BaseGame {
     protected final GroupManager groupManager;
     protected final GameManager gameManager;
 
+    protected BaseGameConfiguration config;
     protected boolean lobby;
     protected boolean battle;
     protected final List<Warrior> participants = new ArrayList<>();
@@ -46,10 +47,11 @@ public abstract class BaseGame {
 
     private final List<BukkitTask> tasks = new ArrayList<>();
 
-    public BaseGame(TitansBattle plugin) {
+    public BaseGame(TitansBattle plugin, BaseGameConfiguration config) {
         this.plugin = plugin;
         this.groupManager = plugin.getGroupManager();
         this.gameManager = plugin.getGameManager();
+        this.config = config;
         if (getConfig().isGroupMode() && groupManager == null) {
             throw new IllegalStateException("gameManager cannot be null in a group mode game");
         }
@@ -139,7 +141,9 @@ public abstract class BaseGame {
 
     public abstract boolean isInBattle(@NotNull Warrior warrior);
 
-    public abstract @NotNull BaseGameConfiguration getConfig();
+    public @NotNull BaseGameConfiguration getConfig() {
+        return config;
+    }
 
     public boolean isParticipant(@NotNull Warrior warrior) {
         return participants.contains(warrior);

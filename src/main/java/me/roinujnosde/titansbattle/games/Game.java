@@ -26,12 +26,10 @@ import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.LEAVE_GAME;
 public abstract class Game extends BaseGame {
 
     protected final DatabaseManager databaseManager;
-    private final GameConfiguration config;
     protected boolean battle = false;
 
     public Game(TitansBattle plugin, GameConfiguration config) {
-        super(plugin);
-        this.config = config;
+        super(plugin, config);
         this.databaseManager = plugin.getDatabaseManager();
     }
 
@@ -48,7 +46,7 @@ public abstract class Game extends BaseGame {
      */
     @Nullable
     public Warrior findKiller() {
-        if (!config.isKiller()) {
+        if (!getConfig().isKiller()) {
             return null;
         }
         Warrior killerPlayer = null;
@@ -69,7 +67,7 @@ public abstract class Game extends BaseGame {
         super.start();
         gameManager.setCurrentGame(this);
         Integer interval = getConfig().getAnnouncementStartingInterval();
-        BukkitTask lobbyTask = new Game.LobbyAnnouncementTask(config.getAnnouncementStartingTimes(), interval)
+        BukkitTask lobbyTask = new Game.LobbyAnnouncementTask(getConfig().getAnnouncementStartingTimes(), interval)
                 .runTaskTimer(plugin, 0, interval * 20);
         addTask(lobbyTask);
     }
@@ -136,7 +134,7 @@ public abstract class Game extends BaseGame {
     }
 
     public @NotNull GameConfiguration getConfig() {
-        return config;
+        return (GameConfiguration) config;
     }
 
     @Override

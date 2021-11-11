@@ -15,13 +15,11 @@ import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.VICTORY;
 
 public class Challenge extends BaseGame {
 
-    private final ArenaConfiguration config;
     private Group winnerGroup;
     private List<Warrior> winners;
 
     public Challenge(@NotNull TitansBattle plugin, @NotNull ArenaConfiguration config) {
-        super(plugin);
-        this.config = config;
+        super(plugin, config);
     }
 
     @Override
@@ -62,7 +60,7 @@ public class Challenge extends BaseGame {
     @NotNull
     @Override
     public ArenaConfiguration getConfig() {
-        return config;
+        return (ArenaConfiguration) config;
     }
 
     @Override
