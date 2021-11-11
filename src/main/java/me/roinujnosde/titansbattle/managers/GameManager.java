@@ -29,7 +29,7 @@ public class GameManager {
      *
      * @return the current game
      */
-    public @NotNull Optional<Game> getCurrentGame() {
+    public Optional<Game> getCurrentGame() {
         return Optional.ofNullable(currentGame);
     }
 

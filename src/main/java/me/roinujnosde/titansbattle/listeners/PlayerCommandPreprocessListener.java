@@ -23,14 +23,14 @@
  */
 package me.roinujnosde.titansbattle.listeners;
 
+import me.roinujnosde.titansbattle.BaseGame;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
-import me.roinujnosde.titansbattle.games.Game;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.text.MessageFormat;
 
@@ -38,21 +38,18 @@ import java.text.MessageFormat;
  *
  * @author RoinujNosde
  */
-public class PlayerCommandPreprocessListener implements Listener {
+public class PlayerCommandPreprocessListener extends TBListener {
 
-    private final GameManager gm;
-    private final ConfigManager cm;
-    private final TitansBattle plugin;
-
-    public PlayerCommandPreprocessListener() {
-        plugin = TitansBattle.getInstance();
-        gm = plugin.getGameManager();
-        cm = plugin.getConfigManager();
+    public PlayerCommandPreprocessListener(@NotNull TitansBattle plugin) {
+        super(plugin);
     }
 
     @EventHandler
     public void onCommandEveryone(PlayerCommandPreprocessEvent event) {
-        Game game = gm.getCurrentGame().orElse(null);
+        GameManager gm = plugin.getGameManager();
+        ConfigManager cm = plugin.getConfigManager();
+
+        BaseGame game = gm.getCurrentGame().orElse(null);
         if (game == null) {
             return;
         }
@@ -72,12 +69,11 @@ public class PlayerCommandPreprocessListener implements Listener {
 
     @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent event) {
+        ConfigManager cm = plugin.getConfigManager();
+
         Player player = event.getPlayer();
-        Game game = gm.getCurrentGame().orElse(null);
+        BaseGame game = getBaseGameFrom(player);
         if (game == null) {
-            return;
-        }
-        if (!game.isParticipant(plugin.getDatabaseManager().getWarrior(player))) {
             return;
         }
         for (String command : cm.getAllowedCommands()) {

@@ -302,12 +302,12 @@ public final class TitansBattle extends JavaPlugin {
     }
 
     private void registerEvents() {
-        Bukkit.getPluginManager().registerEvents(new PlayerCommandPreprocessListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerCommandPreprocessListener(this), this);
         Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), this);
         Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerDeathListener(), this);
-        Bukkit.getPluginManager().registerEvents(new EntityDamageListener(), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerRespawnListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerDeathListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new EntityDamageListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerRespawnListener(this), this);
     }
 
     public DatabaseManager getDatabaseManager() {

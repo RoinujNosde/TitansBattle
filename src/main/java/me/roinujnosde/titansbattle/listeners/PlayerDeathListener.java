@@ -23,8 +23,8 @@
  */
 package me.roinujnosde.titansbattle.listeners;
 
+import me.roinujnosde.titansbattle.BaseGame;
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
@@ -32,30 +32,28 @@ import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.Helper;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.jetbrains.annotations.NotNull;
 
 /**
  *
  * @author RoinujNosde
  */
-public class PlayerDeathListener implements Listener {
+public class PlayerDeathListener extends TBListener {
 
-    private final GameManager gm;
-    private final DatabaseManager databaseManager;
-
-    public PlayerDeathListener() {
-        TitansBattle plugin = TitansBattle.getInstance();
-        gm = plugin.getGameManager();
-        databaseManager = plugin.getDatabaseManager();
+    public PlayerDeathListener(@NotNull TitansBattle plugin) {
+        super(plugin);
     }
 
     @EventHandler
     public void onDeath(PlayerDeathEvent event) {
+        GameManager gm = plugin.getGameManager();
+        DatabaseManager databaseManager = plugin.getDatabaseManager();
+
         Player victim = event.getEntity();
         Player killer = Helper.getPlayerAttackerOrKiller(victim.getKiller());
 
-        Game game = gm.getCurrentGame().orElse(null);
+        BaseGame game = getBaseGameFrom(victim);
         if (game == null) {
             if (killer != null && Helper.isKiller(victim)) {
                 GameConfiguration gameConfig = Helper.getGameConfigurationFromWinnerOrKiller(victim);

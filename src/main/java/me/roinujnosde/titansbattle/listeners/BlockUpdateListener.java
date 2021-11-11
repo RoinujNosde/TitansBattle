@@ -1,54 +1,42 @@
 package me.roinujnosde.titansbattle.listeners;
 
+import me.roinujnosde.titansbattle.BaseGame;
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.games.Game;
-import me.roinujnosde.titansbattle.managers.DatabaseManager;
-import me.roinujnosde.titansbattle.managers.GameManager;
 import me.roinujnosde.titansbattle.types.Warrior;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.jetbrains.annotations.NotNull;
 
-public class BlockUpdateListener implements Listener {
+public class BlockUpdateListener extends TBListener {
 
-    private final TitansBattle plugin = TitansBattle.getInstance();
-    private final GameManager gm;
-    private final DatabaseManager dm;
-
-    public BlockUpdateListener() {
-        gm = plugin.getGameManager();
-        dm = plugin.getDatabaseManager();
+    public BlockUpdateListener(@NotNull TitansBattle plugin) {
+        super(plugin);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onBreak(BlockBreakEvent event) {
-        if (shouldCancel(event.getPlayer())) {
-            event.setCancelled(true);
-        }
+        cancel(event.getPlayer(), event);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onPlace(BlockPlaceEvent event) {
-        if (shouldCancel(event.getPlayer())) {
-            event.setCancelled(true);
-        }
+        cancel(event.getPlayer(), event);
     }
 
-    private boolean shouldCancel(Player player) {
-        Game game = gm.getCurrentGame().orElse(null);
+    private void cancel(Player player, Cancellable event) {
+        BaseGame game = getBaseGameFrom(player);
         if (game == null) {
-            return false;
+            return;
         }
 
-        Warrior warrior = dm.getWarrior(player);
-        if (!game.isParticipant(warrior)) {
-            return false;
+        Warrior warrior = plugin.getDatabaseManager().getWarrior(player);
+        if (!game.isInBattle(warrior)) {
+            event.setCancelled(true);
         }
-
-        return !game.isInBattle(warrior);
     }
 
 }
