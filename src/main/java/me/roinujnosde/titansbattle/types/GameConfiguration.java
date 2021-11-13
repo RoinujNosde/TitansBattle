@@ -3,7 +3,6 @@ package me.roinujnosde.titansbattle.types;
 import me.roinujnosde.titansbattle.BaseGameConfiguration;
 import me.roinujnosde.titansbattle.utils.ConfigUtils;
 import me.roinujnosde.titansbattle.utils.Path;
-import org.bukkit.Location;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.SerializableAs;
 import org.jetbrains.annotations.NotNull;
@@ -61,7 +60,7 @@ public class GameConfiguration extends BaseGameConfiguration {
     }
 
     public GameConfiguration(@NotNull Map<String, Object> data) {
-        super(data);
+        ConfigUtils.deserialize(this, data);
     }
 
     @Override

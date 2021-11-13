@@ -14,7 +14,7 @@ public class ConfigUtils {
     }
 
     public static void deserialize(@NotNull Object instance, @NotNull Map<String, Object> data) {
-        for (Field field : getFields(instance)) {
+        for (Field field : getFields(instance.getClass())) {
             if (Modifier.isStatic(field.getModifiers())) {
                 continue;
             }
@@ -32,7 +32,7 @@ public class ConfigUtils {
 
     public static Map<String, Object> serialize(@NotNull Object instance) {
         TreeMap<String, Object> data = new TreeMap<>();
-        for (Field field : getFields(instance)) {
+        for (Field field : getFields(instance.getClass())) {
             if (Modifier.isStatic(field.getModifiers())) {
                 continue;
             }
@@ -67,7 +67,7 @@ public class ConfigUtils {
 
     public static List<String> getEditableFields(@NotNull Class<?> clazz) {
         List<String> fields = new ArrayList<>();
-        for (Field field : clazz.getDeclaredFields()) {
+        for (Field field : getFields(clazz)) {
             if (Modifier.isStatic(field.getModifiers()) || Modifier.isFinal(field.getModifiers()) ||
                     field.getType().isAssignableFrom(ConfigurationSerializable.class)) {
                 continue;
@@ -92,9 +92,8 @@ public class ConfigUtils {
         return name;
     }
 
-    private static List<Field> getFields(Object obj) {
+    private static List<Field> getFields(Class<?> clazz) {
         List<Field> fields = new ArrayList<>();
-        Class<?> clazz = obj.getClass();
         while (clazz != Object.class) {
             for (Field field : clazz.getDeclaredFields()) {
                 if (Modifier.isTransient(field.getModifiers())) {

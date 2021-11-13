@@ -148,7 +148,6 @@ public class TBCommands extends BaseCommand {
         game.cancel(sender);
     }
 
-    @SuppressWarnings("SpellCheckingInspection")
     @Subcommand("%setdestination|setdestination GENERAL_EXIT")
     @CommandPermission("titansbattle.setdestination")
     @Description("{@@command.description.setdestination.general}")

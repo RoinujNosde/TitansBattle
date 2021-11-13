@@ -23,7 +23,7 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
     protected transient FileConfiguration fileConfiguration;
 
     protected String name;
-    protected Boolean groupMode;
+    protected Boolean groupMode = false;
     protected Boolean clearItemsOnDeath = false;
     protected Boolean useKits = false;
     protected Kit kit;
@@ -71,10 +71,6 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
     protected Integer borderInterval = 120;
     @Path("worldborder.damage")
     protected Double borderDamage = 5.0;
-
-    public BaseGameConfiguration(Map<String, Object> data) {
-        ConfigUtils.deserialize(this, data);
-    }
 
     public @NotNull FileConfiguration getFileConfiguration() {
         if (fileConfiguration == null) {

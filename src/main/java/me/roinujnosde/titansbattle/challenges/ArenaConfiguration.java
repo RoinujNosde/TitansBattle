@@ -16,7 +16,7 @@ public class ArenaConfiguration extends BaseGameConfiguration {
     }
 
     public ArenaConfiguration(@NotNull Map<String, Object> data) {
-        super(data);
+        ConfigUtils.deserialize(this, data);
     }
 
     @Override

@@ -26,7 +26,6 @@ import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.LEAVE_GAME;
 public abstract class Game extends BaseGame {
 
     protected final DatabaseManager databaseManager;
-    protected boolean battle = false;
 
     public Game(TitansBattle plugin, GameConfiguration config) {
         super(plugin, config);
