@@ -70,6 +70,10 @@ public abstract class BaseGame {
             return;
         }
         lobby = true;
+        Integer interval = getConfig().getAnnouncementStartingInterval();
+        BukkitTask lobbyTask = new LobbyAnnouncementTask(getConfig().getAnnouncementStartingTimes(), interval)
+                .runTaskTimer(plugin, 0, interval * 20);
+        addTask(lobbyTask);
     }
 
     public void finish(boolean cancelled) {
@@ -493,6 +497,35 @@ public abstract class BaseGame {
             long borderInterval = getConfig().getBorderInterval() * 20L;
             WorldBorder worldBorder = getConfig().getBorderCenter().getWorld().getWorldBorder();
             addTask(new BorderTask(worldBorder).runTaskTimer(plugin, borderInterval, borderInterval));
+        }
+    }
+
+    public class LobbyAnnouncementTask extends BukkitRunnable {
+        private int times;
+        private long interval, seconds;
+
+        public LobbyAnnouncementTask(int times, long interval) {
+            this.times = times + 1;
+            this.interval = interval;
+        }
+
+        @Override
+        public void run() {
+            seconds = times * interval;
+            if (times > 0) {
+                broadcastKey("starting_game", seconds, getConfig().getMinimumGroups(), getConfig().getMinimumPlayers(),
+                        getGroupParticipants().size(), getParticipants().size());
+                times--;
+            } else {
+                if (canStartBattle()) {
+                    lobby = false;
+                    onLobbyEnd();
+                    addTask(new GameExpirationTask().runTaskLater(plugin, getConfig().getExpirationTime() * 20));
+                } else {
+                    finish(true);
+                }
+                this.cancel();
+            }
         }
     }
 

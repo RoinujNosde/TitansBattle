@@ -33,10 +33,6 @@ public class GameConfiguration extends BaseGameConfiguration {
     @Path("prizes")
     private Map<String, Prizes> prizesMap = createPrizesMap();
 
-    @Path("announcement.starting.times")
-    private Integer announcementStartingTimes = 5;
-    @Path("announcement.starting.interval")
-    private Integer announcementStartingInterval = 20;
     @Path("announcement.game_info.interval")
     private Integer announcementGameInfoInterval = 30;
 
@@ -98,14 +94,6 @@ public class GameConfiguration extends BaseGameConfiguration {
 
     public Integer getExpirationTime() {
         return expirationTime;
-    }
-
-    public Integer getAnnouncementStartingInterval() {
-        return announcementStartingInterval;
-    }
-
-    public Integer getAnnouncementStartingTimes() {
-        return announcementStartingTimes;
     }
 
     public Integer getAnnouncementGameInfoInterval() {

@@ -38,6 +38,11 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
     @Path("maximum.players")
     protected Integer maximumPlayers = 100;
 
+    @Path("announcement.starting.times")
+    protected Integer announcementStartingTimes = 5;
+    @Path("announcement.starting.interval")
+    protected Integer announcementStartingInterval = 20;
+
     @Path("destination.watchroom")
     protected Location watchroom;
     @Path("destination.exit")
@@ -157,6 +162,14 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
 
     public Integer getMaximumPlayers() {
         return maximumPlayers;
+    }
+
+    public Integer getAnnouncementStartingInterval() {
+        return announcementStartingInterval;
+    }
+
+    public Integer getAnnouncementStartingTimes() {
+        return announcementStartingTimes;
     }
 
     public Location getWatchroom() {

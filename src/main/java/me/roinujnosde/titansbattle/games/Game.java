@@ -65,10 +65,6 @@ public abstract class Game extends BaseGame {
     public void start() {
         super.start();
         gameManager.setCurrentGame(this);
-        Integer interval = getConfig().getAnnouncementStartingInterval();
-        BukkitTask lobbyTask = new Game.LobbyAnnouncementTask(getConfig().getAnnouncementStartingTimes(), interval)
-                .runTaskTimer(plugin, 0, interval * 20);
-        addTask(lobbyTask);
     }
 
     @Override
@@ -91,6 +87,13 @@ public abstract class Game extends BaseGame {
         SoundUtils.playSound(LEAVE_GAME, plugin.getConfig(), player);
         player.sendMessage(plugin.getLang("you_have_been_kicked", this));
         processPlayerExit(warrior);
+    }
+
+    @Override
+    protected void onLobbyEnd() {
+        deleteGroups();
+        int gameInfoInterval = getConfig().getAnnouncementGameInfoInterval() * 20;
+        addTask(new ArenaAnnouncementTask().runTaskTimer(plugin, gameInfoInterval, gameInfoInterval));
     }
 
     private void deleteGroups() {
@@ -140,42 +143,6 @@ public abstract class Game extends BaseGame {
     protected void killTasks() {
         super.killTasks();
         plugin.getTaskManager().killAllTasks();
-    }
-
-    protected class LobbyAnnouncementTask extends BukkitRunnable {
-        int times;
-        long interval, seconds;
-
-        public LobbyAnnouncementTask(int times, long interval) {
-            this.times = times + 1;
-            this.interval = interval;
-        }
-
-        @Override
-        public void run() {
-            seconds = times * interval;
-            if (times > 0) {
-                broadcastKey("starting_game", seconds, getConfig().getMinimumGroups(),
-                        getConfig().getMinimumPlayers(), getGroupParticipants().size(), getParticipants().size());
-                times--;
-            } else {
-                preLobbyEnd();
-                this.cancel();
-            }
-        }
-    }
-
-    private void preLobbyEnd() {
-        if (canStartBattle()) {
-            deleteGroups();
-            lobby = false;
-            onLobbyEnd();
-            addTask(new GameExpirationTask().runTaskLater(plugin, getConfig().getExpirationTime() * 20));
-            int gameInfoInterval = getConfig().getAnnouncementGameInfoInterval() * 20;
-            addTask(new ArenaAnnouncementTask().runTaskTimer(plugin, gameInfoInterval, gameInfoInterval));
-        } else {
-            finish(true);
-        }
     }
 
     protected abstract @NotNull String getGameInfoMessage();

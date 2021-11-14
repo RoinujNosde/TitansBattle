@@ -221,6 +221,7 @@ public class EliminationTournamentGame extends Game {
 
     @Override
     protected void onLobbyEnd() {
+        super.onLobbyEnd();
         if (getConfig().isPowerOfTwo() && !isPowerOfTwo(getPlayerOrGroupCount())) {
             kickExcessiveParticipants();
         }

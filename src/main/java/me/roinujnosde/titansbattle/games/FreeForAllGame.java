@@ -61,6 +61,7 @@ public class FreeForAllGame extends Game {
 
     @Override
     protected void onLobbyEnd() {
+        super.onLobbyEnd();
         broadcastKey("game_started", getConfig().getPreparationTime());
         teleportAll(getConfig().getArena());
         startPreparation();
