@@ -104,7 +104,7 @@ public class ChallengeCommand extends BaseCommand {
     @Description("{@@command.description.challenge.create}")
     public void create(CommandSender sender, String arena) {
         if (configDao.create(arena, ArenaConfiguration.class)) {
-            sender.sendMessage(plugin.getLang("arena-created"));
+            sender.sendMessage(plugin.getLang("arena-created", arena));
         } else {
             sender.sendMessage(plugin.getLang("config-creation-error"));
         }
