@@ -27,6 +27,7 @@ import co.aikar.commands.InvalidCommandArgument;
 import co.aikar.commands.Locales;
 import co.aikar.commands.MessageKeys;
 import co.aikar.commands.PaperCommandManager;
+import co.aikar.commands.bukkit.contexts.OnlinePlayer;
 import me.roinujnosde.titansbattle.challenges.ArenaConfiguration;
 import me.roinujnosde.titansbattle.challenges.Challenge;
 import me.roinujnosde.titansbattle.challenges.ChallengeRequest;
@@ -225,6 +226,18 @@ public final class TitansBattle extends JavaPlugin {
             boolean invited = challengeManager.getRequests().stream().anyMatch(r -> r.isInvited(v));
             if (!invited) {
                 cec.getIssuer().sendMessage(getLang("no.challenge.to.accept"));
+                throw new ConditionFailedException();
+            }
+        });
+        pcm.getCommandConditions().addCondition(OnlinePlayer.class, "other", (cc, cec, v) -> {
+            if (v.getPlayer().getUniqueId().equals(cc.getIssuer().getUniqueId())) {
+                cec.getIssuer().sendMessage(getLang("you.cannot.challenge.yourself"));
+                throw new ConditionFailedException();
+            }
+        });
+        pcm.getCommandConditions().addCondition(Group.class, "other", (cc, cec, v) -> {
+            if (v.isMember(cc.getIssuer().getUniqueId())) {
+                cec.getIssuer().sendMessage(getLang("you.cannot.challenge.your.group"));
                 throw new ConditionFailedException();
             }
         });

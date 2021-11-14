@@ -28,7 +28,7 @@ public class Challenge extends BaseGame {
         if (!key.startsWith("challenge_")) {
             lang = super.getLang("challenge_" + key);
         }
-        if (lang == null) {
+        if (lang == null || lang.startsWith("<MISSING KEY:")) {
             lang = super.getLang(key);
         }
         return lang;
@@ -83,9 +83,11 @@ public class Challenge extends BaseGame {
         // TODO Increase stats
         super.finish(cancelled);
         plugin.getChallengeManager().remove(this);
-        String winnerName = getConfig().isGroupMode() ? winnerGroup.getName() : winners.get(0).getName();
-        SoundUtils.playSound(VICTORY, plugin.getConfig(), winners);
-        broadcastKey("who_won", winnerName);
+        if (!cancelled) {
+            String winnerName = getConfig().isGroupMode() ? winnerGroup.getName() : winners.get(0).getName();
+            SoundUtils.playSound(VICTORY, plugin.getConfig(), winners);
+            broadcastKey("who_won", winnerName);
+        }
     }
 
     @Override

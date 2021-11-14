@@ -39,7 +39,7 @@ public class ChallengeCommand extends BaseCommand {
     @Conditions("can_challenge:group=false")
     @CommandPermission("titansbattle.challenge.player")
     @Description("{@@command.description.challenge.player}")
-    public void challengePlayer(Warrior challenger, OnlinePlayer target,
+    public void challengePlayer(Warrior challenger, @Conditions("other") OnlinePlayer target,
             @Conditions("ready:group=false") ArenaConfiguration arena) {
         Challenge challenge = new Challenge(plugin, arena);
         Warrior challenged = databaseManager.getWarrior(target.player);
@@ -57,7 +57,8 @@ public class ChallengeCommand extends BaseCommand {
     @Conditions("can_challenge:group=true")
     @CommandPermission("titansbattle.challenge.group")
     @Description("{@@command.description.challenge.group}")
-    public void challengeGroup(Warrior sender, Group target, @Conditions("ready:group=true") ArenaConfiguration arena) {
+    public void challengeGroup(Warrior sender, @Conditions("other") Group target,
+            @Conditions("ready:group=true") ArenaConfiguration arena) {
         Challenge challenge = new Challenge(plugin, arena);
         Group challenger = Objects.requireNonNull(sender.getGroup());
         GroupChallengeRequest request = new GroupChallengeRequest(challenge, challenger, target);
@@ -79,9 +80,8 @@ public class ChallengeCommand extends BaseCommand {
     @Subcommand("%accept|accept")
     @CommandCompletion("@requests")
     @CommandPermission("titansbattle.challenge.accept")
-    @Conditions("is_invited")
     @Description("{@@command.description.challenge.accept}")
-    public void accept(Warrior warrior, @Values("@requests") ChallengeRequest<?> challenger) {
+    public void accept(@Conditions("is_invited") Warrior warrior, @Values("@requests") ChallengeRequest<?> challenger) {
         challenger.getChallenge().onJoin(warrior);
     }
 
