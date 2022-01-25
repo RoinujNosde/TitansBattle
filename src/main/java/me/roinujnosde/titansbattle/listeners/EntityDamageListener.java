@@ -5,6 +5,7 @@ import me.roinujnosde.titansbattle.BaseGameConfiguration;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.managers.GroupManager;
+import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.Helper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -71,15 +72,14 @@ public class EntityDamageListener extends TBListener {
             event.setCancelled(true);
             return;
         }
-        if (attacker != null && !game.getConfig().isPvP()) {
-            event.setCancelled(true);
-            return;
+        if (attacker != null) {
+            Warrior warrior = dm.getWarrior(attacker);
+            if (!game.getConfig().isPvP() || !game.isInBattle(warrior)) {
+                event.setCancelled(true);
+                return;
+            }
         }
-        if (attacker == null || !game.isParticipant(dm.getWarrior(attacker))) {
-            return;
-        }
-
-        if (!game.getConfig().isGroupMode()) {
+        if (attacker == null || !game.getConfig().isGroupMode()) {
             return;
         }
 
