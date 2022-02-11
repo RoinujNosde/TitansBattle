@@ -25,6 +25,7 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
     protected String name;
     protected Boolean groupMode = false;
     protected Boolean clearItemsOnDeath = false;
+    protected Boolean keepExp = false;
     protected Boolean useKits = false;
     protected Kit kit;
 
@@ -130,6 +131,10 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
 
     public Boolean isClearItemsOnDeath() {
         return clearItemsOnDeath;
+    }
+
+    public Boolean isKeepExp() {
+        return keepExp;
     }
 
     public Boolean isUseKits() {

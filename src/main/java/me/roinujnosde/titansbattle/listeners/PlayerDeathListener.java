@@ -65,6 +65,9 @@ public class PlayerDeathListener extends TBListener {
             }
             return;
         }
+        if (game.getConfig().isKeepExp()) {
+            event.setKeepLevel(true);
+        }
         Warrior warrior = databaseManager.getWarrior(victim);
         if (game.shouldKeepInventoryOnDeath(warrior)) {
             event.setKeepInventory(true);
