@@ -194,11 +194,6 @@ public class EliminationTournamentGame extends Game {
     }
 
     @Override
-    public boolean shouldClearDropsOnDeath(@NotNull Warrior warrior) {
-        return isParticipant(warrior) && !shouldKeepInventoryOnDeath(warrior);
-    }
-
-    @Override
     public boolean shouldKeepInventoryOnDeath(@NotNull Warrior warrior) {
         if (!isCurrentDuelist(warrior)) {
             return false;
