@@ -33,6 +33,7 @@ import me.roinujnosde.titansbattle.challenges.Challenge;
 import me.roinujnosde.titansbattle.challenges.ChallengeRequest;
 import me.roinujnosde.titansbattle.commands.CanChallengeCondition;
 import me.roinujnosde.titansbattle.commands.ChallengeCommand;
+import me.roinujnosde.titansbattle.commands.EmptyInventoryCondition;
 import me.roinujnosde.titansbattle.commands.TBCommands;
 import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.games.Game;
@@ -204,6 +205,7 @@ public final class TitansBattle extends JavaPlugin {
                 throw new ConditionFailedException();
             }
         });
+        pcm.getCommandConditions().addCondition(ArenaConfiguration.class, "empty_inventory", new EmptyInventoryCondition(this));
         pcm.getCommandConditions().addCondition("can_challenge", new CanChallengeCondition(this));
         pcm.getCommandConditions().addCondition(ArenaConfiguration.class, "ready", (cc, cec, v) -> {
             boolean matches = challengeManager.getRequests().stream().map(ChallengeRequest::getChallenge)
