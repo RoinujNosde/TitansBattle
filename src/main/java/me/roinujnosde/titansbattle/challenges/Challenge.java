@@ -86,12 +86,21 @@ public class Challenge extends BaseGame {
         if (!cancelled) {
             String winnerName = getConfig().isGroupMode() ? winnerGroup.getName() : winners.get(0).getName();
             SoundUtils.playSound(VICTORY, plugin.getConfig(), winners);
-            broadcastKey("who_won", winnerName);
+            broadcastKey("who_won", winnerName, getLoserName());
         }
     }
 
     @Override
     public boolean isInBattle(@NotNull Warrior warrior) {
         return battle && participants.contains(warrior);
+    }
+
+    private String getLoserName() {
+        if (!getConfig().isGroupMode()) {
+            return casualties.get(0).getName();
+        }
+        Warrior loser = casualties.get(casualties.size() - 1);
+        //noinspection ConstantConditions
+        return loser.getGroup().getName();
     }
 }

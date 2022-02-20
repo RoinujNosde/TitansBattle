@@ -9,11 +9,7 @@ import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.WorldBorder;
+import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -42,7 +38,7 @@ public abstract class BaseGame {
     protected boolean battle;
     protected final List<Warrior> participants = new ArrayList<>();
     protected final HashMap<Warrior, Integer> killsCount = new HashMap<>();
-    protected final Set<Warrior> casualties = new HashSet<>();
+    protected final List<Warrior> casualties = new ArrayList<>();
     protected final Set<Warrior> casualtiesWatching = new HashSet<>();
 
     private final List<BukkitTask> tasks = new ArrayList<>();
@@ -209,7 +205,7 @@ public abstract class BaseGame {
         return groups;
     }
 
-    public Set<Warrior> getCasualties() {
+    public List<Warrior> getCasualties() {
         return casualties;
     }
 
