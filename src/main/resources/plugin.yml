@@ -1,7 +1,7 @@
 main: "me.roinujnosde.titansbattle.TitansBattle"
 name: "TitansBattle"
 author: "RoinujNosde"
-version: ${project.version}
+version: "${project.version}-${git.commit.id.describe-short}"
 api-version: 1.13
 softdepend:
   - "SimpleClans"
