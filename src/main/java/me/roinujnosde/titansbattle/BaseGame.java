@@ -42,6 +42,7 @@ public abstract class BaseGame {
     protected final Set<Warrior> casualtiesWatching = new HashSet<>();
 
     private final List<BukkitTask> tasks = new ArrayList<>();
+    private LobbyAnnouncementTask lobbyTask;
 
     public BaseGame(TitansBattle plugin, BaseGameConfiguration config) {
         this.plugin = plugin;
@@ -67,9 +68,8 @@ public abstract class BaseGame {
         }
         lobby = true;
         Integer interval = getConfig().getAnnouncementStartingInterval();
-        BukkitTask lobbyTask = new LobbyAnnouncementTask(getConfig().getAnnouncementStartingTimes(), interval)
-                .runTaskTimer(plugin, 0, interval * 20);
-        addTask(lobbyTask);
+        lobbyTask = new LobbyAnnouncementTask(getConfig().getAnnouncementStartingTimes(), interval);
+        addTask(lobbyTask.runTaskTimer(plugin, 0, interval * 20));
     }
 
     public void finish(boolean cancelled) {
@@ -109,6 +109,9 @@ public abstract class BaseGame {
         participants.add(warrior);
         setKit(warrior);
         broadcastKey("player_joined", player.getName());
+        if (participants.size() == getConfig().getMaximumPlayers() && lobbyTask != null) {
+            lobbyTask.processEnd();
+        }
     }
 
     public void onDeath(@NotNull Warrior victim, @Nullable Warrior killer) {
@@ -139,6 +142,7 @@ public abstract class BaseGame {
         return lobby;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     public abstract boolean isInBattle(@NotNull Warrior warrior);
 
     public @NotNull BaseGameConfiguration getConfig() {
@@ -498,7 +502,7 @@ public abstract class BaseGame {
 
     public class LobbyAnnouncementTask extends BukkitRunnable {
         private int times;
-        private long interval, seconds;
+        private final long interval;
 
         public LobbyAnnouncementTask(int times, long interval) {
             this.times = times + 1;
@@ -507,21 +511,26 @@ public abstract class BaseGame {
 
         @Override
         public void run() {
-            seconds = times * interval;
+            long seconds = times * interval;
             if (times > 0) {
                 broadcastKey("starting_game", seconds, getConfig().getMinimumGroups(), getConfig().getMinimumPlayers(),
                         getGroupParticipants().size(), getParticipants().size());
                 times--;
             } else {
-                if (canStartBattle()) {
-                    lobby = false;
-                    onLobbyEnd();
-                    addTask(new GameExpirationTask().runTaskLater(plugin, getConfig().getExpirationTime() * 20));
-                } else {
-                    finish(true);
-                }
-                this.cancel();
+                processEnd();
             }
+        }
+
+        public void processEnd() {
+            if (canStartBattle()) {
+                lobby = false;
+                onLobbyEnd();
+                addTask(new GameExpirationTask().runTaskLater(plugin, getConfig().getExpirationTime() * 20));
+            } else {
+                finish(true);
+            }
+            this.cancel();
+            lobbyTask = null;
         }
     }
 
