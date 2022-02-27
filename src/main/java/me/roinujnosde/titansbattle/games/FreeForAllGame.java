@@ -63,7 +63,7 @@ public class FreeForAllGame extends Game {
     protected void onLobbyEnd() {
         super.onLobbyEnd();
         broadcastKey("game_started", getConfig().getPreparationTime());
-        teleportAll(getConfig().getArena());
+        teleportToArena(getParticipants());
         startPreparation();
     }
 

@@ -362,19 +362,18 @@ public class EliminationTournamentGame extends Game {
 
     private void teleportNextDuelists() {
         if (!getConfig().isGroupMode()) {
-            for (Warrior w : playerDuelists.get(0).getDuelists()) {
-                teleport(w, getConfig().getArena());
-            }
+            teleportToArena(playerDuelists.get(0).getDuelists());
         } else {
             List<Group> duelists = groupDuelists.get(0).getDuelists();
-            getParticipants().stream().filter(player -> {
+            List<Warrior> warriors = getParticipants().stream().filter(player -> {
                 for (Group g : duelists) {
                     if (g.isMember(player.getUniqueId())) {
                         return true;
                     }
                 }
                 return false;
-            }).forEach(p -> teleport(p, getConfig().getArena()));
+            }).collect(Collectors.toList());
+            teleportToArena(warriors);
         }
     }
 

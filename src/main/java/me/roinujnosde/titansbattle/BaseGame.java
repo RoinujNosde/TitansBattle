@@ -29,6 +29,8 @@ import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.*;
 
 public abstract class BaseGame {
 
+    private static final int MAX_ENTRANCES = 2;
+
     protected final TitansBattle plugin;
     protected final GroupManager groupManager;
     protected final GameManager gameManager;
@@ -469,6 +471,36 @@ public abstract class BaseGame {
 
     protected void teleportAll(Location destination) {
         getParticipants().forEach(player -> teleport(player, destination));
+    }
+
+    protected void teleportToArena(List<Warrior> warriors) {
+        Location entrance1 = getConfig().getArenaEntrance(1);
+        Location entrance2 = getConfig().getArenaEntrance(2);
+        if (entrance2 == null) {
+            teleport(warriors, entrance1);
+            return;
+        }
+        if (getConfig().isGroupMode()) {
+            List<Group> groups = warriors.stream().map(Warrior::getGroup).distinct().collect(Collectors.toList());
+            if (groups.size() != MAX_ENTRANCES) {
+                teleport(warriors, entrance1);
+                return;
+            }
+            for (Warrior warrior : warriors) {
+                if (groups.get(0).equals(warrior.getGroup())) {
+                    teleport(warrior, entrance1);
+                } else {
+                    teleport(warrior, entrance2);
+                }
+            }
+        } else {
+            if (warriors.size() != MAX_ENTRANCES) {
+                teleport(warriors, entrance1);
+                return;
+            }
+            teleport(warriors.get(0), entrance1);
+            teleport(warriors.get(1), entrance2);
+        }
     }
 
     @SuppressWarnings("deprecation")

@@ -16,7 +16,7 @@ import java.util.Map;
 public abstract class BaseGameConfiguration implements ConfigurationSerializable {
 
     public enum Destination {
-        EXIT, ARENA, LOBBY, WATCHROOM, BORDER_CENTER
+        EXIT, LOBBY, WATCHROOM, BORDER_CENTER
     }
 
     protected transient File file;
@@ -50,8 +50,8 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
     protected Location exit;
     @Path("destination.lobby")
     protected Location lobby;
-    @Path("destination.arena")
-    protected Location arena; // TODO Make all games support multiple entrances
+    @Path("destination.arena_entrances")
+    protected Map<Integer, Location> arenaEntrances;
     @Path("destination.border_center")
     protected Location borderCenter;
 
@@ -115,7 +115,7 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
     }
 
     public Boolean locationsSet() {
-        return arena != null && exit != null && lobby != null && watchroom != null
+        return arenaEntrances.get(1) != null && exit != null && lobby != null && watchroom != null
                 && (!worldBorder || borderCenter != null);
     }
 
@@ -189,8 +189,8 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
         return lobby;
     }
 
-    public Location getArena() {
-        return arena;
+    public Location getArenaEntrance(int index) {
+        return arenaEntrances.get(index);
     }
 
     public Location getBorderCenter() {
@@ -205,8 +205,8 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
         this.lobby = lobby;
     }
 
-    public void setArena(Location arena) {
-        this.arena = arena;
+    public void setArenaEntrance(int index, Location entrance) {
+        arenaEntrances.put(index, entrance);
     }
 
     public void setWatchroom(Location watchroom) {

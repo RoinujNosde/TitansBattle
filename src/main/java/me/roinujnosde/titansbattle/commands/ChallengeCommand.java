@@ -68,6 +68,7 @@ public class ChallengeCommand extends BaseCommand {
         sender.sendMessage(plugin.getLang("you.challenged.group", challenge, target.getName()));
         String msgRivals = plugin.getLang("challenged.your.group", challenge, challenger.getName(),
                 challenger.getUniqueName());
+        //noinspection ConstantConditions
         plugin.getGroupManager().getWarriors(target).forEach(w -> w.sendMessage(msgRivals));
         String msgOwn = plugin.getLang("your.group.challenged", challenge, challenger.getUniqueName(),
                 target.getName());
@@ -110,6 +111,16 @@ public class ChallengeCommand extends BaseCommand {
         }
     }
 
+    @Subcommand("%setdestination|setdestination ARENA_ENTRANCE")
+    @CommandPermission("titansbattle.setdestination")
+    @CommandCompletion("@arenas @range:1-2")
+    @Description("{@@command.description.challenge.setdestination}")
+    public void setArenaEntrance(Player player, @Values("@arenas") ArenaConfiguration arena, @Values("@range:1-2") int index) {
+        arena.setArenaEntrance(index, player.getLocation());
+        configDao.save(arena);
+        player.sendMessage(plugin.getLang("destination_set", "ARENA_ENTRANCE"));
+    }
+
     @Subcommand("%setdestination|setdestination")
     @CommandPermission("titansbattle.setdestination")
     @CommandCompletion("@arenas")
@@ -119,9 +130,6 @@ public class ChallengeCommand extends BaseCommand {
         switch (destination) {
             case EXIT:
                 arena.setExit(loc);
-                break;
-            case ARENA:
-                arena.setArena(loc);
                 break;
             case LOBBY:
                 arena.setLobby(loc);

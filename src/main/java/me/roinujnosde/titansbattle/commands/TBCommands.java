@@ -157,6 +157,16 @@ public class TBCommands extends BaseCommand {
         player.sendMessage(plugin.getLang("destination_set", "GENERAL_EXIT"));
     }
 
+    @Subcommand("%setdestination|setdestination ARENA_ENTRANCE")
+    @CommandPermission("titansbattle.setdestination")
+    @CommandCompletion("@games @range:1-2")
+    @Description("{@@command.description.setdestination}")
+    public void setArenaEntrance(Player player, @Values("@games") GameConfiguration game, @Values("@range:1-2") int index) {
+        game.setArenaEntrance(index, player.getLocation());
+        configDao.save(game);
+        player.sendMessage(plugin.getLang("destination_set", "ARENA_ENTRANCE"));
+    }
+
     @Subcommand("%setdestination|setdestination")
     @CommandPermission("titansbattle.setdestination")
     @CommandCompletion("@games")
@@ -166,9 +176,6 @@ public class TBCommands extends BaseCommand {
         switch (destination) {
             case EXIT:
                 game.setExit(loc);
-                break;
-            case ARENA:
-                game.setArena(loc);
                 break;
             case LOBBY:
                 game.setLobby(loc);
