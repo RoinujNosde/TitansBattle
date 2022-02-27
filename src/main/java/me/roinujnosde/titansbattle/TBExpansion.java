@@ -1,7 +1,9 @@
 package me.roinujnosde.titansbattle;
 
+import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
+import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.types.Winners;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
@@ -48,10 +50,18 @@ public class TBExpansion extends PlaceholderExpansion {
 
     @Override
     public String onRequest(OfflinePlayer player, @NotNull String params) {
-        Matcher matcher = PREFIX_PATTERN.matcher(params);
-        if (player != null && matcher.find()) {
-            String game = matcher.group("game");
-            String type = matcher.group("type").toLowerCase();
+        if (params.startsWith("arena_in_use_")) {
+            String arenaName = params.replace("arena_in_use_", "");
+            return toString(plugin.getChallengeManager().isArenaInUse(arenaName));
+        }
+
+        if (player == null) {
+            return "";
+        }
+        Matcher prefixMatcher = PREFIX_PATTERN.matcher(params);
+        if (prefixMatcher.find()) {
+            String game = prefixMatcher.group("game");
+            String type = prefixMatcher.group("type").toLowerCase();
             switch (type) {
                 case "killer":
                     return getKillerPrefix(player, game);
@@ -59,7 +69,18 @@ public class TBExpansion extends PlaceholderExpansion {
                     return getWinnerPrefix(player, game);
             }
         }
-        return "";
+        Warrior warrior = plugin.getDatabaseManager().getWarrior(player);
+        switch (params) {
+            case "group_total_victories":
+                return warrior.getGroup() != null ? String.valueOf(warrior.getGroup().getData().getTotalVictories()) : "0";
+            case "total_victories":
+                return String.valueOf(warrior.getTotalVictories());
+            case "total_kills":
+                return String.valueOf(warrior.getTotalKills());
+            case "total_deaths":
+                return String.valueOf(warrior.getTotalDeaths());
+        }
+        return null;
     }
 
     @NotNull
@@ -93,5 +114,9 @@ public class TBExpansion extends PlaceholderExpansion {
         }
         String prefix = config.get().getKillerPrefix();
         return prefix != null ? prefix : "";
+    }
+
+    private String toString(boolean bool) {
+        return bool ? PlaceholderAPIPlugin.booleanTrue() : PlaceholderAPIPlugin.booleanFalse();
     }
 }

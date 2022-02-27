@@ -29,6 +29,10 @@ public class GroupData {
         this.defeats = caseInsensitiveMap(defeats);
     }
 
+    public int getTotalVictories() {
+        return victories.values().stream().mapToInt(i -> i).sum();
+    }
+
     public int getVictories(String game) {
         return victories.getOrDefault(game, 0);
     }

@@ -49,4 +49,13 @@ public class ChallengeManager {
         challenges.remove(challenge);
         requests.removeIf(r -> r.getChallenge().equals(challenge));
     }
+
+    public boolean isArenaInUse(@NotNull String name) {
+        for (Challenge challenge : challenges) {
+            if (challenge.getConfig().getName().equals(name)) {
+                return true;
+            }
+        }
+        return false;
+    }
 }

@@ -33,6 +33,7 @@ import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
 
 import static me.roinujnosde.titansbattle.utils.Helper.caseInsensitiveMap;
 
@@ -140,6 +141,10 @@ public class Warrior {
         return groupManager.getGroup(offlinePlayer.getUniqueId());
     }
 
+    public int getTotalKills() {
+        return getSum(kills);
+    }
+
     public int getKills(@NotNull String game) {
         return kills.getOrDefault(game, 0);
     }
@@ -153,6 +158,10 @@ public class Warrior {
         }
     }
 
+    public int getTotalDeaths() {
+        return getSum(deaths);
+    }
+
     public int getDeaths(@NotNull String game) {
         return deaths.getOrDefault(game, 0);
     }
@@ -164,6 +173,10 @@ public class Warrior {
             GroupData data = group.getData();
             data.setDeaths(game, data.getDeaths(game) + 1);
         }
+    }
+
+    public int getTotalVictories() {
+        return getSum(victories);
     }
 
     public int getVictories(@NotNull String game) {
@@ -184,5 +197,9 @@ public class Warrior {
 
     public void increaseVictories(@NotNull String game) {
         setVictories(game, getVictories(game) + 1);
+    }
+
+    private <T> int getSum(Map<T, Integer> map) {
+        return map.values().stream().mapToInt(i -> i).sum();
     }
 }
