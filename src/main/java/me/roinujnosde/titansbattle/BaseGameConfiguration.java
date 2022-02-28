@@ -12,6 +12,7 @@ import org.jetbrains.annotations.Nullable;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 public abstract class BaseGameConfiguration implements ConfigurationSerializable {
 
@@ -51,7 +52,7 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
     @Path("destination.lobby")
     protected Location lobby;
     @Path("destination.arena_entrances")
-    protected Map<Integer, Location> arenaEntrances;
+    protected Map<Integer, Location> arenaEntrances = new HashMap<>();
     @Path("destination.border_center")
     protected Location borderCenter;
 
