@@ -24,7 +24,7 @@ public class PlayerTeleportListener extends TBListener {
         }
         final Player player = event.getPlayer();
 
-        BaseGame game = getBaseGameFrom(player);
+        BaseGame game = plugin.getBaseGameFrom(player);
         if (game != null) {
             plugin.getLogger().log(Level.INFO, "Cancelled a teleport started via command for %s", player.getName());
             event.setCancelled(true);

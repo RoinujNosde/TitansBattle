@@ -72,7 +72,7 @@ public class PlayerCommandPreprocessListener extends TBListener {
         ConfigManager cm = plugin.getConfigManager();
 
         Player player = event.getPlayer();
-        BaseGame game = getBaseGameFrom(player);
+        BaseGame game = plugin.getBaseGameFrom(player);
         if (game == null) {
             return;
         }

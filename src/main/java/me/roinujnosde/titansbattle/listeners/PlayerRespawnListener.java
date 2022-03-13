@@ -19,7 +19,7 @@ public class PlayerRespawnListener extends TBListener {
         final Warrior warrior = plugin.getDatabaseManager().getWarrior(event.getPlayer());
 
         Bukkit.getScheduler().runTask(plugin, () -> {
-            BaseGame game = getBaseGameFrom(event.getPlayer());
+            BaseGame game = plugin.getBaseGameFrom(event.getPlayer());
             if (game != null) {
                 game.onRespawn(warrior);
             }

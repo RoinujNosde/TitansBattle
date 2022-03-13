@@ -28,7 +28,7 @@ public class BlockUpdateListener extends TBListener {
     }
 
     private void cancel(Player player, Cancellable event) {
-        BaseGame game = getBaseGameFrom(player);
+        BaseGame game = plugin.getBaseGameFrom(player);
         if (game == null) {
             return;
         }

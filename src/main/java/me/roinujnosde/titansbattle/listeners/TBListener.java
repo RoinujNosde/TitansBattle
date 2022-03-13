@@ -23,23 +23,4 @@ public abstract class TBListener implements Listener {
         this.plugin = plugin;
     }
 
-    public @Nullable BaseGame getBaseGameFrom(@NotNull Player player) {
-        Warrior warrior = plugin.getDatabaseManager().getWarrior(player);
-
-        Optional<Game> currentGame = plugin.getGameManager().getCurrentGame();
-        if (currentGame.isPresent()) {
-            if (currentGame.get().isParticipant(warrior)) {
-                return currentGame.get();
-            }
-        }
-        Set<ChallengeRequest<?>> requests = plugin.getChallengeManager().getRequests();
-        for (ChallengeRequest<?> request : requests) {
-            Challenge challenge = request.getChallenge();
-            if (challenge.isParticipant(warrior)) {
-                return challenge;
-            }
-        }
-        return null;
-    }
-
 }

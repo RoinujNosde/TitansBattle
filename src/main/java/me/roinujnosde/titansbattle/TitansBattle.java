@@ -31,10 +31,7 @@ import co.aikar.commands.bukkit.contexts.OnlinePlayer;
 import me.roinujnosde.titansbattle.challenges.ArenaConfiguration;
 import me.roinujnosde.titansbattle.challenges.Challenge;
 import me.roinujnosde.titansbattle.challenges.ChallengeRequest;
-import me.roinujnosde.titansbattle.commands.CanChallengeCondition;
-import me.roinujnosde.titansbattle.commands.ChallengeCommand;
-import me.roinujnosde.titansbattle.commands.EmptyInventoryCondition;
-import me.roinujnosde.titansbattle.commands.TBCommands;
+import me.roinujnosde.titansbattle.commands.*;
 import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.listeners.*;
@@ -104,227 +101,23 @@ public final class TitansBattle extends JavaPlugin {
         }
     }
 
-    private void setupConfig() {
-        saveDefaultConfig();
-        // loads the config and copies default values
-        getConfig().options().copyDefaults(true);
-        // saves it back (to add new values)
-        saveConfig();
-    }
+    public @Nullable BaseGame getBaseGameFrom(@NotNull Player player) {
+        Warrior warrior = getDatabaseManager().getWarrior(player);
 
-    private void registerSerializationClasses() {
-        ConfigurationSerialization.registerClass(GameConfiguration.Prize.class);
-        ConfigurationSerialization.registerClass(BaseGameConfiguration.class);
-        ConfigurationSerialization.registerClass(Kit.class);
-        ConfigurationSerialization.registerClass(Prizes.class);
-    }
-
-    private void configureCommands() {
-        setDefaultLocale();
-        registerDependencies();
-        registerCompletions();
-        registerContexts();
-        registerReplacements();
-        registerConditions();
-        registerCommands();
-    }
-    
-    private void setDefaultLocale() {
-        Locale defaultLocale = new Locale(configManager.getLanguage().split("_")[0]);
-        BukkitLocales locales = pcm.getLocales();
-        
-        locales.setDefaultLocale(defaultLocale);
-        locales.loadLanguage(getLanguageManager().getEnglishLanguageFile(), Locales.ENGLISH);
-        locales.loadLanguage(getLanguageManager().getConfig(), defaultLocale);
-    }
-
-    private void registerReplacements() {
-        ConfigurationSection commandsSection = getConfig().getConfigurationSection("commands");
-        if (commandsSection == null) {
-            return;
+        Optional<Game> currentGame = getGameManager().getCurrentGame();
+        if (currentGame.isPresent()) {
+            if (currentGame.get().isParticipant(warrior)) {
+                return currentGame.get();
+            }
         }
-        Set<String> commands = commandsSection.getKeys(false);
-        for (String command : commands) {
-            pcm.getCommandReplacements().addReplacement(command, commandsSection.getString(command) + "|" + command);
+        Set<ChallengeRequest<?>> requests = getChallengeManager().getRequests();
+        for (ChallengeRequest<?> request : requests) {
+            Challenge challenge = request.getChallenge();
+            if (challenge.isParticipant(warrior)) {
+                return challenge;
+            }
         }
-    }
-
-    private void registerContexts() {
-        pcm.getCommandContexts().registerIssuerOnlyContext(Game.class,
-                supplier -> gameManager.getCurrentGame().orElse(null));
-        pcm.getCommandContexts().registerContext(Date.class, supplier -> {
-            try {
-                return new SimpleDateFormat(configManager.getDateFormat()).parse(supplier.popFirstArg());
-            } catch (ParseException ex) {
-                supplier.getSender().sendMessage(getLang("invalid-date"));
-                throw new InvalidCommandArgument();
-            }
-        });
-        pcm.getCommandContexts().registerContext(Group.class, supplier -> {
-            String arg = supplier.popFirstArg();
-            if (groupManager != null) {
-                for (Group group : groupManager.getGroups()) {
-                    if (arg.equalsIgnoreCase(group.getUniqueName())) {
-                        return group;
-                    }
-                }
-            }
-            throw new InvalidCommandArgument(getLang("group.not.found"));
-        });
-        pcm.getCommandContexts().registerIssuerOnlyContext(Warrior.class, supplier -> {
-            Player player = supplier.getPlayer();
-            if (player == null) {
-                throw new InvalidCommandArgument(MessageKeys.NOT_ALLOWED_ON_CONSOLE);
-            }
-            return databaseManager.getWarrior(player);
-        });
-        pcm.getCommandContexts().registerContext(ChallengeRequest.class, supplier -> {
-            String arg = supplier.popFirstArg();
-            for (ChallengeRequest<?> request : challengeManager.getRequests()) {
-                if (request.getChallengerName().equalsIgnoreCase(arg)) {
-                    return request;
-                }
-            }
-            return null;
-        });
-        pcm.getCommandContexts().registerContext(ArenaConfiguration.class, supplier -> configurationDao
-                .getConfiguration(supplier.popFirstArg(), ArenaConfiguration.class).orElse(null));
-        pcm.getCommandContexts().registerContext(GameConfiguration.class, supplier -> configurationDao
-                .getConfiguration(supplier.popFirstArg(), GameConfiguration.class).orElse(null));
-    }
-
-    private void registerCommands() {
-        pcm.registerCommand(new TBCommands());
-        pcm.registerCommand(new ChallengeCommand());
-    }
-
-    private void registerConditions() {
-        pcm.getCommandConditions().addCondition("happening", handler -> {
-            if (!gameManager.getCurrentGame().isPresent()) {
-                handler.getIssuer().sendMessage(getLang("not-starting-or-started"));
-                throw new ConditionFailedException();
-            }
-        });
-        pcm.getCommandConditions().addCondition(ArenaConfiguration.class, "empty_inventory", new EmptyInventoryCondition(this));
-        pcm.getCommandConditions().addCondition("can_challenge", new CanChallengeCondition(this));
-        pcm.getCommandConditions().addCondition(ArenaConfiguration.class, "ready", (cc, cec, v) -> {
-            boolean matches = challengeManager.getRequests().stream().map(ChallengeRequest::getChallenge)
-                    .map(Challenge::getConfig).anyMatch(config -> config.equals(v));
-            if (matches) {
-                cec.getIssuer().sendMessage(getLang("arena.in.use"));
-                throw new ConditionFailedException();
-            }
-            if (!v.locationsSet()) {
-                cc.getIssuer().sendMessage(getLang("this.arena.isnt.ready"));
-                throw new ConditionFailedException();
-            }
-            boolean groupMode = Boolean.valueOf(cc.getConfigValue("group", "false"));
-            if (groupMode != v.isGroupMode()) {
-                cc.getIssuer().sendMessage(getLang("group.mode.not.supported"));
-                throw new ConditionFailedException();
-            }
-        });
-        pcm.getCommandConditions().addCondition(Warrior.class, "is_invited", (cc, cec, v) -> {
-            boolean invited = challengeManager.getRequests().stream().anyMatch(r -> r.isInvited(v));
-            if (!invited) {
-                cec.getIssuer().sendMessage(getLang("no.challenge.to.accept"));
-                throw new ConditionFailedException();
-            }
-        });
-        pcm.getCommandConditions().addCondition(OnlinePlayer.class, "other", (cc, cec, v) -> {
-            if (v.getPlayer().getUniqueId().equals(cc.getIssuer().getUniqueId())) {
-                cec.getIssuer().sendMessage(getLang("you.cannot.challenge.yourself"));
-                throw new ConditionFailedException();
-            }
-        });
-        pcm.getCommandConditions().addCondition(Group.class, "other", (cc, cec, v) -> {
-            if (v.isMember(cc.getIssuer().getUniqueId())) {
-                cec.getIssuer().sendMessage(getLang("you.cannot.challenge.your.group"));
-                throw new ConditionFailedException();
-            }
-        });
-    }
-
-    private void registerCompletions() {
-        pcm.getCommandCompletions().registerCompletion("winners_dates",
-                handler -> databaseManager.getWinners().stream().map(Winners::getDate)
-                        .map(new SimpleDateFormat(configManager.getDateFormat())::format).collect(Collectors.toList()));
-        pcm.getCommandCompletions().registerCompletion("group_pages", handler -> {
-            int pages = databaseManager.getGroups().size() / configManager.getPageLimitRanking();
-            ArrayList<String> list = new ArrayList<>();
-            for (int i = 0; i < pages; i++) {
-                list.add(String.valueOf(i + 1));
-            }
-            return list;
-        });
-        pcm.getCommandCompletions().registerCompletion("warrior_pages", handler -> {
-            int pages = databaseManager.getWarriors().size() / configManager.getPageLimitRanking();
-            ArrayList<String> list = new ArrayList<>();
-            for (int i = 0; i < pages; i++) {
-                list.add(String.valueOf(i + 1));
-            }
-            return list;
-        });
-        pcm.getCommandCompletions().registerCompletion("groups", handler -> {
-            if (groupManager == null)
-                return Collections.emptyList();
-            return groupManager.getGroups().stream().map(Group::getUniqueName).collect(Collectors.toList());
-        });
-        pcm.getCommandCompletions().registerCompletion("requests", handler -> {
-            Warrior warrior = databaseManager.getWarrior(handler.getIssuer().getUniqueId());
-            return challengeManager.getRequests().stream().filter(cr -> cr.isInvited(warrior))
-                    .map(ChallengeRequest::getChallengerName).collect(Collectors.toList());
-        });
-        pcm.getCommandCompletions().registerStaticCompletion("prizes_config_fields",
-                ConfigUtils.getEditableFields(Prizes.class));
-        pcm.getCommandCompletions().registerStaticCompletion("game_config_fields",
-                ConfigUtils.getEditableFields(GameConfiguration.class));
-        pcm.getCommandCompletions().registerStaticCompletion("warrior_order", Arrays.asList("kills", "deaths"));
-        pcm.getCommandCompletions().registerStaticCompletion("group_order",
-                Arrays.asList("kills", "deaths", "defeats"));
-        pcm.getCommandCompletions().registerCompletion("games",
-                handler -> configurationDao.getConfigurations(GameConfiguration.class).stream()
-                        .map(GameConfiguration::getName).collect(Collectors.toList()));
-        pcm.getCommandCompletions().registerCompletion("arenas", handler -> {
-            List<String> inUse = challengeManager.getRequests().stream()
-                    .map(cr -> cr.getChallenge().getConfig().getName()).collect(Collectors.toList());
-            if (handler.hasConfig("in_use")) {
-                return inUse;
-            }
-            
-            boolean group = Boolean.valueOf(handler.getConfig("group"));
-            List<String> arenas = configurationDao.getConfigurations(ArenaConfiguration.class).stream()
-                    .filter(a -> a.isGroupMode() == group).map(ArenaConfiguration::getName)
-                    .collect(Collectors.toList());
-
-            arenas.removeAll(inUse);
-            return arenas;
-        });
-    }
-
-    private void registerDependencies() {
-        pcm.registerDependency(GameManager.class, gameManager);
-        pcm.registerDependency(ConfigurationDao.class, configurationDao);
-        pcm.registerDependency(ConfigManager.class, configManager);
-        pcm.registerDependency(DatabaseManager.class, databaseManager);
-        pcm.registerDependency(ChallengeManager.class, challengeManager);
-    }
-
-    private void loadGroupsPlugin() {
-        if (Bukkit.getPluginManager().getPlugin("SimpleClans") != null) {
-            setGroupManager(new SimpleClansGroupManager(this));
-        }
-    }
-
-    private void registerEvents() {
-        Bukkit.getPluginManager().registerEvents(new PlayerCommandPreprocessListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerDeathListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new EntityDamageListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerRespawnListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerTeleportListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new BlockUpdateListener(this), this);
+        return null;
     }
 
     public DatabaseManager getDatabaseManager() {
@@ -436,6 +229,230 @@ public final class TitansBattle extends JavaPlugin {
 
     public void debug(String message) {
         debug(message, true);
+    }
+
+    private void setupConfig() {
+        saveDefaultConfig();
+        // loads the config and copies default values
+        getConfig().options().copyDefaults(true);
+        // saves it back (to add new values)
+        saveConfig();
+    }
+
+    private void registerSerializationClasses() {
+        ConfigurationSerialization.registerClass(GameConfiguration.Prize.class);
+        ConfigurationSerialization.registerClass(BaseGameConfiguration.class);
+        ConfigurationSerialization.registerClass(Kit.class);
+        ConfigurationSerialization.registerClass(Prizes.class);
+    }
+
+    private void configureCommands() {
+        setDefaultLocale();
+        registerDependencies();
+        registerCompletions();
+        registerContexts();
+        registerReplacements();
+        registerConditions();
+        registerCommands();
+    }
+
+    private void setDefaultLocale() {
+        Locale defaultLocale = new Locale(configManager.getLanguage().split("_")[0]);
+        BukkitLocales locales = pcm.getLocales();
+
+        locales.setDefaultLocale(defaultLocale);
+        locales.loadLanguage(getLanguageManager().getEnglishLanguageFile(), Locales.ENGLISH);
+        locales.loadLanguage(getLanguageManager().getConfig(), defaultLocale);
+    }
+
+    private void registerReplacements() {
+        ConfigurationSection commandsSection = getConfig().getConfigurationSection("commands");
+        if (commandsSection == null) {
+            return;
+        }
+        Set<String> commands = commandsSection.getKeys(false);
+        for (String command : commands) {
+            pcm.getCommandReplacements().addReplacement(command, commandsSection.getString(command) + "|" + command);
+        }
+    }
+
+    private void registerContexts() {
+        pcm.getCommandContexts().registerIssuerOnlyContext(Game.class,
+                supplier -> gameManager.getCurrentGame().orElse(null));
+        pcm.getCommandContexts().registerContext(Date.class, supplier -> {
+            try {
+                return new SimpleDateFormat(configManager.getDateFormat()).parse(supplier.popFirstArg());
+            } catch (ParseException ex) {
+                supplier.getSender().sendMessage(getLang("invalid-date"));
+                throw new InvalidCommandArgument();
+            }
+        });
+        pcm.getCommandContexts().registerContext(Group.class, supplier -> {
+            String arg = supplier.popFirstArg();
+            if (groupManager != null) {
+                for (Group group : groupManager.getGroups()) {
+                    if (arg.equalsIgnoreCase(group.getUniqueName())) {
+                        return group;
+                    }
+                }
+            }
+            throw new InvalidCommandArgument(getLang("group.not.found"));
+        });
+        pcm.getCommandContexts().registerIssuerOnlyContext(Warrior.class, supplier -> {
+            Player player = supplier.getPlayer();
+            if (player == null) {
+                throw new InvalidCommandArgument(MessageKeys.NOT_ALLOWED_ON_CONSOLE);
+            }
+            return databaseManager.getWarrior(player);
+        });
+        pcm.getCommandContexts().registerContext(ChallengeRequest.class, supplier -> {
+            String arg = supplier.popFirstArg();
+            for (ChallengeRequest<?> request : challengeManager.getRequests()) {
+                if (request.getChallengerName().equalsIgnoreCase(arg)) {
+                    return request;
+                }
+            }
+            return null;
+        });
+        pcm.getCommandContexts().registerContext(ArenaConfiguration.class, supplier -> configurationDao
+                .getConfiguration(supplier.popFirstArg(), ArenaConfiguration.class).orElse(null));
+        pcm.getCommandContexts().registerContext(GameConfiguration.class, supplier -> configurationDao
+                .getConfiguration(supplier.popFirstArg(), GameConfiguration.class).orElse(null));
+    }
+
+    private void registerCommands() {
+        pcm.registerCommand(new TBCommands());
+        pcm.registerCommand(new ChallengeCommand());
+    }
+
+    private void registerConditions() {
+        pcm.getCommandConditions().addCondition("happening", handler -> {
+            if (!gameManager.getCurrentGame().isPresent()) {
+                handler.getIssuer().sendMessage(getLang("not-starting-or-started"));
+                throw new ConditionFailedException();
+            }
+        });
+        pcm.getCommandConditions().addCondition("participant", new ParticipantCondition(this));
+        pcm.getCommandConditions().addCondition(ArenaConfiguration.class, "empty_inventory", new EmptyInventoryCondition(this));
+        pcm.getCommandConditions().addCondition("can_challenge", new CanChallengeCondition(this));
+        pcm.getCommandConditions().addCondition(ArenaConfiguration.class, "ready", (cc, cec, v) -> {
+            boolean matches = challengeManager.getRequests().stream().map(ChallengeRequest::getChallenge)
+                    .map(Challenge::getConfig).anyMatch(config -> config.equals(v));
+            if (matches) {
+                cec.getIssuer().sendMessage(getLang("arena.in.use"));
+                throw new ConditionFailedException();
+            }
+            if (!v.locationsSet()) {
+                cc.getIssuer().sendMessage(getLang("this.arena.isnt.ready"));
+                throw new ConditionFailedException();
+            }
+            boolean groupMode = Boolean.parseBoolean(cc.getConfigValue("group", "false"));
+            if (groupMode != v.isGroupMode()) {
+                cc.getIssuer().sendMessage(getLang("group.mode.not.supported"));
+                throw new ConditionFailedException();
+            }
+        });
+        pcm.getCommandConditions().addCondition(Warrior.class, "is_invited", (cc, cec, v) -> {
+            boolean invited = challengeManager.getRequests().stream().anyMatch(r -> r.isInvited(v));
+            if (!invited) {
+                cec.getIssuer().sendMessage(getLang("no.challenge.to.accept"));
+                throw new ConditionFailedException();
+            }
+        });
+        pcm.getCommandConditions().addCondition(OnlinePlayer.class, "other", (cc, cec, v) -> {
+            if (v.getPlayer().getUniqueId().equals(cc.getIssuer().getUniqueId())) {
+                cec.getIssuer().sendMessage(getLang("you.cannot.challenge.yourself"));
+                throw new ConditionFailedException();
+            }
+        });
+        pcm.getCommandConditions().addCondition(Group.class, "other", (cc, cec, v) -> {
+            if (v.isMember(cc.getIssuer().getUniqueId())) {
+                cec.getIssuer().sendMessage(getLang("you.cannot.challenge.your.group"));
+                throw new ConditionFailedException();
+            }
+        });
+    }
+
+    private void registerCompletions() {
+        pcm.getCommandCompletions().registerCompletion("winners_dates",
+                handler -> databaseManager.getWinners().stream().map(Winners::getDate)
+                        .map(new SimpleDateFormat(configManager.getDateFormat())::format).collect(Collectors.toList()));
+        pcm.getCommandCompletions().registerCompletion("group_pages", handler -> {
+            int pages = databaseManager.getGroups().size() / configManager.getPageLimitRanking();
+            ArrayList<String> list = new ArrayList<>();
+            for (int i = 0; i < pages; i++) {
+                list.add(String.valueOf(i + 1));
+            }
+            return list;
+        });
+        pcm.getCommandCompletions().registerCompletion("warrior_pages", handler -> {
+            int pages = databaseManager.getWarriors().size() / configManager.getPageLimitRanking();
+            ArrayList<String> list = new ArrayList<>();
+            for (int i = 0; i < pages; i++) {
+                list.add(String.valueOf(i + 1));
+            }
+            return list;
+        });
+        pcm.getCommandCompletions().registerCompletion("groups", handler -> {
+            if (groupManager == null)
+                return Collections.emptyList();
+            return groupManager.getGroups().stream().map(Group::getUniqueName).collect(Collectors.toList());
+        });
+        pcm.getCommandCompletions().registerCompletion("requests", handler -> {
+            Warrior warrior = databaseManager.getWarrior(handler.getIssuer().getUniqueId());
+            return challengeManager.getRequests().stream().filter(cr -> cr.isInvited(warrior))
+                    .map(ChallengeRequest::getChallengerName).collect(Collectors.toList());
+        });
+        pcm.getCommandCompletions().registerStaticCompletion("prizes_config_fields",
+                ConfigUtils.getEditableFields(Prizes.class));
+        pcm.getCommandCompletions().registerStaticCompletion("game_config_fields",
+                ConfigUtils.getEditableFields(GameConfiguration.class));
+        pcm.getCommandCompletions().registerStaticCompletion("warrior_order", Arrays.asList("kills", "deaths"));
+        pcm.getCommandCompletions().registerStaticCompletion("group_order",
+                Arrays.asList("kills", "deaths", "defeats"));
+        pcm.getCommandCompletions().registerCompletion("games",
+                handler -> configurationDao.getConfigurations(GameConfiguration.class).stream()
+                        .map(GameConfiguration::getName).collect(Collectors.toList()));
+        pcm.getCommandCompletions().registerCompletion("arenas", handler -> {
+            List<String> inUse = challengeManager.getRequests().stream()
+                    .map(cr -> cr.getChallenge().getConfig().getName()).collect(Collectors.toList());
+            if (handler.hasConfig("in_use")) {
+                return inUse;
+            }
+
+            boolean group = Boolean.parseBoolean(handler.getConfig("group"));
+            List<String> arenas = configurationDao.getConfigurations(ArenaConfiguration.class).stream()
+                    .filter(a -> a.isGroupMode() == group).map(ArenaConfiguration::getName)
+                    .collect(Collectors.toList());
+
+            arenas.removeAll(inUse);
+            return arenas;
+        });
+    }
+
+    private void registerDependencies() {
+        pcm.registerDependency(GameManager.class, gameManager);
+        pcm.registerDependency(ConfigurationDao.class, configurationDao);
+        pcm.registerDependency(ConfigManager.class, configManager);
+        pcm.registerDependency(DatabaseManager.class, databaseManager);
+        pcm.registerDependency(ChallengeManager.class, challengeManager);
+    }
+
+    private void loadGroupsPlugin() {
+        if (Bukkit.getPluginManager().getPlugin("SimpleClans") != null) {
+            setGroupManager(new SimpleClansGroupManager(this));
+        }
+    }
+
+    private void registerEvents() {
+        Bukkit.getPluginManager().registerEvents(new PlayerCommandPreprocessListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerDeathListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new EntityDamageListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerRespawnListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new PlayerTeleportListener(this), this);
+        Bukkit.getPluginManager().registerEvents(new BlockUpdateListener(this), this);
     }
 
 }

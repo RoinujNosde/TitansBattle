@@ -53,7 +53,7 @@ public class PlayerDeathListener extends TBListener {
         Player victim = event.getEntity();
         Player killer = Helper.getPlayerAttackerOrKiller(victim.getKiller());
 
-        BaseGame game = getBaseGameFrom(victim);
+        BaseGame game = plugin.getBaseGameFrom(victim);
         if (game == null) {
             if (killer != null && Helper.isKiller(victim)) {
                 GameConfiguration gameConfig = Helper.getGameConfigurationFromWinnerOrKiller(victim);

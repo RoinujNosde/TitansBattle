@@ -48,7 +48,7 @@ public class PlayerQuitListener extends TBListener {
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
         Warrior warrior = plugin.getDatabaseManager().getWarrior(player);
-        BaseGame game = getBaseGameFrom(player);
+        BaseGame game = plugin.getBaseGameFrom(player);
         if (game != null) {
             game.onDisconnect(warrior);
         }

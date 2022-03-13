@@ -232,15 +232,12 @@ public class TBCommands extends BaseCommand {
 
     @Subcommand("%exit|exit|leave")
     @CommandPermission("titansbattle.exit")
-    @Conditions("happening")
+    @Conditions("participant")
     @Description("{@@command.description.exit}")
-    public void leave(Player sender, Game game) {
+    public void leave(Player sender) {
         Warrior warrior = databaseManager.getWarrior(sender);
-        if (!game.isParticipant(warrior)) {
-            sender.sendMessage(plugin.getLang("not_participating", game));
-            return;
-        }
-        game.onLeave(warrior);
+        //noinspection ConstantConditions
+        plugin.getBaseGameFrom(sender).onLeave(warrior);
     }
 
     @Subcommand("%help|help")
