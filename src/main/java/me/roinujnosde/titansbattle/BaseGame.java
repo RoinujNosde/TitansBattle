@@ -162,6 +162,8 @@ public abstract class BaseGame {
         if (getConfig().isUseKits()) {
             plugin.getConfigManager().getClearInventory().add(warrior.getUniqueId());
         }
+        casualties.add(warrior);
+        casualtiesWatching.add(warrior); //adding to this Collection, so they are not teleport on respawn
         plugin.getConfigManager().getRespawn().add(warrior.getUniqueId());
         plugin.getConfigManager().save();
         processPlayerExit(warrior);
@@ -174,6 +176,8 @@ public abstract class BaseGame {
         if (getConfig().isUseKits()) {
             Kit.clearInventory(warrior.toOnlinePlayer());
         }
+        casualties.add(warrior);
+        casualtiesWatching.add(warrior); //adding to this Collection, so they are not teleport on respawn
         Player player = Objects.requireNonNull(warrior.toOnlinePlayer());
         player.sendMessage(plugin.getLang("you-have-left", this));
         SoundUtils.playSound(LEAVE_GAME, plugin.getConfig(), player);
