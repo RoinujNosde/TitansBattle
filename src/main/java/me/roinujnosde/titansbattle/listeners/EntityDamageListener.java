@@ -31,16 +31,8 @@ public class EntityDamageListener extends TBListener {
         }
     }
 
-    //un-cancelling so mcMMO skills can be used
     //mcMMO's listener is on HIGHEST and ignoreCancelled = true, this will run before
     @EventHandler(priority = EventPriority.HIGH)
-    public void onDamageHigh(EntityDamageEvent event) {
-        if (isParticipant(event.getEntity())) {
-            event.setCancelled(false);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
     public void onDamage(EntityDamageEvent event) {
         DatabaseManager dm = plugin.getDatabaseManager();
 
