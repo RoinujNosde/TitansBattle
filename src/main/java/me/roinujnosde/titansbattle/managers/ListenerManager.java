@@ -10,7 +10,7 @@ import java.util.Set;
 public class ListenerManager {
 
     private final TitansBattle plugin;
-    private final Set<TBListener> registered = new HashSet<>();
+    private final Set<? extends TBListener> registered = new HashSet<>();
 
     public ListenerManager(TitansBattle plugin) {
         this.plugin = plugin;
@@ -40,13 +40,13 @@ public class ListenerManager {
         }
         for (TBListener listener : registered) {
             HandlerList.unregisterAll(listener);
-            registered.remove(listener);
+            registered.remove(listener.getClass());
         }
         plugin.getLogger().info("Unregistering battle listeners...");
     }
 
     private void registerListener(TBListener listener, boolean permanent) {
-        if (permanent || registered.add(listener)) {
+        if (permanent || registered.add(listener.getClass())) {
             plugin.getServer().getPluginManager().registerEvents(listener, plugin);
         }
     }
