@@ -32,20 +32,22 @@ import me.roinujnosde.titansbattle.utils.SoundUtils;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+import java.util.UUID;
 
 /**
  *
  * @author RoinujNosde
  */
-public class PlayerJoinListener implements Listener {
+public class PlayerJoinListener extends TBListener {
 
     private final ConfigManager cm;
-    private final TitansBattle plugin;
 
-    public PlayerJoinListener() {
-        plugin = TitansBattle.getInstance();
+    public PlayerJoinListener(@NotNull TitansBattle plugin) {
+        super(plugin);
         cm = plugin.getConfigManager();
     }
 
@@ -82,24 +84,26 @@ public class PlayerJoinListener implements Listener {
     }
 
     private void clearInventory(Player player) {
-        if (cm.getClearInventory().contains(player.getUniqueId())) {
+        List<UUID> toClear = cm.getClearInventory();
+        if (toClear.contains(player.getUniqueId())) {
             Kit.clearInventory(player);
-            cm.getClearInventory().remove(player.getUniqueId());
+            toClear.remove(player.getUniqueId());
             cm.save();
         }
     }
 
     private void teleportToExit(Player player) {
-        if (cm.getRespawn().contains(player.getUniqueId())) {
-            if (cm.getGeneralExit() != null) {
-                SoundUtils.playSound(SoundUtils.Type.TELEPORT, plugin.getConfig(), player);
-                player.teleport(cm.getGeneralExit());
-            } else {
-                plugin.getLogger().warning(String.format("GENERAL_EXIT is not set, it was not possible to teleport %s",
-                        player.getName()));
-            }
-            cm.getRespawn().remove(player.getUniqueId());
-            cm.save();
+        if (!cm.getRespawn().contains(player.getUniqueId())) {
+            return;
         }
+        if (cm.getGeneralExit() != null) {
+            SoundUtils.playSound(SoundUtils.Type.TELEPORT, plugin.getConfig(), player);
+            player.teleport(cm.getGeneralExit());
+        } else {
+            plugin.getLogger().warning(String.format("GENERAL_EXIT is not set, it was not possible to teleport %s",
+                    player.getName()));
+        }
+        cm.getRespawn().remove(player.getUniqueId());
+        cm.save();
     }
 }

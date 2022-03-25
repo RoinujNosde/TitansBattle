@@ -35,6 +35,11 @@ public class GameManager {
 
     public void setCurrentGame(@Nullable Game game) {
         this.currentGame = game;
+        if (game != null) {
+            plugin.getListenerManager().registerBattleListeners();
+        } else {
+            plugin.getListenerManager().unregisterBattleListeners();
+        }
     }
 
     /**

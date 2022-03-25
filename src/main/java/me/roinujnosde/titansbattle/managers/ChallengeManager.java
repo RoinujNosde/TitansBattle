@@ -1,18 +1,29 @@
 package me.roinujnosde.titansbattle.managers;
 
+import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.challenges.Challenge;
 import me.roinujnosde.titansbattle.challenges.ChallengeRequest;
 import me.roinujnosde.titansbattle.types.Warrior;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 public class ChallengeManager {
 
+    private final TitansBattle plugin;
     private final Set<Challenge> challenges = new HashSet<>();
     private final Set<ChallengeRequest<?>> requests = new HashSet<>();
+
+    public ChallengeManager(TitansBattle plugin) {
+        this.plugin = plugin;
+    }
+
+    public Set<Challenge> getChallenges() {
+        return Collections.unmodifiableSet(challenges);
+    }
 
     public Set<ChallengeRequest<?>> getRequests() {
         return requests;
@@ -38,6 +49,7 @@ public class ChallengeManager {
         requests.add(request);
         challenges.add(challenge);
         challenge.start();
+        plugin.getListenerManager().registerBattleListeners();
     }
 
     public void remove(@NotNull ChallengeRequest<?> request) {
@@ -48,6 +60,7 @@ public class ChallengeManager {
     public void remove(final Challenge challenge) {
         challenges.remove(challenge);
         requests.removeIf(r -> r.getChallenge().equals(challenge));
+        plugin.getListenerManager().unregisterBattleListeners();
     }
 
     public boolean isArenaInUse(@NotNull String name) {

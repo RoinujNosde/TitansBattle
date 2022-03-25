@@ -21,12 +21,7 @@
  ***************************************************************************** */
 package me.roinujnosde.titansbattle;
 
-import co.aikar.commands.BukkitLocales;
-import co.aikar.commands.ConditionFailedException;
-import co.aikar.commands.InvalidCommandArgument;
-import co.aikar.commands.Locales;
-import co.aikar.commands.MessageKeys;
-import co.aikar.commands.PaperCommandManager;
+import co.aikar.commands.*;
 import co.aikar.commands.bukkit.contexts.OnlinePlayer;
 import me.roinujnosde.titansbattle.challenges.ArenaConfiguration;
 import me.roinujnosde.titansbattle.challenges.Challenge;
@@ -34,7 +29,6 @@ import me.roinujnosde.titansbattle.challenges.ChallengeRequest;
 import me.roinujnosde.titansbattle.commands.*;
 import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.games.Game;
-import me.roinujnosde.titansbattle.listeners.*;
 import me.roinujnosde.titansbattle.managers.*;
 import me.roinujnosde.titansbattle.types.*;
 import me.roinujnosde.titansbattle.utils.ConfigUtils;
@@ -69,6 +63,7 @@ public final class TitansBattle extends JavaPlugin {
     private DatabaseManager databaseManager;
     private @Nullable GroupManager groupManager;
     private ChallengeManager challengeManager;
+    private ListenerManager listenerManager;
     private ConfigurationDao configurationDao;
 
     @Override
@@ -81,7 +76,8 @@ public final class TitansBattle extends JavaPlugin {
         taskManager = new TaskManager();
         languageManager = new LanguageManager();
         databaseManager = new DatabaseManager();
-        challengeManager = new ChallengeManager();
+        challengeManager = new ChallengeManager(this);
+        listenerManager = new ListenerManager(this);
         configurationDao = new ConfigurationDao(getDataFolder());
 
         configManager.load();
@@ -93,7 +89,7 @@ public final class TitansBattle extends JavaPlugin {
         pcm = new PaperCommandManager(this);
         pcm.enableUnstableAPI("help");
         configureCommands();
-        registerEvents();
+        listenerManager.registerGeneralListeners();
         databaseManager.loadDataToMemory();
         gameManager.startOrSchedule();
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
@@ -154,6 +150,10 @@ public final class TitansBattle extends JavaPlugin {
 
     public ChallengeManager getChallengeManager() {
         return challengeManager;
+    }
+
+    public ListenerManager getListenerManager() {
+        return listenerManager;
     }
 
     public TaskManager getTaskManager() {
@@ -442,17 +442,6 @@ public final class TitansBattle extends JavaPlugin {
         if (Bukkit.getPluginManager().getPlugin("SimpleClans") != null) {
             setGroupManager(new SimpleClansGroupManager(this));
         }
-    }
-
-    private void registerEvents() {
-        Bukkit.getPluginManager().registerEvents(new PlayerCommandPreprocessListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerDeathListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new EntityDamageListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerRespawnListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerTeleportListener(this), this);
-        Bukkit.getPluginManager().registerEvents(new BlockUpdateListener(this), this);
     }
 
 }
