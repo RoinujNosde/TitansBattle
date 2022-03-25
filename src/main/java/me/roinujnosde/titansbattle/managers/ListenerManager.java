@@ -10,7 +10,7 @@ import java.util.Set;
 public class ListenerManager {
 
     private final TitansBattle plugin;
-    private final Set<? extends TBListener> registered = new HashSet<>();
+    private final Set<Class<? extends TBListener>> registered = new HashSet<>();
 
     public ListenerManager(TitansBattle plugin) {
         this.plugin = plugin;
