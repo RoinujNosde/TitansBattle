@@ -46,9 +46,9 @@ public class ChallengeManager {
         if (challenges.contains(challenge)) {
             throw new IllegalStateException("cannot add another challenge in the same arena");
         }
+        challenge.start();
         requests.add(request);
         challenges.add(challenge);
-        challenge.start();
         plugin.getListenerManager().registerBattleListeners();
     }
 
