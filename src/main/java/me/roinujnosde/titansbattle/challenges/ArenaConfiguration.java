@@ -1,7 +1,7 @@
 package me.roinujnosde.titansbattle.challenges;
 
 import me.roinujnosde.titansbattle.BaseGameConfiguration;
-import me.roinujnosde.titansbattle.utils.ConfigUtils;
+import me.roinujnosde.titansbattle.serialization.ConfigUtils;
 import org.bukkit.configuration.serialization.SerializableAs;
 import org.jetbrains.annotations.NotNull;
 

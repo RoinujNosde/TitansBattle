@@ -13,7 +13,7 @@ import me.roinujnosde.titansbattle.managers.ConfigManager;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
 import me.roinujnosde.titansbattle.types.*;
-import me.roinujnosde.titansbattle.utils.ConfigUtils;
+import me.roinujnosde.titansbattle.serialization.ConfigUtils;
 import me.roinujnosde.titansbattle.utils.Helper;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
 import org.bukkit.Bukkit;
@@ -58,12 +58,12 @@ public class TBCommands extends BaseCommand {
 
     @Subcommand("%edit|edit %prize|prize")
     @CommandPermission("titansbattle.edit")
-    @CommandCompletion("@games @prizes_config_fields")
+    @CommandCompletion("@games @config_fields:class=prizes")
     @Description("{@@command.description.edit.prize}")
     public void editPrizes(CommandSender sender,
                            @Values("@games") GameConfiguration game,
                            Prize prize,
-                           @Values("@prizes_config_fields") String field,
+                           @Values("@config_fields:class=prizes") String field,
                            String value) {
         Prizes prizes = game.getPrizes(prize);
         if (ConfigUtils.setValue(prizes, field, value)) {
@@ -97,11 +97,11 @@ public class TBCommands extends BaseCommand {
 
     @Subcommand("%edit|edit %game|game")
     @CommandPermission("titansbattle.edit")
-    @CommandCompletion("@games @game_config_fields")
+    @CommandCompletion("@games @config_fields:class=game")
     @Description("{@@command.description.edit.game}")
     public void editGame(CommandSender sender,
                          @Values("@games") GameConfiguration game,
-                         @Values("@game_config_fields") String field,
+                         @Values("@config_fields:class=game") String field,
                          String value) {
         if (ConfigUtils.setValue(Objects.requireNonNull(game), field, value)) {
             sender.sendMessage(ChatColor.GREEN + "[TitansBattle] Successfully changed the field's value!");
@@ -467,11 +467,11 @@ public class TBCommands extends BaseCommand {
 
         @Subcommand("%groups|groups")
         @CommandPermission("titansbattle.ranking")
-        @CommandCompletion("@games @group_order @group_pages")
+        @CommandCompletion("@games @order_by:type=group @pages:type=group")
         @Description("{@@command.description.ranking.groups}")
         public void groupsRanking(CommandSender sender,
                                   @Values("@games") String game,
-                                  @Values("@group_order") @Optional @Nullable String order,
+                                  @Values("@order_by:type=group") @Optional @Nullable String order,
                                   @Optional @Default("1") int page) {
             final List<Group> groups;
             if (plugin.getGroupManager() != null) {
@@ -514,11 +514,11 @@ public class TBCommands extends BaseCommand {
 
         @Subcommand("%players|players")
         @CommandPermission("titansbattle.ranking")
-        @CommandCompletion("@games @warrior_order @warrior_pages")
+        @CommandCompletion("@games @order_by:type=warrior @pages:type=warrior")
         @Description("{@@command.description.ranking.players}")
         public void playersRanking(CommandSender sender,
                                    @Values("@games") String game,
-                                   @Values("@warrior_order") @Optional @Nullable String order,
+                                   @Values("@order_by:type=warrior") @Optional @Nullable String order,
                                    @Optional @Default("1") int page) {
             final List<Warrior> warriors = new ArrayList<>(databaseManager.getWarriors());
             if (warriors.isEmpty()) {

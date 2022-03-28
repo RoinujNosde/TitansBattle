@@ -1,4 +1,4 @@
-package me.roinujnosde.titansbattle.utils;
+package me.roinujnosde.titansbattle.serialization;
 
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.jetbrains.annotations.NotNull;

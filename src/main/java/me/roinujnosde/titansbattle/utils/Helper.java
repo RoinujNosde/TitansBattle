@@ -307,37 +307,6 @@ public class Helper {
     }
 
     /**
-     * Gets a String representation of a String List
-     * Example: "RoinujNosde, Lannister & Killer07"
-     *
-     * @param list the String list
-     * @return the String representation
-     * @deprecated use {@link Helper#buildStringFrom(Collection)}
-     */
-    @Deprecated
-    public static String getStringFromStringList(List<String> list) {
-        if (list == null || list.isEmpty()) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        for (String a : list) {
-            //Checa se é o primeiro vencedor
-            if (a.equalsIgnoreCase(list.get(0))) {
-                sb.append(a);
-                //Checa se é o último vencedor
-            } else if (a.equals(list.get(list.size() - 1))) {
-                sb.append(" & ");
-                sb.append(a);
-                //Não é nenhum dos acima
-            } else {
-                sb.append(", ");
-                sb.append(a);
-            }
-        }
-        return sb.toString();
-    }
-
-    /**
      * Gets the current time in seconds
      *
      * @return the current time in seconds

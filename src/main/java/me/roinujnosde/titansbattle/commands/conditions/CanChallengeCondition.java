@@ -1,24 +1,24 @@
-package me.roinujnosde.titansbattle.commands;
+package me.roinujnosde.titansbattle.commands.conditions;
 
 import co.aikar.commands.BukkitCommandIssuer;
-import co.aikar.commands.CommandConditions.Condition;
 import co.aikar.commands.ConditionContext;
 import co.aikar.commands.ConditionFailedException;
 import co.aikar.commands.InvalidCommandArgument;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.challenges.ChallengeRequest;
-import me.roinujnosde.titansbattle.managers.ChallengeManager;
 import me.roinujnosde.titansbattle.types.Warrior;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
-public class CanChallengeCondition implements Condition<BukkitCommandIssuer> {
-
-    private final TitansBattle plugin;
-    private final ChallengeManager challengeManager;
+public class CanChallengeCondition extends AbstractCommandCondition {
 
     public CanChallengeCondition(TitansBattle plugin) {
-        this.plugin = plugin;
-        this.challengeManager = plugin.getChallengeManager();
+        super(plugin);
+    }
+
+    @Override
+    public @NotNull String getId() {
+        return "can_challenge";
     }
 
     @Override
@@ -32,7 +32,7 @@ public class CanChallengeCondition implements Condition<BukkitCommandIssuer> {
             throw new ConditionFailedException();
         }
 
-        ChallengeRequest<?> request = challengeManager.getChallengeRequest(warrior, groupMode);
+        ChallengeRequest<?> request = getChallengeManager().getChallengeRequest(warrior, groupMode);
         if (request != null) {
             player.sendMessage(plugin.getLang("already.challenged"));
             throw new ConditionFailedException();

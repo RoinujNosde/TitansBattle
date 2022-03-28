@@ -1,16 +1,20 @@
-package me.roinujnosde.titansbattle.commands;
+package me.roinujnosde.titansbattle.commands.conditions;
 
 import co.aikar.commands.*;
 import me.roinujnosde.titansbattle.BaseGame;
 import me.roinujnosde.titansbattle.TitansBattle;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
 
-public class ParticipantCondition implements CommandConditions.Condition<BukkitCommandIssuer> {
-
-    private final TitansBattle plugin;
+public class ParticipantCondition extends AbstractCommandCondition {
 
     public ParticipantCondition(TitansBattle plugin) {
-        this.plugin = plugin;
+        super(plugin);
+    }
+
+    @Override
+    public @NotNull String getId() {
+        return "participant";
     }
 
     @Override

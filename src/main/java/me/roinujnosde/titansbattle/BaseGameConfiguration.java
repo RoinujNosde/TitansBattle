@@ -1,8 +1,8 @@
 package me.roinujnosde.titansbattle;
 
 import me.roinujnosde.titansbattle.types.Kit;
-import me.roinujnosde.titansbattle.utils.ConfigUtils;
-import me.roinujnosde.titansbattle.utils.Path;
+import me.roinujnosde.titansbattle.serialization.ConfigUtils;
+import me.roinujnosde.titansbattle.serialization.Path;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;

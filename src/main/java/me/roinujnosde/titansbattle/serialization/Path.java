@@ -1,4 +1,4 @@
-package me.roinujnosde.titansbattle.utils;
+package me.roinujnosde.titansbattle.serialization;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
