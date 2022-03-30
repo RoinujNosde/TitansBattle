@@ -49,6 +49,7 @@ commands:
     accept: "accept"
     deny: "deny"
     info: "info"
+    setwinner: "setwinner"
 
 #Sounds used in games, to disable one leave it ""
 sounds:

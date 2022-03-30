@@ -1,6 +1,7 @@
 package me.roinujnosde.titansbattle;
 
 import me.roinujnosde.titansbattle.events.*;
+import me.roinujnosde.titansbattle.exceptions.CommandNotSupportedException;
 import me.roinujnosde.titansbattle.managers.GameManager;
 import me.roinujnosde.titansbattle.managers.GroupManager;
 import me.roinujnosde.titansbattle.types.Group;
@@ -25,6 +26,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static me.roinujnosde.titansbattle.BaseGameConfiguration.Prize;
 import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.*;
 
 public abstract class BaseGame {
@@ -85,7 +87,12 @@ public abstract class BaseGame {
             getConfig().getBorderCenter().getWorld().getWorldBorder().reset();
         }
         Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getDatabaseManager().saveAll(), 1);
+        if (!cancelled) {
+            processWinners();
+        }
     }
+
+    public abstract void setWinner(@NotNull Warrior warrior) throws CommandNotSupportedException;
 
     public void cancel(@NotNull CommandSender sender) {
         broadcastKey("cancelled", sender.getName());
@@ -286,6 +293,30 @@ public abstract class BaseGame {
     }
 
     protected abstract void onLobbyEnd();
+
+    protected abstract void processWinners();
+
+    protected void givePrizes(Prize prize, @Nullable Group group, @Nullable List<Warrior> warriors) {
+        List<Player> leaders = new ArrayList<>();
+        List<Player> members = new ArrayList<>();
+        if (warriors == null) {
+            return;
+        }
+        List<Player> players = warriors.stream().filter(Objects::nonNull).map(Warrior::toOnlinePlayer)
+                .filter(Objects::nonNull).collect(Collectors.toList());
+        if (group != null) {
+            for (Player p : players) {
+                if (group.isLeaderOrOfficer(p.getUniqueId())) {
+                    leaders.add(p);
+                } else {
+                    members.add(p);
+                }
+            }
+        } else {
+            members = players;
+        }
+        getConfig().getPrizes(prize).give(plugin, leaders, members);
+    }
 
     protected boolean canStartBattle() {
         GameStartEvent event = new GameStartEvent(this);

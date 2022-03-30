@@ -30,9 +30,6 @@ public class GameConfiguration extends BaseGameConfiguration {
 
     private Boolean deleteGroups = false;
 
-    @Path("prizes")
-    private Map<String, Prizes> prizesMap = createPrizesMap();
-
     @Path("announcement.game_info.interval")
     private Integer announcementGameInfoInterval = 30;
 
@@ -100,15 +97,6 @@ public class GameConfiguration extends BaseGameConfiguration {
         return announcementGameInfoInterval;
     }
 
-    public Prizes getPrizes(@NotNull Prize prize) {
-        Prizes prizes = prizesMap.get(prize.name());
-        if (prizes == null) {
-            Logger.getLogger("TitansBattle").warning(String.format("Prizes not set for %s!", prize.name()));
-            prizes = new Prizes();
-        }
-        return prizes;
-    }
-
     public Boolean isEliminationTournament() {
         return eliminationTournament;
     }
@@ -153,15 +141,6 @@ public class GameConfiguration extends BaseGameConfiguration {
         return winnerPrefix;
     }
 
-
-    private Map<String, Prizes> createPrizesMap() {
-        LinkedHashMap<String, Prizes> map = new LinkedHashMap<>();
-        for (Prize p : Prize.values()) {
-            map.put(p.name(), new Prizes());
-        }
-        return map;
-    }
-
     @Override
     public int hashCode() {
         return getName().hashCode();
@@ -173,18 +152,5 @@ public class GameConfiguration extends BaseGameConfiguration {
             return getName().equals(((GameConfiguration) other).getName());
         }
         return false;
-    }
-
-    public enum Prize implements ConfigurationSerializable {
-        FIRST, SECOND, THIRD, KILLER;
-
-        public static Prize deserialize(Map<String, Object> data) {
-            return Prize.valueOf((String) data.get("prize"));
-        }
-
-        @Override
-        public Map<String, Object> serialize() {
-            return Collections.singletonMap("prize", this.name());
-        }
     }
 }

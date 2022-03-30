@@ -38,7 +38,7 @@ public class GroupWinEvent extends Event {
 
     public GroupWinEvent(Group group) {
         if (group == null) {
-            throw new IllegalArgumentException("Group must be an instance of Clan or Faction and cannot be null.");
+            throw new IllegalArgumentException("Group must not be null.");
         }
         this.group = group;
     }

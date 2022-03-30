@@ -5,15 +5,16 @@ import co.aikar.commands.CommandHelp;
 import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.*;
 import co.aikar.commands.bukkit.contexts.OnlinePlayer;
-import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.BaseGameConfiguration.Destination;
+import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.dao.ConfigurationDao;
+import me.roinujnosde.titansbattle.exceptions.CommandNotSupportedException;
 import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
-import me.roinujnosde.titansbattle.types.*;
 import me.roinujnosde.titansbattle.serialization.ConfigUtils;
+import me.roinujnosde.titansbattle.types.*;
 import me.roinujnosde.titansbattle.utils.Helper;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
 import org.bukkit.Bukkit;
@@ -123,6 +124,21 @@ public class TBCommands extends BaseCommand {
         }
 
         gameManager.start(game);
+    }
+
+
+    @Subcommand("%setwinner|setwinner")
+    @CommandPermission("titansbattle.setwinner")
+    @CommandCompletion("@players")
+    @Description("{@@command.description.setwinner}")
+    @Conditions("happening")
+    public void setWinner(CommandSender sender, Game game, @Conditions("participant") Player winner) {
+        Warrior warrior = databaseManager.getWarrior(winner);
+        try {
+            game.setWinner(warrior);
+        } catch (CommandNotSupportedException e) {
+            sender.sendMessage(plugin.getLang("command-not-supported-by-game", game));
+        }
     }
 
     @Subcommand("%kick|kick")

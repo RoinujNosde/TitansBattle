@@ -23,7 +23,7 @@
  */
 package me.roinujnosde.titansbattle.events;
 
-import me.roinujnosde.titansbattle.games.Game;
+import me.roinujnosde.titansbattle.BaseGame;
 import me.roinujnosde.titansbattle.types.Warrior;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -40,21 +40,21 @@ import java.util.List;
 public class PlayerWinEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
-    private final Game game;
+    private final BaseGame game;
     private final List<Warrior> players;
 
-    public PlayerWinEvent(@NotNull Game game, @NotNull List<Warrior> players) {
+    public PlayerWinEvent(@NotNull BaseGame game, @NotNull List<Warrior> players) {
         this.game = game;
         this.players = players;
     }
 
-    public PlayerWinEvent(@NotNull Game game, @NotNull Warrior warrior) {
+    public PlayerWinEvent(@NotNull BaseGame game, @NotNull Warrior warrior) {
         this.game = game;
         players = new ArrayList<>();
         players.add(warrior);
     }
 
-    public @NotNull Game getGame() {
+    public @NotNull BaseGame getGame() {
         return game;
     }
 

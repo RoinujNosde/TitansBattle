@@ -2,21 +2,27 @@ package me.roinujnosde.titansbattle.challenges;
 
 import me.roinujnosde.titansbattle.BaseGame;
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.events.GroupWinEvent;
+import me.roinujnosde.titansbattle.events.PlayerWinEvent;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
+import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
+import static me.roinujnosde.titansbattle.BaseGameConfiguration.Prize.FIRST;
 import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.VICTORY;
 
 public class Challenge extends BaseGame {
 
     private Group winnerGroup;
-    private List<Warrior> winners;
+    private List<Warrior> winners = new ArrayList<>();
 
     public Challenge(@NotNull TitansBattle plugin, @NotNull ArenaConfiguration config) {
         super(plugin, config);
@@ -80,14 +86,36 @@ public class Challenge extends BaseGame {
 
     @Override
     public void finish(boolean cancelled) {
-        // TODO Increase stats
         super.finish(cancelled);
         plugin.getChallengeManager().remove(this);
-        if (!cancelled) {
-            String winnerName = getConfig().isGroupMode() ? winnerGroup.getName() : winners.get(0).getName();
-            SoundUtils.playSound(VICTORY, plugin.getConfig(), winners);
-            broadcastKey("who_won", winnerName, getLoserName());
+    }
+
+    @Override
+    protected void processWinners() {
+        if (winnerGroup != null) {
+            Bukkit.getPluginManager().callEvent(new GroupWinEvent(winnerGroup));
+            getCasualties().stream().filter(p -> winnerGroup.isMember(p.getUniqueId())).forEach(winners::add);
         }
+        PlayerWinEvent event = new PlayerWinEvent(this, winners);
+        Bukkit.getPluginManager().callEvent(event);
+        String winnerName = getConfig().isGroupMode() ? winnerGroup.getName() : winners.get(0).getName();
+        SoundUtils.playSound(VICTORY, plugin.getConfig(), winners);
+        givePrizes(FIRST, winnerGroup, winners);
+        broadcastKey("who_won", winnerName, getLoserName());
+    }
+
+    @Override
+    public void setWinner(@NotNull Warrior warrior) {
+        if (!isParticipant(warrior)) {
+            return;
+        }
+        if (getConfig().isGroupMode()) {
+            winnerGroup = warrior.getGroup();
+            winners = getParticipants().stream().filter(p -> winnerGroup.isMember(p.getUniqueId())).collect(Collectors.toList());
+        } else {
+            winners.add(warrior);
+        }
+        finish(false);
     }
 
     @Override

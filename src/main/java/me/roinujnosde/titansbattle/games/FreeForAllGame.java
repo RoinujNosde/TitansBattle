@@ -16,9 +16,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import static me.roinujnosde.titansbattle.types.GameConfiguration.Prize.FIRST;
-import static me.roinujnosde.titansbattle.types.GameConfiguration.Prize.KILLER;
+import static me.roinujnosde.titansbattle.BaseGameConfiguration.Prize.FIRST;
+import static me.roinujnosde.titansbattle.BaseGameConfiguration.Prize.KILLER;
 import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.VICTORY;
 
 public class FreeForAllGame extends Game {
@@ -93,6 +94,22 @@ public class FreeForAllGame extends Game {
         broadcastKey("who_won", winnerName);
         winners.forEach(w -> w.increaseVictories(gameName));
         givePrizes(FIRST, winnerGroup, winners);
+    }
+
+    @Override
+    public void setWinner(@NotNull Warrior warrior) {
+        if (!isParticipant(warrior)) {
+            return;
+        }
+        killer = findKiller();
+        if (getConfig().isGroupMode()) {
+            winnerGroup = warrior.getGroup();
+            //noinspection ConstantConditions
+            winners = getParticipants().stream().filter(p -> winnerGroup.isMember(p.getUniqueId())).collect(Collectors.toList());
+        } else {
+            winners.add(warrior);
+        }
+        finish(false);
     }
 
     @Override

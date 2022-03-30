@@ -8,17 +8,13 @@ import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
-
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.LEAVE_GAME;
 
@@ -70,9 +66,6 @@ public abstract class Game extends BaseGame {
     public void finish(boolean cancelled) {
         super.finish(cancelled);
         gameManager.setCurrentGame(null);
-        if (!cancelled) {
-            processWinners();
-        }
     }
 
     public void onKick(@NotNull Warrior warrior) {
@@ -108,30 +101,6 @@ public abstract class Game extends BaseGame {
                 broadcastKey("deleted_groups", deleted);
             }
         }
-    }
-
-    protected abstract void processWinners();
-
-    protected void givePrizes(GameConfiguration.Prize prize, @Nullable Group group, @Nullable List<Warrior> warriors) {
-        List<Player> leaders = new ArrayList<>();
-        List<Player> members = new ArrayList<>();
-        if (warriors == null) {
-            return;
-        }
-        List<Player> players = warriors.stream().filter(Objects::nonNull).map(Warrior::toOnlinePlayer)
-                .filter(Objects::nonNull).collect(Collectors.toList());
-        if (group != null) {
-            for (Player p : players) {
-                if (group.isLeaderOrOfficer(p.getUniqueId())) {
-                    leaders.add(p);
-                } else {
-                    members.add(p);
-                }
-            }
-        } else {
-            members = players;
-        }
-        getConfig().getPrizes(prize).give(plugin, leaders, members);
     }
 
     public @NotNull GameConfiguration getConfig() {

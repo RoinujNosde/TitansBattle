@@ -3,8 +3,8 @@ package me.roinujnosde.titansbattle.games;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.events.GroupWinEvent;
 import me.roinujnosde.titansbattle.events.PlayerWinEvent;
+import me.roinujnosde.titansbattle.exceptions.CommandNotSupportedException;
 import me.roinujnosde.titansbattle.types.*;
-import me.roinujnosde.titansbattle.types.GameConfiguration.Prize;
 import me.roinujnosde.titansbattle.utils.Helper;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
 import org.bukkit.Bukkit;
@@ -17,6 +17,8 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static me.roinujnosde.titansbattle.BaseGameConfiguration.Prize.*;
 
 public class EliminationTournamentGame extends Game {
     private final List<Duel<Warrior>> playerDuelists = new ArrayList<>();
@@ -421,14 +423,14 @@ public class EliminationTournamentGame extends Game {
         PlayerWinEvent event = new PlayerWinEvent(this, firstPlaceWinners);
         Bukkit.getPluginManager().callEvent(event);
         todayWinners.setWinners(getConfig().getName(), Helper.warriorListToUuidList(firstPlaceWinners));
-        givePrizes(Prize.FIRST, firstGroup, firstPlaceWinners);
-        givePrizes(Prize.SECOND, getAnyGroup(secondPlaceWinners), secondPlaceWinners);
-        givePrizes(Prize.THIRD, getAnyGroup(thirdPlaceWinners), thirdPlaceWinners);
+        givePrizes(FIRST, firstGroup, firstPlaceWinners);
+        givePrizes(SECOND, getAnyGroup(secondPlaceWinners), secondPlaceWinners);
+        givePrizes(THIRD, getAnyGroup(thirdPlaceWinners), thirdPlaceWinners);
         SoundUtils.playSound(SoundUtils.Type.VICTORY, plugin.getConfig(), firstPlaceWinners, secondPlaceWinners,
                 thirdPlaceWinners);
         Warrior killer = findKiller();
         if (killer != null) {
-            givePrizes(Prize.KILLER, null, Collections.singletonList(killer));
+            givePrizes(KILLER, null, Collections.singletonList(killer));
             gameManager.setKiller(getConfig(), killer, null);
             SoundUtils.playSound(SoundUtils.Type.VICTORY, plugin.getConfig(), killer.toOnlinePlayer());
             todayWinners.setKiller(getConfig().getName(), killer.getUniqueId());
@@ -436,6 +438,11 @@ public class EliminationTournamentGame extends Game {
         broadcastKey("who_won_tournament", getWinnerName(firstPlaceWinners),
                 getWinnerName(secondPlaceWinners), getWinnerName(thirdPlaceWinners));
         firstPlaceWinners.forEach(warrior -> warrior.increaseVictories(getConfig().getName()));
+    }
+
+    @Override
+    public void setWinner(@NotNull Warrior warrior) throws CommandNotSupportedException {
+        throw new CommandNotSupportedException();
     }
 
     @Override

@@ -1,8 +1,9 @@
 package me.roinujnosde.titansbattle;
 
-import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.serialization.ConfigUtils;
 import me.roinujnosde.titansbattle.serialization.Path;
+import me.roinujnosde.titansbattle.types.Kit;
+import me.roinujnosde.titansbattle.types.Prizes;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
@@ -10,10 +11,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
+import java.util.logging.Logger;
 
+@SuppressWarnings("FieldMayBeFinal")
 public abstract class BaseGameConfiguration implements ConfigurationSerializable {
 
     public enum Destination {
@@ -29,6 +30,8 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
     protected Boolean keepExp = false;
     protected Boolean useKits = false;
     protected Kit kit;
+    @Path("prizes")
+    private Map<String, Prizes> prizesMap = createPrizesMap();
 
     protected Boolean pvp = true;
     @Path("damage-type.melee")
@@ -256,5 +259,35 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
 
     public Double getBorderDamage() {
         return borderDamage;
+    }
+
+    public Prizes getPrizes(@NotNull Prize prize) {
+        Prizes prizes = prizesMap.get(prize.name());
+        if (prizes == null) {
+            Logger.getLogger("TitansBattle").warning(String.format("Prizes not set for %s!", prize.name()));
+            prizes = new Prizes();
+        }
+        return prizes;
+    }
+
+    private Map<String, Prizes> createPrizesMap() {
+        LinkedHashMap<String, Prizes> map = new LinkedHashMap<>();
+        for (Prize p : Prize.values()) {
+            map.put(p.name(), new Prizes());
+        }
+        return map;
+    }
+
+    public enum Prize implements ConfigurationSerializable {
+        FIRST, SECOND, THIRD, KILLER;
+
+        public static Prize deserialize(Map<String, Object> data) {
+            return Prize.valueOf((String) data.get("prize"));
+        }
+
+        @Override
+        public Map<String, Object> serialize() {
+            return Collections.singletonMap("prize", this.name());
+        }
     }
 }
