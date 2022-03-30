@@ -20,7 +20,6 @@ command.description.watch: "Телепортироваться в комнату
 command.description.challenge.player: "Вызвать игрока на дуэль"
 command.description.challenge.group: "Вызвать группу на битву"
 command.description.challenge.accept: "Принять вызов"
-command.description.challenge.watch: "Посмотреть испытание"
 command.description.challenge.create: "Создать конфигурационный файл испытания"
 command.description.challenge.setdestination: "Установить место назначения для испытания"
 command.description.challenge.setkit: "Установить ваш инвентарь в качестве набора для испытания"
