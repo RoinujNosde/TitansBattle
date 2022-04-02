@@ -7,15 +7,13 @@ import me.roinujnosde.titansbattle.types.Warrior;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 public class ChallengeManager {
 
     private final TitansBattle plugin;
     private final Set<Challenge> challenges = new HashSet<>();
-    private final Set<ChallengeRequest<?>> requests = new HashSet<>();
+    private final List<ChallengeRequest<?>> requests = new ArrayList<>();
 
     public ChallengeManager(TitansBattle plugin) {
         this.plugin = plugin;
@@ -25,8 +23,18 @@ public class ChallengeManager {
         return Collections.unmodifiableSet(challenges);
     }
 
-    public Set<ChallengeRequest<?>> getRequests() {
+    public List<ChallengeRequest<?>> getRequests() {
         return requests;
+    }
+
+    public @NotNull List<ChallengeRequest<?>> getRequestsByInvited(@NotNull Warrior warrior) {
+        List<ChallengeRequest<?>> result = new ArrayList<>();
+        for (ChallengeRequest<?> request : requests) {
+            if (request.isInvited(warrior)) {
+                result.add(request);
+            }
+        }
+        return result;
     }
 
     public @Nullable ChallengeRequest<?> getChallengeRequest(@NotNull Warrior challenger, boolean groupMode) {

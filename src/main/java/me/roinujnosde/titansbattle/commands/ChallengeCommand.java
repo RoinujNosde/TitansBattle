@@ -3,8 +3,8 @@ package me.roinujnosde.titansbattle.commands;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
 import co.aikar.commands.bukkit.contexts.OnlinePlayer;
-import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.BaseGameConfiguration.Destination;
+import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.challenges.*;
 import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.managers.ChallengeManager;
@@ -13,13 +13,13 @@ import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
-
-import java.util.Objects;
-import java.util.Set;
-
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 @CommandAlias("%titansbattle|tb")
 @Subcommand("%challenge|challenge")
@@ -82,7 +82,12 @@ public class ChallengeCommand extends BaseCommand {
     @CommandCompletion("@requests")
     @CommandPermission("titansbattle.challenge.accept")
     @Description("{@@command.description.challenge.accept}")
-    public void accept(@Conditions("is_invited") Warrior warrior, @Values("@requests") ChallengeRequest<?> challenger) {
+    public void accept(@Conditions("is_invited") Warrior warrior, @Optional @Values("@requests") ChallengeRequest<?> challenger) {
+        if (challenger == null) {
+            List<ChallengeRequest<?>> requests = challengeManager.getRequestsByInvited(warrior);
+            requests.get(requests.size() - 1).getChallenge().onJoin(warrior);
+            return;
+        }
         challenger.getChallenge().onJoin(warrior);
     }
 

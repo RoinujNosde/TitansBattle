@@ -40,8 +40,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.text.MessageFormat;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 /**
  * @author RoinujNosde
@@ -98,7 +98,7 @@ public final class TitansBattle extends JavaPlugin {
                 return currentGame.get();
             }
         }
-        Set<ChallengeRequest<?>> requests = getChallengeManager().getRequests();
+        List<ChallengeRequest<?>> requests = getChallengeManager().getRequests();
         for (ChallengeRequest<?> request : requests) {
             Challenge challenge = request.getChallenge();
             if (challenge.isParticipant(warrior)) {
