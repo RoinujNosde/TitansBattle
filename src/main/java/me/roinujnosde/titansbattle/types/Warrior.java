@@ -33,7 +33,6 @@ import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
-import java.util.stream.IntStream;
 
 import static me.roinujnosde.titansbattle.utils.Helper.caseInsensitiveMap;
 

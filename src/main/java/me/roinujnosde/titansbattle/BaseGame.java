@@ -22,7 +22,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.text.MessageFormat;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -492,12 +491,19 @@ public abstract class BaseGame {
 
     protected void runCommands(@NotNull Collection<Warrior> warriors, @Nullable Collection<String> commands) {
         if (commands == null) return;
-        Consumer<Player> dispatchCommands = (player) -> {
-            for (String command : commands) {
+        for (String command : commands) {
+            for (Warrior warrior : warriors) {
+                Player player = warrior.toOnlinePlayer();
+                if (player == null) {
+                    continue;
+                }
+                if (!command.contains("%player%")) { // Runs the command once when %player% is not used
+                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                    break;
+                }
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command.replace("%player%", player.getName()));
             }
-        };
-        warriors.stream().map(Warrior::toOnlinePlayer).filter(Objects::nonNull).forEach(dispatchCommands);
+        }
     }
 
     protected void teleport(@NotNull Collection<Warrior> collection, @NotNull Location destination) {
