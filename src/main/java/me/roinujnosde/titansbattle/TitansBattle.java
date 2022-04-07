@@ -30,6 +30,7 @@ import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.types.Prizes;
 import me.roinujnosde.titansbattle.types.Warrior;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -87,6 +88,7 @@ public final class TitansBattle extends JavaPlugin {
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new TBExpansion(this).register();
         }
+        new Metrics(this, 14875);
     }
 
     public @Nullable BaseGame getBaseGameFrom(@NotNull Player player) {

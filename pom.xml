@@ -51,15 +51,23 @@
                     <relocations>
                         <relocation>
                             <pattern>com.google.gson</pattern>
-                            <shadedPattern>me.roinujnosde.titansbattle.gson</shadedPattern>
+                            <shadedPattern>me.roinujnosde.titansbattle.shaded.gson</shadedPattern>
                         </relocation>
                         <relocation>
                             <pattern>co.aikar.commands</pattern>
-                            <shadedPattern>me.roinujnosde.titansbattle.acf</shadedPattern>
+                            <shadedPattern>me.roinujnosde.titansbattle.shaded.acf</shadedPattern>
                         </relocation>
                         <relocation>
                             <pattern>co.aikar.locales</pattern>
-                            <shadedPattern>me.roinujnosde.titansbattle.locales</shadedPattern>
+                            <shadedPattern>me.roinujnosde.titansbattle.shaded.locales</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>de.tr7zw.changeme.nbtapi</pattern>
+                            <shadedPattern>me.roinujnosde.titansbattle.shaded.nbtapi</shadedPattern>
+                        </relocation>
+                        <relocation>
+                            <pattern>org.bstats</pattern>
+                            <shadedPattern>me.roinujnosde.titansbattle.shaded.bstats</shadedPattern>
                         </relocation>
                     </relocations>
                 </configuration>
@@ -146,6 +154,17 @@
             <artifactId>placeholderapi</artifactId>
             <version>2.10.9</version>
             <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.tr7zw</groupId>
+            <artifactId>item-nbt-api</artifactId>
+            <version>2.9.2</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bstats</groupId>
+            <artifactId>bstats-bukkit</artifactId>
+            <version>3.0.0</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
     <name>TitansBattle</name>
