@@ -19,6 +19,7 @@ public class ListenerManager {
     public void registerGeneralListeners() {
         registerListener(new PlayerQuitListener(plugin), true);
         registerListener(new PlayerJoinListener(plugin), true);
+        registerListener(new ItemsProtectionListener(plugin), true);
     }
 
     public void registerBattleListeners() {

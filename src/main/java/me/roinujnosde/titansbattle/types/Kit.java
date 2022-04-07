@@ -1,5 +1,6 @@
 package me.roinujnosde.titansbattle.types;
 
+import de.tr7zw.changeme.nbtapi.NBTItem;
 import org.bukkit.Material;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.SerializableAs;
@@ -15,6 +16,7 @@ import java.util.TreeMap;
 @SerializableAs("kit")
 public class Kit implements ConfigurationSerializable {
 
+    public static final String NBT_TAG = "titansbattle:kit";
     private final ItemStack[] contents;
 
     public Kit(@NotNull PlayerInventory inventory) {
@@ -25,6 +27,7 @@ public class Kit implements ConfigurationSerializable {
             ItemStack itemStack = invContents[i];
             this.contents[i] = itemStack != null ? itemStack.clone() : null;
         }
+        setNBTTag();
     }
 
     public Kit(@NotNull Map<String, Object> data) {
@@ -43,6 +46,7 @@ public class Kit implements ConfigurationSerializable {
             int index = Integer.parseInt(entry.getKey());
             contents[index] = ((ItemStack) entry.getValue());
         }
+        setNBTTag();
     }
 
     @Override
@@ -93,5 +97,13 @@ public class Kit implements ConfigurationSerializable {
         player.getInventory().setChestplate(null);
         player.getInventory().setLeggings(null);
         player.getInventory().setBoots(null);
+    }
+
+    private void setNBTTag() {
+        for (ItemStack item : contents) {
+            if (item != null) {
+                new NBTItem(item).setBoolean(NBT_TAG, true);
+            }
+        }
     }
 }
