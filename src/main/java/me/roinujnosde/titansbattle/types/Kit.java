@@ -16,7 +16,7 @@ import java.util.TreeMap;
 @SerializableAs("kit")
 public class Kit implements ConfigurationSerializable {
 
-    public static final String NBT_TAG = "titansbattle:kit";
+    public static final String NBT_TAG = "TitansBattle.Kit";
     private final ItemStack[] contents;
 
     public Kit(@NotNull PlayerInventory inventory) {
@@ -101,8 +101,8 @@ public class Kit implements ConfigurationSerializable {
 
     private void setNBTTag() {
         for (ItemStack item : contents) {
-            if (item != null) {
-                new NBTItem(item).setBoolean(NBT_TAG, true);
+            if (item != null && item.getType() != Material.AIR) {
+                new NBTItem(item, true).setBoolean(NBT_TAG, true);
             }
         }
     }
