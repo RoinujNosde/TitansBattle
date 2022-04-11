@@ -112,7 +112,7 @@ public class ConfigUtils {
     }
 
     private static boolean isEditable(Field field) {
-        if (!Modifier.isStatic(field.getModifiers()) && !Modifier.isFinal(field.getModifiers())) {
+        if (Modifier.isStatic(field.getModifiers()) || Modifier.isFinal(field.getModifiers())) {
             return false;
         }
         try {
