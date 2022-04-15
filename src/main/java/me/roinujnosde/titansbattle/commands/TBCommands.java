@@ -132,8 +132,8 @@ public class TBCommands extends BaseCommand {
     @CommandCompletion("@players")
     @Description("{@@command.description.setwinner}")
     @Conditions("happening")
-    public void setWinner(CommandSender sender, Game game, @Conditions("participant") Player winner) {
-        Warrior warrior = databaseManager.getWarrior(winner);
+    public void setWinner(CommandSender sender, Game game, @Conditions("participant") OnlinePlayer winner) {
+        Warrior warrior = databaseManager.getWarrior(winner.player);
         try {
             game.setWinner(warrior);
         } catch (CommandNotSupportedException e) {

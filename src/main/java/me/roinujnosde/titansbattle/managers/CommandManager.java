@@ -85,6 +85,7 @@ public class CommandManager extends PaperCommandManager {
     }
 
     private void registerConditions() {
+        registerCondition(new PlayerParticipantCondition(getPlugin()));
         registerCondition(new ParticipantCondition(getPlugin()));
         registerCondition(new HappeningCondition(getPlugin()));
         registerCondition(new EmptyInventoryCondition(getPlugin()));
