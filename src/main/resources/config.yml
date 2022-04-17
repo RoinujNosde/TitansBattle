@@ -50,6 +50,7 @@ commands:
     deny: "deny"
     info: "info"
     setwinner: "setwinner"
+    config: "config"
 
 #Sounds used in games, to disable one leave it ""
 sounds:

@@ -12,7 +12,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -25,16 +24,6 @@ public class Helper {
     private static final TitansBattle plugin = TitansBattle.getInstance();
 
     private Helper() {
-    }
-
-    /**
-     * Gets the player inventory and converts it to a List
-     *
-     * @param player the player
-     * @return the inventory as list
-     */
-    public static List<ItemStack> getInventoryAsList(Player player) {
-        return Arrays.stream(player.getInventory().getContents()).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     @Nullable

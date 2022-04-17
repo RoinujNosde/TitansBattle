@@ -5,6 +5,7 @@ import co.aikar.commands.Locales;
 import co.aikar.commands.PaperCommandManager;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.commands.ChallengeCommand;
+import me.roinujnosde.titansbattle.commands.ConfigCommands;
 import me.roinujnosde.titansbattle.commands.TBCommands;
 import me.roinujnosde.titansbattle.commands.completions.*;
 import me.roinujnosde.titansbattle.commands.conditions.*;
@@ -61,6 +62,8 @@ public class CommandManager extends PaperCommandManager {
         registerCompletion(new GamesCompletion(getPlugin()));
         registerCompletion(new ArenasCompletion(getPlugin()));
         registerCompletion(new WinnersDatesCompletion(getPlugin()));
+        registerCompletion(new DestinationCompletion(getPlugin()));
+        registerCompletion(new PrizeCompletion(getPlugin()));
     }
 
     private void registerContexts() {
@@ -99,6 +102,7 @@ public class CommandManager extends PaperCommandManager {
     private void registerCommands() {
         registerCommand(new TBCommands());
         registerCommand(new ChallengeCommand());
+        registerCommand(new ConfigCommands());
     }
 
     private <T> void registerContext(AbstractIssuerOnlyContextResolver<T> resolver) {

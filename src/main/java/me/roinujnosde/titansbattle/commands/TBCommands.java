@@ -2,35 +2,35 @@ package me.roinujnosde.titansbattle.commands;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.CommandHelp;
-import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.*;
 import co.aikar.commands.bukkit.contexts.OnlinePlayer;
-import me.roinujnosde.titansbattle.BaseGameConfiguration.Destination;
+import me.roinujnosde.titansbattle.BaseGameConfiguration;
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.challenges.ArenaConfiguration;
 import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.exceptions.CommandNotSupportedException;
 import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
-import me.roinujnosde.titansbattle.serialization.ConfigUtils;
-import me.roinujnosde.titansbattle.types.*;
+import me.roinujnosde.titansbattle.types.GameConfiguration;
+import me.roinujnosde.titansbattle.types.Group;
+import me.roinujnosde.titansbattle.types.Warrior;
+import me.roinujnosde.titansbattle.types.Winners;
 import me.roinujnosde.titansbattle.utils.Helper;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
-
-import static me.roinujnosde.titansbattle.types.GameConfiguration.Prize;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 @CommandAlias("%titansbattle|tb")
 public class TBCommands extends BaseCommand {
@@ -46,72 +46,6 @@ public class TBCommands extends BaseCommand {
     @Dependency
     private ConfigurationDao configDao;
 
-    @Subcommand("%create|create")
-    @CommandPermission("titansbattle.create")
-    @Description("{@@command.description.create}")
-    public void create(CommandSender sender, String game) {
-        if (configDao.create(game, GameConfiguration.class)) {
-            sender.sendMessage(plugin.getLang("game-created", game));
-        } else {
-            sender.sendMessage(plugin.getLang("config-creation-error"));
-        }
-    }
-
-    @Subcommand("%edit|edit %prize|prize")
-    @CommandPermission("titansbattle.edit")
-    @CommandCompletion("@games @config_fields:class=prizes")
-    @Description("{@@command.description.edit.prize}")
-    public void editPrizes(CommandSender sender,
-                           @Values("@games") GameConfiguration game,
-                           Prize prize,
-                           @Values("@config_fields:class=prizes") String field,
-                           String value) {
-        Prizes prizes = game.getPrizes(prize);
-        if (ConfigUtils.setValue(prizes, field, value)) {
-            sender.sendMessage(ChatColor.GREEN + "[TitansBattle] Successfully changed the field's value!");
-            configDao.save(game);
-        } else {
-            sender.sendMessage(ChatColor.GREEN + "[TitansBattle] Error changing the field's value!");
-        }
-    }
-
-    @Subcommand("%setprize|setprize")
-    @CommandPermission("titansbattle.setinventory")
-    @CommandCompletion("@games")
-    @Description("{@@command.description.setprize}")
-    public void setPrizeInventory(Player sender,
-                                  @Values("@games") GameConfiguration game,
-                                  Prize prize,
-                                  PrizeReceiver receiver) {
-        Prizes prizes = game.getPrizes(prize);
-        List<ItemStack> inventoryAsList = Helper.getInventoryAsList(sender);
-        switch (receiver) {
-            case LEADERS:
-                prizes.setLeaderItems(inventoryAsList);
-                break;
-            case MEMBERS:
-                prizes.setMemberItems(inventoryAsList);
-                break;
-        }
-        saveInventory(sender, game);
-    }
-
-    @Subcommand("%edit|edit %game|game")
-    @CommandPermission("titansbattle.edit")
-    @CommandCompletion("@games @config_fields:class=game")
-    @Description("{@@command.description.edit.game}")
-    public void editGame(CommandSender sender,
-                         @Values("@games") GameConfiguration game,
-                         @Values("@config_fields:class=game") String field,
-                         String value) {
-        if (ConfigUtils.setValue(Objects.requireNonNull(game), field, value)) {
-            sender.sendMessage(ChatColor.GREEN + "[TitansBattle] Successfully changed the field's value!");
-            configDao.save(game);
-        } else {
-            sender.sendMessage(ChatColor.GREEN + "[TitansBattle] Error changing the field's value!");
-        }
-    }
-
     @Subcommand("%start|start")
     @CommandPermission("titansbattle.start")
     @CommandCompletion("@games")
@@ -125,7 +59,6 @@ public class TBCommands extends BaseCommand {
 
         gameManager.start(game);
     }
-
 
     @Subcommand("%setwinner|setwinner")
     @CommandPermission("titansbattle.setwinner")
@@ -160,51 +93,8 @@ public class TBCommands extends BaseCommand {
     @CommandPermission("titansbattle.cancel")
     @Conditions("happening")
     @Description("{@@command.description.cancel}")
-    public void cancelGame(CommandSender sender, Game game) {
+    public void cancel(CommandSender sender, Game game) {
         game.cancel(sender);
-    }
-
-    @Subcommand("%setdestination|setdestination GENERAL_EXIT")
-    @CommandPermission("titansbattle.setdestination")
-    @Description("{@@command.description.setdestination.general}")
-    public void setGeneralExit(Player player) {
-        configManager.setGeneralExit(player.getLocation());
-        configManager.save();
-        player.sendMessage(plugin.getLang("destination_set", "GENERAL_EXIT"));
-    }
-
-    @Subcommand("%setdestination|setdestination ARENA_ENTRANCE")
-    @CommandPermission("titansbattle.setdestination")
-    @CommandCompletion("@games @range:1-2")
-    @Description("{@@command.description.setdestination}")
-    public void setArenaEntrance(Player player, @Values("@games") GameConfiguration game, @Values("@range:1-2") int index) {
-        game.setArenaEntrance(index, player.getLocation());
-        configDao.save(game);
-        player.sendMessage(plugin.getLang("destination_set", "ARENA_ENTRANCE"));
-    }
-
-    @Subcommand("%setdestination|setdestination")
-    @CommandPermission("titansbattle.setdestination")
-    @CommandCompletion("@games")
-    @Description("{@@command.description.setdestination}")
-    public void setDestination(Player player, @Values("@games") GameConfiguration game, Destination destination) {
-        Location loc = player.getLocation();
-        switch (destination) {
-            case EXIT:
-                game.setExit(loc);
-                break;
-            case LOBBY:
-                game.setLobby(loc);
-                break;
-            case WATCHROOM:
-                game.setWatchroom(loc);
-                break;
-            case BORDER_CENTER:
-                game.setBorderCenter(loc);
-                break;
-        }
-        configDao.save(game);
-        player.sendMessage(plugin.getLang("destination_set", destination));
     }
 
     @Subcommand("%reload|reload")
@@ -217,24 +107,6 @@ public class TBCommands extends BaseCommand {
         plugin.getLanguageManager().reload();
         configDao.loadConfigurations();
         sender.sendMessage(plugin.getLang("configuration-reloaded"));
-    }
-
-    @Subcommand("%setkit|setkit")
-    @CommandPermission("titansbattle.setinventory")
-    @CommandCompletion("@games")
-    @Description("{@@command.description.setkit}")
-    public void setKit(Player sender, @Values("@games") GameConfiguration game) {
-        Objects.requireNonNull(game);
-        game.setKit(new Kit(sender.getInventory()));
-        saveInventory(sender, game);
-    }
-
-    private void saveInventory(@NotNull CommandSender sender, @NotNull GameConfiguration config) {
-        if (configDao.save(config)) {
-            sender.sendMessage(plugin.getLang("inventory-set"));
-        } else {
-            sender.sendMessage(plugin.getLang("error-saving-game-config"));
-        }
     }
 
     @Subcommand("%join|join")
@@ -608,15 +480,19 @@ public class TBCommands extends BaseCommand {
 
     @Subcommand("%watch|watch")
     @CommandPermission("titansbattle.watch")
-    @Conditions("happening")
+    @CommandCompletion("@arenas:in_use")
     @Description("{@@command.description.watch}")
-    public void watch(Player sender, Game game) {
-        Location watchroom = game.getConfig().getWatchroom();
+    public void watch(Player sender, Game game, @Optional ArenaConfiguration arena) {
+        BaseGameConfiguration config;
+        if (arena == null && game == null) {
+            sender.sendMessage(plugin.getLang("not-starting-or-started"));
+            return;
+        }
+        config = (arena == null) ? game.getConfig() : arena;
+
+        Location watchroom = config.getWatchroom();
         sender.teleport(watchroom);
         SoundUtils.playSound(SoundUtils.Type.WATCH, plugin.getConfig(), sender);
     }
 
-    public enum PrizeReceiver {
-        LEADERS, MEMBERS
-    }
 }

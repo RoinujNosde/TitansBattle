@@ -3,19 +3,13 @@ package me.roinujnosde.titansbattle.commands;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.annotation.*;
 import co.aikar.commands.bukkit.contexts.OnlinePlayer;
-import me.roinujnosde.titansbattle.BaseGameConfiguration.Destination;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.challenges.*;
 import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.managers.ChallengeManager;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.types.Group;
-import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.types.Warrior;
-import me.roinujnosde.titansbattle.utils.SoundUtils;
-import org.bukkit.Location;
-import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Objects;
@@ -89,78 +83,6 @@ public class ChallengeCommand extends BaseCommand {
             return;
         }
         challenger.getChallenge().onJoin(warrior);
-    }
-
-    @Subcommand("%watch|watch")
-    @CommandPermission("titansbattle.watch")
-    @CommandCompletion("@arenas:in_use")
-    @Description("{@@command.description.challenge.watch}")
-    public void watch(Player sender, ArenaConfiguration arena) {
-        Location watchroom = arena.getWatchroom();
-        if (watchroom == null) {
-            sender.sendMessage(plugin.getLang("teleport.error"));
-            return;
-        }
-        sender.teleport(watchroom);
-        SoundUtils.playSound(SoundUtils.Type.WATCH, plugin.getConfig(), sender);
-    }
-
-    @Subcommand("%create|create")
-    @CommandPermission("titansbattle.create")
-    @Description("{@@command.description.challenge.create}")
-    public void create(CommandSender sender, String arena) {
-        if (configDao.create(arena, ArenaConfiguration.class)) {
-            sender.sendMessage(plugin.getLang("arena-created", arena));
-        } else {
-            sender.sendMessage(plugin.getLang("config-creation-error"));
-        }
-    }
-
-    @Subcommand("%setdestination|setdestination ARENA_ENTRANCE")
-    @CommandPermission("titansbattle.setdestination")
-    @CommandCompletion("@arenas @range:1-2")
-    @Description("{@@command.description.challenge.setdestination}")
-    public void setArenaEntrance(Player player, @Values("@arenas") ArenaConfiguration arena, @Values("@range:1-2") int index) {
-        arena.setArenaEntrance(index, player.getLocation());
-        configDao.save(arena);
-        player.sendMessage(plugin.getLang("destination_set", "ARENA_ENTRANCE"));
-    }
-
-    @Subcommand("%setdestination|setdestination")
-    @CommandPermission("titansbattle.setdestination")
-    @CommandCompletion("@arenas")
-    @Description("{@@command.description.challenge.setdestination}")
-    public void setDestination(Player player, @Values("@arenas") ArenaConfiguration arena, Destination destination) {
-        Location loc = player.getLocation();
-        switch (destination) {
-            case EXIT:
-                arena.setExit(loc);
-                break;
-            case LOBBY:
-                arena.setLobby(loc);
-                break;
-            case WATCHROOM:
-                arena.setWatchroom(loc);
-                break;
-            case BORDER_CENTER:
-                arena.setBorderCenter(loc);
-                break;
-        }
-        configDao.save(arena);
-        player.sendMessage(plugin.getLang("destination_set", destination));
-    }
-
-    @Subcommand("%setkit|setkit")
-    @CommandPermission("titansbattle.setinventory")
-    @CommandCompletion("@arenas")
-    @Description("{@@command.description.challenge.setkit}")
-    public void setKit(Player sender, @Values("@arenas") ArenaConfiguration arena) {
-        arena.setKit(new Kit(sender.getInventory()));
-        if (configDao.save(arena)) {
-            sender.sendMessage(plugin.getLang("inventory-set"));
-        } else {
-            sender.sendMessage(plugin.getLang("error-saving-config"));
-        }
     }
 
 }

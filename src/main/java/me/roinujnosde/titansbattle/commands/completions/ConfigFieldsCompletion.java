@@ -3,6 +3,7 @@ package me.roinujnosde.titansbattle.commands.completions;
 import co.aikar.commands.BukkitCommandCompletionContext;
 import co.aikar.commands.InvalidCommandArgument;
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.challenges.ArenaConfiguration;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Prizes;
 import me.roinujnosde.titansbattle.serialization.ConfigUtils;
@@ -30,6 +31,8 @@ public class ConfigFieldsCompletion extends AbstractAsyncCompletion {
                     return ConfigUtils.getEditableFields(Prizes.class);
                 case "game":
                     return ConfigUtils.getEditableFields(GameConfiguration.class);
+                case "arena":
+                    return ConfigUtils.getEditableFields(ArenaConfiguration.class);
             }
         }
         return Collections.emptySet();
