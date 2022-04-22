@@ -29,6 +29,7 @@ error-changing-field-value: "&c» Ошибка изменения значени
 command-not-supported-by-game: "&c» Эта команда не поддерживается текущей игрой"
 you.cannot.challenge.yourself: "&c» Вы не можете бросить вызов самому себе!"
 you.cannot.challenge.your.group: "&c» Вы не можете бросить вызов своей группе!"
+border.title: "&4&lГРАНИЦА"
 border.subtitle: "&сужается"
 group.mode.not.supported: "&c» Эта арена не поддерживает этот тип испытания!"
 this.arena.isnt.ready: "&c» Эта арена еще не готова!"
