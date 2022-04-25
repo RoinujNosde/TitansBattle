@@ -51,6 +51,7 @@ public class CommandManager extends PaperCommandManager {
         registerDependency(ConfigManager.class, getPlugin().getConfigManager());
         registerDependency(DatabaseManager.class, getPlugin().getDatabaseManager());
         registerDependency(ChallengeManager.class, getPlugin().getChallengeManager());
+        registerDependency(TaskManager.class, getPlugin().getTaskManager());
     }
 
     private void registerCompletions() {

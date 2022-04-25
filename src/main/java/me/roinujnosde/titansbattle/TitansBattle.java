@@ -84,7 +84,7 @@ public final class TitansBattle extends JavaPlugin {
         new CommandManager(this);
         listenerManager.registerGeneralListeners();
         databaseManager.loadDataToMemory();
-        gameManager.startOrSchedule();
+        taskManager.setupScheduler();
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new TBExpansion(this).register();
         }

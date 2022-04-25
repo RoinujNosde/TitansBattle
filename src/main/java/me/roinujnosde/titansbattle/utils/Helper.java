@@ -296,19 +296,6 @@ public class Helper {
     }
 
     /**
-     * Gets the current time in seconds
-     *
-     * @return the current time in seconds
-     */
-    public static int getCurrentTimeInSeconds() {
-        Calendar today = Calendar.getInstance();
-        int hour = today.get(Calendar.HOUR_OF_DAY);
-        int minute = today.get(Calendar.MINUTE);
-
-        return ((hour * 60 * 60) + (minute * 60));
-    }
-
-    /**
      * Gets a String representation of a String Collection
      * Example: "RoinujNosde, GhostTheWolf & Killer07"
      *

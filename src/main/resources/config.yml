@@ -8,7 +8,7 @@ sql:
     mysql:
         hostname: "localhost"
         port: 3306
-        username: "root"
+        username: "titansbattle"
         password: ""
 
 #Language used in plugin's message
@@ -87,22 +87,34 @@ destinations:
     
 #Will the game begin automatically? Which game? When?
 #Game: the name of the game file
-#Day: 1 = Sunday
+#Frequency: HOURLY, DAILY, WEEKLY, MONTHLY
+#Day: the day of the week (1 = Monday), or the day of the month
 #Hour format: 0 to 24
 #Minute format: 0 to 59
-#If you want more schedulers, just follow the example below, copy them and change the number
+#If you want more events, just follow the example below, copy them and change the number
 scheduler:
   enabled: true
-  schedulers:
+  events:
     1:
-      game: GROUPS_FUN
-      day: 1
+      game: gladiador
+      frequency: DAILY
       hour: 18
       minute: 30
     2:
-      game: FREEFORALL_REAL
-      day: 2
-      hour: 10
+      game: gladiador
+      frequency: HOURLY
+      minute: 30
+    3:
+      game: gladiador
+      frequency: WEEKLY
+      day: 1
+      hour: 18
+      minute: 30
+    4:
+      game: gladiador
+      frequency: MONTHLY
+      day: 15
+      hour: 18
       minute: 30
           
 #Data used by the plugin, don't edit it.

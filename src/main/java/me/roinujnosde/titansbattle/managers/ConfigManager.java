@@ -23,9 +23,10 @@
  */
 package me.roinujnosde.titansbattle.managers;
 
-import me.roinujnosde.titansbattle.utils.Helper;
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.types.Scheduler;
+import me.roinujnosde.titansbattle.types.Event;
+import me.roinujnosde.titansbattle.types.Event.Frequency;
+import me.roinujnosde.titansbattle.utils.Helper;
 import org.bukkit.Location;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
@@ -35,6 +36,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Level;
+
+import static java.lang.String.format;
 
 /**
  *
@@ -45,6 +49,7 @@ public final class ConfigManager {
     private final TitansBattle plugin = TitansBattle.getInstance();
     private FileConfiguration config;
 
+    private final List<Event> events = new ArrayList<>();
     private List<UUID> respawn = new ArrayList<>();
     private List<UUID> clearInventory = new ArrayList<>();
 
@@ -59,21 +64,22 @@ public final class ConfigManager {
         config = plugin.getConfig();
 
         if (isScheduler()) {
-            List<Scheduler> schedulers = Scheduler.getSchedulers();
-            schedulers.clear();
-            ConfigurationSection schedulersSection = config.getConfigurationSection("scheduler.schedulers");
-            if (schedulersSection == null) {
-                plugin.debug("Couldn't find the schedulers section in the config file!", false);
-            } else {
+            events.clear();
+            ConfigurationSection schedulersSection = config.getConfigurationSection("scheduler.events");
+            if (schedulersSection != null) {
                 Set<String> ids = schedulersSection.getKeys(false);
-                plugin.debug(String.format("Scheduler IDs: %s", ids.size()), true);
+                String pathPrefix = "scheduler.events.";
                 for (String id : ids) {
-                    String game = config.getString("scheduler.schedulers." + id + ".game");
-                    int day = config.getInt("scheduler.schedulers." + id + ".day");
-                    int hour = config.getInt("scheduler.schedulers." + id + ".hour");
-                    int minute = config.getInt("scheduler.schedulers." + id + ".minute");
-                    Scheduler s = new Scheduler(id, game, day, hour, minute);
-                    schedulers.add(s);
+                    try {
+                        String game = config.getString(pathPrefix + id + ".game");
+                        Frequency frequency = Frequency.valueOf(config.getString(pathPrefix + id + ".frequency"));
+                        int day = config.getInt(pathPrefix + id + ".day");
+                        int hour = config.getInt(pathPrefix + id + ".hour");
+                        int minute = config.getInt(pathPrefix + id + ".minute");
+                        events.add(new Event(game, frequency, day, hour, minute));
+                    } catch (IllegalArgumentException ex) {
+                        plugin.getLogger().log(Level.SEVERE, format("Invalid event configuration for ID %s", id), ex);
+                    }
                 }
             }
         }
@@ -144,6 +150,15 @@ public final class ConfigManager {
      */
     public boolean isScheduler() {
         return config.getBoolean("scheduler.enabled", false);
+    }
+
+    /**
+     * Gets the schedulers
+     *
+     * @return the schedulers
+     */
+    public List<Event> getEvents() {
+        return events;
     }
 
     public List<UUID> getClearInventory() {

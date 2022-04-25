@@ -6,9 +6,7 @@ import me.roinujnosde.titansbattle.games.EliminationTournamentGame;
 import me.roinujnosde.titansbattle.games.FreeForAllGame;
 import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
-import me.roinujnosde.titansbattle.types.Scheduler;
 import me.roinujnosde.titansbattle.types.Warrior;
-import me.roinujnosde.titansbattle.utils.Helper;
 import me.roinujnosde.titansbattle.utils.MessageUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -39,50 +37,6 @@ public class GameManager {
             plugin.getListenerManager().registerBattleListeners();
         } else {
             plugin.getListenerManager().unregisterBattleListeners();
-        }
-    }
-
-    /**
-     * Initiates the schedule task or starts the game
-     */
-    public void startOrSchedule() {
-        if (!plugin.getConfigManager().isScheduler()) {
-            plugin.debug("Scheduler disabled", true);
-            return;
-        }
-        plugin.debug("Scheduler enabled", true);
-        TaskManager tm = plugin.getTaskManager();
-        if (currentGame != null) {
-            plugin.debug("Already happening or starting", true);
-            tm.startSchedulerTask(300);
-            return;
-        }
-        int currentTimeInSeconds = Helper.getCurrentTimeInSeconds();
-        int oneDay = 86400;
-
-        Scheduler nextScheduler = Scheduler.getNextSchedulerOfDay();
-        if (nextScheduler == null) {
-            plugin.debug("No next scheduler today", true);
-            tm.startSchedulerTask(oneDay - currentTimeInSeconds);
-            return;
-        }
-        int nextHour = nextScheduler.getHour();
-        int nextMinute = nextScheduler.getMinute();
-        int nextTimeInSeconds = (nextHour * 60 * 60) + (nextMinute * 60);
-        plugin.debug(String.format("Scheduler Time: %s:%s", nextHour, nextMinute), true);
-
-        if (currentTimeInSeconds == nextTimeInSeconds) {
-            plugin.debug("It's time!", true);
-            Optional<GameConfiguration> config = plugin.getConfigurationDao()
-                    .getConfiguration(nextScheduler.getGameName(), GameConfiguration.class);
-            if (!config.isPresent()) {
-                plugin.debug(String.format("Game %s not found!", nextScheduler.getGameName()), false);
-                return;
-            }
-            start(config.get());
-        } else {
-            plugin.debug("It's not time yet!", true);
-            tm.startSchedulerTask(nextTimeInSeconds - currentTimeInSeconds);
         }
     }
 

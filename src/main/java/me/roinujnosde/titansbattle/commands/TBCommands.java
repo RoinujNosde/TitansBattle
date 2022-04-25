@@ -13,6 +13,7 @@ import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
+import me.roinujnosde.titansbattle.managers.TaskManager;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Warrior;
@@ -39,6 +40,8 @@ public class TBCommands extends BaseCommand {
     private TitansBattle plugin;
     @Dependency
     private GameManager gameManager;
+    @Dependency
+    private TaskManager taskManager;
     @Dependency
     private ConfigManager configManager;
     @Dependency
@@ -106,6 +109,7 @@ public class TBCommands extends BaseCommand {
         configManager.load();
         plugin.getLanguageManager().reload();
         configDao.loadConfigurations();
+        taskManager.setupScheduler();
         sender.sendMessage(plugin.getLang("configuration-reloaded"));
     }
 

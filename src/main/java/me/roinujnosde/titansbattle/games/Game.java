@@ -110,7 +110,6 @@ public abstract class Game extends BaseGame {
     @Override
     protected void killTasks() {
         super.killTasks();
-        plugin.getTaskManager().killAllTasks();
     }
 
     protected abstract @NotNull String getGameInfoMessage();
