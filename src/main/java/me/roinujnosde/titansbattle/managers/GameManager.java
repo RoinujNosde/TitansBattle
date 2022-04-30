@@ -68,6 +68,10 @@ public class GameManager {
     }
 
     public void start(@NotNull GameConfiguration config) {
+        if (currentGame != null) {
+            plugin.getLogger().warning("A game is already running!");
+            return;
+        }
         Game game;
         if (config.isEliminationTournament()) {
             game = new EliminationTournamentGame(plugin, config);

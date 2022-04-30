@@ -78,7 +78,7 @@ public final class ConfigManager {
                         int minute = config.getInt(pathPrefix + id + ".minute");
                         events.add(new Event(game, frequency, day, hour, minute));
                     } catch (IllegalArgumentException ex) {
-                        plugin.getLogger().log(Level.SEVERE, format("Invalid event configuration for ID %s", id), ex);
+                        plugin.getLogger().log(Level.SEVERE, format("Invalid event configuration for ID %s: %s", id, ex.getMessage()));
                     }
                 }
             }
