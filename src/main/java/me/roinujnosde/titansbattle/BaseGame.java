@@ -618,6 +618,7 @@ public abstract class BaseGame {
             worldBorder.setCenter(getConfig().getBorderCenter());
             worldBorder.setSize(currentSize);
             worldBorder.setDamageAmount(getConfig().getBorderDamage());
+            worldBorder.setDamageBuffer(0);
         }
 
         @Override
