@@ -223,6 +223,7 @@ public class EliminationTournamentGame extends Game {
             kickExcessiveParticipants();
         }
         startNextDuel();
+        broadcast(getGameInfoMessage());
     }
 
     private void kickExcessiveParticipants() {
