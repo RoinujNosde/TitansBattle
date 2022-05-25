@@ -485,11 +485,7 @@ public class DatabaseManager {
             plugin.debug("An error ocurred while trying to load the winners data! " + ex.getMessage(), false);
         }
 
-        sortWinners();
-    }
-
-    private void sortWinners() {
-        winners.sort(Comparator.comparing(Winners::getDate));
+        winners.sort(Comparator.naturalOrder());
     }
 
     public void loadDataToMemory() {
@@ -538,7 +534,7 @@ public class DatabaseManager {
 
         Winners w = new Winners(date);
         winners.add(w);
-        sortWinners();
+        winners.sort(Comparator.naturalOrder());
         return w;
     }
 

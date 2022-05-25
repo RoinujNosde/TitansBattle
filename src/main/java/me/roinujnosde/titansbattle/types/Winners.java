@@ -37,7 +37,7 @@ import static me.roinujnosde.titansbattle.utils.Helper.caseInsensitiveMap;
  *
  * @author RoinujNosde
  */
-public class Winners {
+public class Winners implements Comparable<Winners> {
 
     private final Date date;
     private final Map<String, UUID> killer;
@@ -84,5 +84,10 @@ public class Winners {
 
     public void setWinners(String game, List<UUID> winners) {
         playerWinners.put(game, winners);
+    }
+
+    @Override
+    public int compareTo(@NotNull Winners o) {
+        return this.date.compareTo(o.date);
     }
 }

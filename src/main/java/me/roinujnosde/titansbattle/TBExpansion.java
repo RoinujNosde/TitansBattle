@@ -8,6 +8,7 @@ import me.roinujnosde.titansbattle.types.Winners;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,8 +18,15 @@ import java.util.regex.Pattern;
 public class TBExpansion extends PlaceholderExpansion {
 
     private final TitansBattle plugin;
-    private static final Pattern PREFIX_PATTERN = Pattern.compile("(?<game>^[A-Za-z]+)_(?<type>winner|killer)_prefix");
+    private static final Pattern ARENA_IN_USE_PATTERN;
+    private static final Pattern LAST_WINNER_GROUP_PATTERN;
+    private static final Pattern PREFIX_PATTERN;
 
+    static {
+        ARENA_IN_USE_PATTERN = Pattern.compile("arena_in_use_(?<arena>^[A-Za-z]+)");
+        LAST_WINNER_GROUP_PATTERN = Pattern.compile("last_winner_group_(?<game>^[A-Za-z]+)");
+        PREFIX_PATTERN = Pattern.compile("(?<game>^[A-Za-z]+)_(?<type>winner|killer)_prefix");
+    }
     public TBExpansion(TitansBattle plugin) {
         this.plugin = plugin;
     }
@@ -50,18 +58,23 @@ public class TBExpansion extends PlaceholderExpansion {
 
     @Override
     public String onRequest(OfflinePlayer player, @NotNull String params) {
-        if (params.startsWith("arena_in_use_")) {
-            String arenaName = params.replace("arena_in_use_", "");
+        Matcher arenaInUse = ARENA_IN_USE_PATTERN.matcher(params);
+        if (arenaInUse.find()) {
+            String arenaName = arenaInUse.group("arena");
             return toString(plugin.getChallengeManager().isArenaInUse(arenaName));
+        }
+        Matcher lastWinnerGroup = LAST_WINNER_GROUP_PATTERN.matcher(params);
+        if (lastWinnerGroup.find()) {
+            return getLastWinnerGroup(lastWinnerGroup.group("game"));
         }
 
         if (player == null) {
             return "";
         }
-        Matcher prefixMatcher = PREFIX_PATTERN.matcher(params);
-        if (prefixMatcher.find()) {
-            String game = prefixMatcher.group("game");
-            String type = prefixMatcher.group("type").toLowerCase();
+        Matcher prefix = PREFIX_PATTERN.matcher(params);
+        if (prefix.find()) {
+            String game = prefix.group("game");
+            String type = prefix.group("type").toLowerCase();
             switch (type) {
                 case "killer":
                     return getKillerPrefix(player, game);
@@ -84,7 +97,7 @@ public class TBExpansion extends PlaceholderExpansion {
     }
 
     @NotNull
-    public String getWinnerPrefix(@NotNull OfflinePlayer player, @NotNull String game) {
+    private String getWinnerPrefix(@NotNull OfflinePlayer player, @NotNull String game) {
         Optional<GameConfiguration> config = plugin.getConfigurationDao().getConfiguration(game, GameConfiguration.class);
         if (!config.isPresent()) {
             plugin.debug(String.format("game %s not found", game));
@@ -102,7 +115,7 @@ public class TBExpansion extends PlaceholderExpansion {
     }
 
     @NotNull
-    public String getKillerPrefix(@NotNull OfflinePlayer player, @NotNull String game) {
+    private String getKillerPrefix(@NotNull OfflinePlayer player, @NotNull String game) {
         Optional<GameConfiguration> config = plugin.getConfigurationDao().getConfiguration(game, GameConfiguration.class);
         if (!config.isPresent()) {
             return "";
@@ -114,6 +127,15 @@ public class TBExpansion extends PlaceholderExpansion {
         }
         String prefix = config.get().getKillerPrefix();
         return prefix != null ? prefix : "";
+    }
+
+    private @NotNull String getLastWinnerGroup(String game) {
+        Optional<Winners> winner = plugin.getDatabaseManager().getWinners().stream().sorted(Comparator.reverseOrder())
+                .filter(w -> w.getWinnerGroup(game) != null).findFirst();
+        if (!winner.isPresent()) {
+            return "";
+        }
+        return winner.get().getWinnerGroup(game);
     }
 
     private String toString(boolean bool) {
