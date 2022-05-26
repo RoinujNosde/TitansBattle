@@ -23,8 +23,8 @@ public class TBExpansion extends PlaceholderExpansion {
     private static final Pattern PREFIX_PATTERN;
 
     static {
-        ARENA_IN_USE_PATTERN = Pattern.compile("arena_in_use_(?<arena>^[A-Za-z]+)");
-        LAST_WINNER_GROUP_PATTERN = Pattern.compile("last_winner_group_(?<game>^[A-Za-z]+)");
+        ARENA_IN_USE_PATTERN = Pattern.compile("arena_in_use_(?<arena>[A-Za-z]+)");
+        LAST_WINNER_GROUP_PATTERN = Pattern.compile("last_winner_group_(?<game>[A-Za-z]+)");
         PREFIX_PATTERN = Pattern.compile("(?<game>^[A-Za-z]+)_(?<type>winner|killer)_prefix");
     }
     public TBExpansion(TitansBattle plugin) {
