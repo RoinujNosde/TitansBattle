@@ -155,7 +155,7 @@ public class TBExpansion extends PlaceholderExpansion {
         Optional<Winners> winners = getLastWinnersMatching(w -> w.getPlayerWinners(game) != null);
 
         return winners.map(value -> value.getPlayerWinners(game).stream().map(Bukkit::getOfflinePlayer)
-                .map(OfflinePlayer::getName).collect(Collectors.joining())).orElse("");
+                .map(OfflinePlayer::getName).collect(Collectors.joining(", "))).orElse("");
     }
 
     private @NotNull String getLastKiller(String game) {
