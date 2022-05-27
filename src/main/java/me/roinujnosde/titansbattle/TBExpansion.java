@@ -3,8 +3,10 @@ package me.roinujnosde.titansbattle;
 import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
+import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.types.Winners;
+import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
@@ -12,21 +14,28 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import static java.lang.String.valueOf;
 
 public class TBExpansion extends PlaceholderExpansion {
 
     private final TitansBattle plugin;
     private static final Pattern ARENA_IN_USE_PATTERN;
     private static final Pattern LAST_WINNER_GROUP_PATTERN;
+    private static final Pattern LAST_WINNER_KILLER_PATTERN;
     private static final Pattern PREFIX_PATTERN;
 
     static {
         ARENA_IN_USE_PATTERN = Pattern.compile("arena_in_use_(?<arena>[A-Za-z]+)");
         LAST_WINNER_GROUP_PATTERN = Pattern.compile("last_winner_group_(?<game>[A-Za-z]+)");
+        LAST_WINNER_KILLER_PATTERN = Pattern.compile("last_(?<type>winner|killer)_(?<game>[A-Za-z]+)");
         PREFIX_PATTERN = Pattern.compile("(?<game>^[A-Za-z]+)_(?<type>winner|killer)_prefix");
     }
+
     public TBExpansion(TitansBattle plugin) {
         this.plugin = plugin;
     }
@@ -58,6 +67,7 @@ public class TBExpansion extends PlaceholderExpansion {
 
     @Override
     public String onRequest(OfflinePlayer player, @NotNull String params) {
+        //last_killer/winner_<game>
         Matcher arenaInUse = ARENA_IN_USE_PATTERN.matcher(params);
         if (arenaInUse.find()) {
             String arenaName = arenaInUse.group("arena");
@@ -67,6 +77,17 @@ public class TBExpansion extends PlaceholderExpansion {
         if (lastWinnerGroup.find()) {
             return getLastWinnerGroup(lastWinnerGroup.group("game"));
         }
+        Matcher lastWinnerKiller = LAST_WINNER_KILLER_PATTERN.matcher(params);
+        if (lastWinnerKiller.find()) {
+            String game = lastWinnerKiller.group("game");
+            String type = lastWinnerKiller.group("type");
+            switch (type) {
+                case "killer":
+                    return getLastKiller(game);
+                case "winner":
+                    return getLastWinner(game);
+            }
+        }
 
         if (player == null) {
             return "";
@@ -74,7 +95,7 @@ public class TBExpansion extends PlaceholderExpansion {
         Matcher prefix = PREFIX_PATTERN.matcher(params);
         if (prefix.find()) {
             String game = prefix.group("game");
-            String type = prefix.group("type").toLowerCase();
+            String type = prefix.group("type");
             switch (type) {
                 case "killer":
                     return getKillerPrefix(player, game);
@@ -85,13 +106,14 @@ public class TBExpansion extends PlaceholderExpansion {
         Warrior warrior = plugin.getDatabaseManager().getWarrior(player);
         switch (params) {
             case "group_total_victories":
-                return warrior.getGroup() != null ? String.valueOf(warrior.getGroup().getData().getTotalVictories()) : "0";
+                Group group = warrior.getGroup();
+                return group != null ? valueOf(group.getData().getTotalVictories()) : "0";
             case "total_victories":
-                return String.valueOf(warrior.getTotalVictories());
+                return valueOf(warrior.getTotalVictories());
             case "total_kills":
-                return String.valueOf(warrior.getTotalKills());
+                return valueOf(warrior.getTotalKills());
             case "total_deaths":
-                return String.valueOf(warrior.getTotalDeaths());
+                return valueOf(warrior.getTotalDeaths());
         }
         return null;
     }
@@ -129,13 +151,33 @@ public class TBExpansion extends PlaceholderExpansion {
         return prefix != null ? prefix : "";
     }
 
+    private @NotNull String getLastWinner(String game) {
+        Optional<Winners> winners = getLastWinnersMatching(w -> w.getPlayerWinners(game) != null);
+
+        return winners.map(value -> value.getPlayerWinners(game).stream().map(Bukkit::getOfflinePlayer)
+                .map(OfflinePlayer::getName).collect(Collectors.joining())).orElse("");
+    }
+
+    private @NotNull String getLastKiller(String game) {
+        Optional<Winners> winners = getLastWinnersMatching(w -> w.getKiller(game) != null);
+        if (!winners.isPresent()) {
+            return "";
+        }
+        UUID killer = winners.get().getKiller(game);
+        return Bukkit.getOfflinePlayer(killer).getName();
+    }
+
     private @NotNull String getLastWinnerGroup(String game) {
-        Optional<Winners> winner = plugin.getDatabaseManager().getWinners().stream().sorted(Comparator.reverseOrder())
-                .filter(w -> w.getWinnerGroup(game) != null).findFirst();
+        Optional<Winners> winner = getLastWinnersMatching(w -> w.getWinnerGroup(game) != null);
         if (!winner.isPresent()) {
             return "";
         }
         return winner.get().getWinnerGroup(game);
+    }
+
+    private Optional<Winners> getLastWinnersMatching(Predicate<Winners> filter) {
+        return plugin.getDatabaseManager().getWinners().stream().sorted(Comparator.reverseOrder())
+                .filter(filter).findFirst();
     }
 
     private String toString(boolean bool) {
