@@ -116,6 +116,7 @@ public final class TitansBattle extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        challengeManager.getChallenges().forEach(c -> c.cancel(Bukkit.getConsoleSender()));
         gameManager.getCurrentGame().ifPresent(g -> g.cancel(Bukkit.getConsoleSender()));
         databaseManager.close();
     }
