@@ -10,10 +10,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -24,6 +21,8 @@ import static java.lang.String.valueOf;
 public class TBExpansion extends PlaceholderExpansion {
 
     private final TitansBattle plugin;
+
+    private static final List<String> PLACEHOLDERS;
     private static final Pattern ARENA_IN_USE_PATTERN;
     private static final Pattern LAST_WINNER_GROUP_PATTERN;
     private static final Pattern LAST_WINNER_KILLER_PATTERN;
@@ -34,6 +33,9 @@ public class TBExpansion extends PlaceholderExpansion {
         LAST_WINNER_GROUP_PATTERN = Pattern.compile("last_winner_group_(?<game>[A-Za-z]+)");
         LAST_WINNER_KILLER_PATTERN = Pattern.compile("last_(?<type>winner|killer)_(?<game>[A-Za-z]+)");
         PREFIX_PATTERN = Pattern.compile("(?<game>^[A-Za-z]+)_(?<type>winner|killer)_prefix");
+        PLACEHOLDERS = Arrays.asList("%titansbattle_arena_in_use_<arena>%", "%titansbattle_last_winner_group_<game>%",
+                "%titansbattle_<game>_<killer ou winner>_prefix%", "%titansbattle_group_total_victories%",
+                "%titansbattle_total_kills%", "%titansbattle_total_deaths%");
     }
 
     public TBExpansion(TitansBattle plugin) {
@@ -66,8 +68,12 @@ public class TBExpansion extends PlaceholderExpansion {
     }
 
     @Override
+    public @NotNull List<String> getPlaceholders() {
+        return PLACEHOLDERS;
+    }
+
+    @Override
     public String onRequest(OfflinePlayer player, @NotNull String params) {
-        //last_killer/winner_<game>
         Matcher arenaInUse = ARENA_IN_USE_PATTERN.matcher(params);
         if (arenaInUse.find()) {
             String arenaName = arenaInUse.group("arena");
