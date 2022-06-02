@@ -24,12 +24,12 @@
 package me.roinujnosde.titansbattle.events;
 
 import me.roinujnosde.titansbattle.BaseGame;
+import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.types.Warrior;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -46,12 +46,6 @@ public class PlayerWinEvent extends Event {
     public PlayerWinEvent(@NotNull BaseGame game, @NotNull List<Warrior> players) {
         this.game = game;
         this.players = players;
-    }
-
-    public PlayerWinEvent(@NotNull BaseGame game, @NotNull Warrior warrior) {
-        this.game = game;
-        players = new ArrayList<>();
-        players.add(warrior);
     }
 
     public @NotNull BaseGame getGame() {
@@ -71,6 +65,7 @@ public class PlayerWinEvent extends Event {
      * @return an Unmodifiable List of the Winners
      */
     public List<Warrior> getPlayers() {
+        TitansBattle.getInstance().debug(players.toString());
         return Collections.unmodifiableList(players);
     }
 
@@ -79,6 +74,7 @@ public class PlayerWinEvent extends Event {
         return HANDLERS;
     }
 
+    @SuppressWarnings("unused")
     public static HandlerList getHandlerList() {
         return HANDLERS;
     }
