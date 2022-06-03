@@ -108,8 +108,9 @@
             <url>https://hub.spigotmc.org/nexus/content/repositories/snapshots/</url>
         </repository>
         <repository>
-            <id>codemc-repo</id>
-            <url>https://repo.codemc.io/repository/maven-public/</url>
+            <id>roinujnosde-repo</id>
+            <name>RoinujNosde's Repository</name>
+            <url>https://repo.roinujnosde.me/releases</url>
         </repository>
         <repository>
             <id>aikar</id>
@@ -118,6 +119,10 @@
         <repository>
             <id>placeholderapi-repo</id>
             <url>https://repo.extendedclip.com/content/repositories/placeholderapi/</url>
+        </repository>
+        <repository>
+            <id>codemc-repo</id>
+            <url>https://repo.codemc.io/repository/maven-public/</url>
         </repository>
     </repositories>
     <dependencies>
