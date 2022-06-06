@@ -2,8 +2,8 @@ package me.roinujnosde.titansbattle.managers;
 
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.events.NewKillerEvent;
-import me.roinujnosde.titansbattle.games.EliminationTournamentGame;
-import me.roinujnosde.titansbattle.games.FreeForAllGame;
+import me.roinujnosde.titansbattle.exceptions.GameTypeNotFoundException;
+import me.roinujnosde.titansbattle.exceptions.InvalidGameException;
 import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Warrior;
@@ -72,13 +72,34 @@ public class GameManager {
             plugin.getLogger().warning("A game is already running!");
             return;
         }
-        Game game;
-        if (config.isEliminationTournament()) {
-            game = new EliminationTournamentGame(plugin, config);
-        } else {
-            game = new FreeForAllGame(plugin, config);
-        }
+
+        Game game = instantiateGame(config.getType(), config);
         game.start();
+    }
+
+    private Game instantiateGame(String className, GameConfiguration config)
+            throws InvalidGameException, GameTypeNotFoundException {
+        try {
+            Class<? extends Game> gameClass = getGameClass(className).asSubclass(Game.class);
+            return gameClass.getConstructor(TitansBattle.class, GameConfiguration.class).newInstance(plugin, config);
+        } catch (ClassCastException ex) {
+            throw new InvalidGameException("class does not extend Game");
+        } catch (NoSuchMethodException ex) {
+            throw new InvalidGameException("required constructor (TitansBattle, GameConfiguration) not found");
+        } catch (ReflectiveOperationException ex) {
+            throw new RuntimeException(ex);
+        }
+    }
+
+    private Class<?> getGameClass(String className) throws GameTypeNotFoundException {
+        try {
+            return Class.forName("me.roinujnosde.titansbattle.games." + className);
+        } catch (ClassNotFoundException ignored) {}
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException ex) {
+            throw new GameTypeNotFoundException(className);
+        }
     }
 
 }

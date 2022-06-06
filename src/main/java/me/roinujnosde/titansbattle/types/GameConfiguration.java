@@ -3,21 +3,18 @@ package me.roinujnosde.titansbattle.types;
 import me.roinujnosde.titansbattle.BaseGameConfiguration;
 import me.roinujnosde.titansbattle.serialization.ConfigUtils;
 import me.roinujnosde.titansbattle.serialization.Path;
-import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.SerializableAs;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 @SuppressWarnings({"FieldMayBeFinal", "FieldCanBeLocal", "unused"})
 @SerializableAs("game")
 public class GameConfiguration extends BaseGameConfiguration {
 
-    private Boolean eliminationTournament = false;
+    private String type = "FreeForAllGame";
     private Boolean powerOfTwo = false;
     private Boolean killer = true;
 
@@ -61,6 +58,15 @@ public class GameConfiguration extends BaseGameConfiguration {
         return ConfigUtils.serialize(this);
     }
 
+    /**
+     * The name of the class responsible for managing this game
+     *
+     * @return the class name
+     */
+    public String getType() {
+        return type;
+    }
+
     public void setName(@NotNull String name) {
         this.name = name;
     }
@@ -95,10 +101,6 @@ public class GameConfiguration extends BaseGameConfiguration {
 
     public Integer getAnnouncementGameInfoInterval() {
         return announcementGameInfoInterval;
-    }
-
-    public Boolean isEliminationTournament() {
-        return eliminationTournament;
     }
 
     public Boolean isPowerOfTwo() {
