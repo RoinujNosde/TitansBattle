@@ -52,10 +52,6 @@ public class PlayerWinEvent extends Event {
         return game;
     }
 
-    public @NotNull Game getGame() {
-        return game;
-    }
-
     /**
      * Returns the winner of the event (or the first of the list, if there are more than one winner)
      * @return the winner of the event
