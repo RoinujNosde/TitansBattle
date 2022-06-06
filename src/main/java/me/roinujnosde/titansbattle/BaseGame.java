@@ -27,6 +27,7 @@ import java.util.stream.Stream;
 
 import static me.roinujnosde.titansbattle.BaseGameConfiguration.Prize;
 import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.*;
+import static org.bukkit.ChatColor.*;
 
 public abstract class BaseGame {
 
@@ -85,7 +86,7 @@ public abstract class BaseGame {
         if (getConfig().isWorldBorder()) {
             getConfig().getBorderCenter().getWorld().getWorldBorder().reset();
         }
-        Bukkit.getScheduler().runTaskLater(plugin, () -> plugin.getDatabaseManager().saveAll(), 1);
+        Bukkit.getScheduler().runTask(plugin, () -> plugin.getDatabaseManager().saveAll());
         if (!cancelled) {
             processWinners();
         }
@@ -110,7 +111,7 @@ public abstract class BaseGame {
         }
         if (!teleport(warrior, getConfig().getLobby())) {
             plugin.debug(String.format("Player %s is dead: %s", player, player.isDead()), false);
-            player.sendMessage(plugin.getLang("teleport.error", this));
+            player.sendMessage(getLang("teleport.error"));
             return;
         }
         SoundUtils.playSound(JOIN_GAME, plugin.getConfig(), player);
@@ -132,7 +133,7 @@ public abstract class BaseGame {
             String gameName = getConfig().getName();
             casualties.add(victim);
             if (getConfig().isGroupMode()) {
-                victim.sendMessage(plugin.getLang("watch_to_the_end", this));
+                victim.sendMessage(getLang("watch_to_the_end"));
             }
             if (killer != null) {
                 killer.increaseKills(gameName);
@@ -185,7 +186,7 @@ public abstract class BaseGame {
         casualties.add(warrior);
         casualtiesWatching.add(warrior); //adding to this Collection, so they are not teleport on respawn
         Player player = Objects.requireNonNull(warrior.toOnlinePlayer());
-        player.sendMessage(plugin.getLang("you-have-left", this));
+        player.sendMessage(getLang("you-have-left"));
         SoundUtils.playSound(LEAVE_GAME, plugin.getConfig(), player);
         processPlayerExit(warrior);
     }
@@ -263,7 +264,7 @@ public abstract class BaseGame {
         return otherGame.getConfig().getName().equals(getConfig().getName());
     }
 
-    protected @Nullable String getLang(@NotNull String key) {
+    protected @NotNull String getLang(@NotNull String key) {
         return plugin.getLang(key, this);
     }
 
@@ -301,8 +302,7 @@ public abstract class BaseGame {
         if (warriors == null) {
             return;
         }
-        List<Player> players = warriors.stream().filter(Objects::nonNull).map(Warrior::toOnlinePlayer)
-                .filter(Objects::nonNull).collect(Collectors.toList());
+        List<Player> players = getPlayerParticipantsStream().collect(Collectors.toList());
         if (group != null) {
             for (Player p : players) {
                 if (group.isLeaderOrOfficer(p.getUniqueId())) {
@@ -346,37 +346,37 @@ public abstract class BaseGame {
             return false;
         }
         if (!isLobby()) {
-            reason = plugin.getLang("game_is_happening", this);
+            reason = getLang("game_is_happening");
             plugin.debug("happening");
         }
         if (isParticipant(warrior)) {
-            reason = plugin.getLang("already-joined", this);
+            reason = getLang("already-joined");
             plugin.debug("already in");
         }
         if (participants.size() >= getConfig().getMaximumPlayers() && getConfig().getMaximumPlayers() > 0) {
-            reason = plugin.getLang("maximum-players", this);
+            reason = getLang("maximum-players");
             plugin.debug("max players");
         }
         if (getConfig().isGroupMode()) {
             if (warrior.getGroup() == null) {
-                reason = plugin.getLang("not_in_a_group", this);
+                reason = getLang("not_in_a_group");
                 plugin.debug("not in group");
             }
             if (!getGroupParticipants().containsKey(warrior.getGroup())
                     && getGroupParticipants().size() >= getConfig().getMaximumGroups()
                     && getConfig().getMaximumGroups() > 0) {
-                reason = plugin.getLang("maximum-groups", this);
+                reason = getLang("maximum-groups");
                 plugin.debug("max groups");
             }
             Integer amountOfPlayers = getGroupParticipants().getOrDefault(warrior.getGroup(), 0);
             if (amountOfPlayers >= getConfig().getMaximumPlayersPerGroup() &&
                     getConfig().getMaximumPlayersPerGroup() > 0) {
-                reason = plugin.getLang("maximum-players-per-group", this);
+                reason = getLang("maximum-players-per-group");
                 plugin.debug("max per group");
             }
         }
         if (getConfig().isUseKits() && Kit.inventoryHasItems(player)) {
-            reason = plugin.getLang("clear-your-inventory", this);
+            reason = getLang("clear-your-inventory");
             plugin.debug("clear inv");
         }
 
@@ -458,7 +458,7 @@ public abstract class BaseGame {
                     return;
                 }
                 p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(
-                        MessageFormat.format(plugin.getLang("action-bar-remaining-opponents", this),
+                        MessageFormat.format(getLang("action-bar-remaining-opponents"),
                                 remaining)));
             });
         } catch (NoSuchMethodError ignored) {
@@ -506,8 +506,8 @@ public abstract class BaseGame {
         }
     }
 
-    protected void teleport(@NotNull Collection<Warrior> collection, @NotNull Location destination) {
-        collection.forEach(p -> teleport(p, destination));
+    protected void teleport(@NotNull Collection<Warrior> warriors, @NotNull Location destination) {
+        warriors.forEach(warrior -> teleport(warrior, destination));
     }
 
     protected void teleportAll(Location destination) {
@@ -550,7 +550,7 @@ public abstract class BaseGame {
             broadcastKey("died_by_himself", victim.getName());
         } else {
             ItemStack itemInHand = Objects.requireNonNull(killer.toOnlinePlayer()).getItemInHand();
-            String weaponName = plugin.getLang("fist", this);
+            String weaponName = getLang("fist");
             if (itemInHand != null && itemInHand.getType() != Material.AIR) {
                 ItemMeta itemMeta = itemInHand.getItemMeta();
                 if (itemMeta != null && itemMeta.hasDisplayName()) {
@@ -673,7 +673,7 @@ public abstract class BaseGame {
             if (timer > 0) {
                 title = getColor() + "" + timer;
             } else {
-                title = ChatColor.RED + plugin.getLang("title.fight", BaseGame.this);
+                title = RED + getLang("title.fight");
                 this.cancel();
                 Bukkit.getScheduler().runTaskLater(plugin, () -> players.forEach(Player::resetTitle), 20L);
             }
@@ -682,13 +682,11 @@ public abstract class BaseGame {
         }
 
         private ChatColor getColor() {
-            ChatColor color;
-            if (timer > 6) {
-                color = ChatColor.GREEN;
-            } else if (timer > 3) {
-                color = ChatColor.YELLOW;
-            } else {
-                color = ChatColor.RED;
+            ChatColor color = GREEN;
+            if (timer <= 3) {
+                color = RED;
+            } else if (timer <= 7) {
+                color = YELLOW;
             }
             return color;
         }

@@ -9,8 +9,6 @@ import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -79,7 +77,7 @@ public abstract class Game extends BaseGame {
             Kit.clearInventory(player);
         }
         SoundUtils.playSound(LEAVE_GAME, plugin.getConfig(), player);
-        player.sendMessage(plugin.getLang("you_have_been_kicked", this));
+        player.sendMessage(getLang("you_have_been_kicked"));
         processPlayerExit(warrior);
     }
 

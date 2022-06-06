@@ -9,7 +9,6 @@ import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
 import org.bukkit.Bukkit;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,7 +28,7 @@ public class Challenge extends BaseGame {
     }
 
     @Override
-    protected @Nullable String getLang(@NotNull String key) {
+    protected @NotNull String getLang(@NotNull String key) {
         String lang = null;
         if (!key.startsWith("challenge_")) {
             lang = super.getLang("challenge_" + key);

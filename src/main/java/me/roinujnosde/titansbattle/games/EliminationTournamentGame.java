@@ -267,7 +267,7 @@ public class EliminationTournamentGame extends Game {
                 .collect(Collectors.toSet());
         teleport(warriors, getConfig().getWatchroom());
         players.forEach(player -> {
-            player.sendMessage(plugin.getLang("kicked_to_adjust_duels", this));
+            player.sendMessage(getLang("kicked_to_adjust_duels"));
             if (getConfig().isUseKits()) {
                 Kit.clearInventory(player);
             }
@@ -353,7 +353,7 @@ public class EliminationTournamentGame extends Game {
     }
 
     private void informOtherDuelists() {
-        String message = plugin.getLang("wait_for_your_turn", this);
+        String message = getLang("wait_for_your_turn");
         Consumer<Warrior> sendMessage = warrior -> {
             if (!isCurrentDuelist(warrior)) {
                 warrior.sendMessage(message);
@@ -394,7 +394,7 @@ public class EliminationTournamentGame extends Game {
 
     @NotNull
     private String getWinnerName(@Nullable List<Warrior> warriors) {
-        String name = plugin.getLang("no_winner_tournament", this);
+        String name = getLang("no_winner_tournament");
         if (getConfig().isGroupMode()) {
             Group group = getAnyGroup(warriors);
             if (group != null) {
@@ -448,8 +448,8 @@ public class EliminationTournamentGame extends Game {
 
     @Override
     protected @NotNull String getGameInfoMessage() {
-        String gameInfo = plugin.getLang("game_info_duels", this);
-        String nextDuels = plugin.getLang("game_info_next_duels", this);
+        String gameInfo = getLang("game_info_duels");
+        String nextDuels = getLang("game_info_next_duels");
         String[] firstDuel;
         StringBuilder builder = new StringBuilder();
         if (getConfig().isGroupMode()) {
@@ -467,7 +467,7 @@ public class EliminationTournamentGame extends Game {
     }
 
     private <D> void populateDuelsMessage(StringBuilder builder, List<Duel<D>> list, Function<D, String> getName) {
-        String nextDuelsLineMessage = plugin.getLang("game_info_duels_line", this);
+        String nextDuelsLineMessage = getLang("game_info_duels_line");
         if (list.size() > 1) {
             for (int i = 1; i < list.size(); i++) {
                 @NotNull String[] name = duelistsToNameArray(i, list, getName);

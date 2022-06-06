@@ -119,7 +119,7 @@ public class FreeForAllGame extends Game {
         if (groupManager != null && getConfig().isGroupMode()) {
             groupsText = groupManager.buildStringFrom(getGroupParticipants().keySet());
         }
-        return MessageFormat.format(plugin.getLang("game_info", this),
+        return MessageFormat.format(getLang("game_info"),
                 getParticipants().size(), getGroupParticipants().size(), groupsText);
     }
 }
