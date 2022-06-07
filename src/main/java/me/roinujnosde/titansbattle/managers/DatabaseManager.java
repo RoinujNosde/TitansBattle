@@ -26,7 +26,6 @@ package me.roinujnosde.titansbattle.managers;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.GroupData;
 import me.roinujnosde.titansbattle.types.Warrior;
@@ -34,7 +33,9 @@ import me.roinujnosde.titansbattle.types.Winners;
 import me.roinujnosde.titansbattle.utils.Helper;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.sql.*;
@@ -49,17 +50,12 @@ import java.util.*;
 public class DatabaseManager {
 
     private final TitansBattle plugin = TitansBattle.getInstance();
-    private final Collection<GameConfiguration> games;
 
     private Connection connection;
 
     private final Map<String, GroupData> groups = new HashMap<>();
     private final Set<Warrior> warriors = new HashSet<>();
     private final List<Winners> winners = new ArrayList<>();
-
-    public DatabaseManager() {
-        games = GameConfigurationDao.getInstance(plugin).getGameConfigurations().values();
-    }
 
     private enum CountType {
         KILLS, DEATHS, VICTORIES, DEFEATS
@@ -150,7 +146,7 @@ public class DatabaseManager {
 
         String update = "UPDATE tb_winners SET killer=?, player_winners=?, winner_group=? WHERE date=? AND game=?;";
         try (PreparedStatement statement = getConnection().prepareStatement(update)) {
-            for (GameConfiguration game : games) {
+            for (GameConfiguration game : getGames()) {
                 String killer = null;
                 if (winners.getKiller(game.getName()) != null) {
                     killer = winners.getKiller(game.getName()).toString();
@@ -180,7 +176,7 @@ public class DatabaseManager {
 
         String insert = "INSERT INTO tb_winners (killer, player_winners, winner_group, date, game) VALUES (?, ?, ?, ?, ?);";
         try (PreparedStatement statement = getConnection().prepareStatement(insert)) {
-            for (GameConfiguration game : games) {
+            for (GameConfiguration game : getGames()) {
                 if (!updated.contains(game)) {
                     String gameName = game.getName();
                     String killer = null;
@@ -215,7 +211,7 @@ public class DatabaseManager {
         String update = "UPDATE tb_groups SET kills=?, deaths=?, victories=?,"
                 + " defeats=? WHERE identification=? AND game=?;";
         try (PreparedStatement statement = getConnection().prepareStatement(update)) {
-            for (GameConfiguration game : games) {
+            for (GameConfiguration game : getGames()) {
                 String gameName = game.getName();
                 int kills = data.getKills(gameName);
                 int deaths = data.getDeaths(gameName);
@@ -238,7 +234,7 @@ public class DatabaseManager {
         }
         String insert = "INSERT INTO tb_groups (identification, kills, deaths, victories, game, defeats) VALUES (?,?,?,?,?,?);";
         try (PreparedStatement statement = getConnection().prepareStatement(insert)) {
-            for (GameConfiguration game : games) {
+            for (GameConfiguration game : getGames()) {
                 if (!updated.contains(game)) {
                     String gameName = game.getName();
                     int kills = data.getKills(gameName);
@@ -264,10 +260,14 @@ public class DatabaseManager {
         ArrayList<GameConfiguration> updated = new ArrayList<>();
         String uuid = warrior.toPlayer().getUniqueId().toString();
         String name = warrior.toPlayer().getName();
+        if (name == null) {
+            plugin.debug(String.format("Name not found for %s", uuid));
+            return;
+        }
 
         String update = "UPDATE tb_warriors SET kills=?, deaths=?, victories=?, displayname=? WHERE uuid=? AND game=?;";
         try (PreparedStatement statement = getConnection().prepareStatement(update)) {
-            for (GameConfiguration game : games) {
+            for (GameConfiguration game : getGames()) {
                 String gameName = game.getName();
                 int kills = warrior.getKills(gameName);
                 int deaths = warrior.getDeaths(gameName);
@@ -291,7 +291,7 @@ public class DatabaseManager {
 
         String insert = "INSERT INTO tb_warriors (uuid, kills, deaths, victories, game, displayname) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement statement = getConnection().prepareStatement(insert)) {
-            for (GameConfiguration game : games) {
+            for (GameConfiguration game : getGames()) {
                 if (!updated.contains(game)) {
                     String gameName = game.getName();
                     int kills = warrior.getKills(gameName);
@@ -314,28 +314,29 @@ public class DatabaseManager {
 
     @NotNull
     public GroupData getGroupData(@NotNull String id) {
-        GroupData groupData = groups.get(id);
-        if (groupData == null) {
-            groupData = new GroupData(new HashMap<>(), new HashMap<>(), new HashMap<>(), new HashMap<>());
-            groups.put(id, groupData);
-        }
-        return groupData;
+        return groups.computeIfAbsent(id, k -> new GroupData());
     }
 
     @NotNull
-    public Warrior getWarrior(@NotNull UUID uuid) {
-        OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-
+    public Warrior getWarrior(@NotNull OfflinePlayer player) {
+        UUID uuid = player.getUniqueId();
         for (Warrior warrior : warriors) {
             if (warrior.toPlayer().getUniqueId().equals(uuid)) {
+                if (player instanceof Player) {
+                    warrior.setOnlinePlayer((Player) player);
+                }
                 return warrior;
             }
         }
 
-        Warrior warrior = new Warrior(player, plugin::getGroupManager, new HashMap<>(), new HashMap<>(),
-                new HashMap<>());
+        Warrior warrior = new Warrior(player, plugin::getGroupManager);
         warriors.add(warrior);
         return warrior;
+    }
+
+    @NotNull
+    public Warrior getWarrior(@NotNull UUID uuid) {
+        return getWarrior(Bukkit.getOfflinePlayer(uuid));
     }
 
     private void loopThroughGroups() {
@@ -343,13 +344,13 @@ public class DatabaseManager {
         try (PreparedStatement statement = getConnection().prepareStatement(sql)) {
             ResultSet query = statement.executeQuery();
 
-            Map<String, HashMap<CountType, HashMap<String, Integer>>> dataMap = new HashMap<>();
+            Map<String, Map<CountType, Map<String, Integer>>> dataMap = new HashMap<>();
 
             while (query.next()) {
                 String id = query.getString("identification");
                 String game = String.valueOf(query.getString("game"));
                 dataMap.computeIfAbsent(id, k -> new HashMap<>());
-                final HashMap<CountType, HashMap<String, Integer>> groupData = dataMap.get(id);
+                final Map<CountType, Map<String, Integer>> groupData = dataMap.get(id);
                 for (CountType t : CountType.values()) {
                     groupData.computeIfAbsent(t, k -> new HashMap<>());
                     groupData.get(t).put(game, query.getInt(t.name()));
@@ -357,7 +358,7 @@ public class DatabaseManager {
             }
 
             for (String id : dataMap.keySet()) {
-                HashMap<CountType, HashMap<String, Integer>> data = dataMap.get(id);
+                Map<CountType, Map<String, Integer>> data = dataMap.get(id);
 
                 GroupData groupData = new GroupData(data.get(CountType.VICTORIES), data.get(CountType.DEFEATS),
                         data.get(CountType.KILLS), data.get(CountType.DEATHS));
@@ -373,13 +374,13 @@ public class DatabaseManager {
         try (Statement statement = getConnection().createStatement()) {
             ResultSet rs = statement.executeQuery(sql);
 
-            HashMap<UUID, HashMap<CountType, HashMap<String, Integer>>> players = new HashMap<>();
+            Map<UUID, Map<CountType, Map<String, Integer>>> players = new HashMap<>();
 
             while (rs.next()) {
                 UUID uuid = UUID.fromString(rs.getString("uuid"));
                 String game = String.valueOf(rs.getString("game"));
                 players.computeIfAbsent(uuid, k -> new HashMap<>());
-                final HashMap<CountType, HashMap<String, Integer>> playerData = players.get(uuid);
+                final Map<CountType, Map<String, Integer>> playerData = players.get(uuid);
                 for (CountType t : CountType.values()) {
                     if (t == CountType.DEFEATS) {
                         continue;
@@ -391,7 +392,7 @@ public class DatabaseManager {
 
             for (UUID uuid : players.keySet()) {
                 OfflinePlayer player = Bukkit.getOfflinePlayer(uuid);
-                HashMap<CountType, HashMap<String, Integer>> playerData = players.get(uuid);
+                Map<CountType, Map<String, Integer>> playerData = players.get(uuid);
 
                 Warrior warrior = new Warrior(player, plugin::getGroupManager, playerData.get(CountType.KILLS),
                         playerData.get(CountType.DEATHS), playerData.get(CountType.VICTORIES));
@@ -484,11 +485,7 @@ public class DatabaseManager {
             plugin.debug("An error ocurred while trying to load the winners data! " + ex.getMessage(), false);
         }
 
-        sortWinners();
-    }
-
-    private void sortWinners() {
-        winners.sort(Comparator.comparing(Winners::getDate));
+        winners.sort(Comparator.naturalOrder());
     }
 
     public void loadDataToMemory() {
@@ -530,17 +527,14 @@ public class DatabaseManager {
         return getEmptyWinners(null);
     }
 
-    private Winners getEmptyWinners(Date date) {
+    private Winners getEmptyWinners(@Nullable Date date) {
         if (date == null) {
             date = Calendar.getInstance().getTime();
         }
-        Map<String, UUID> killer = new HashMap<>();
-        Map<String, List<UUID>> playerWinners = new HashMap<>();
-        Map<String, String> winnerGroup = new HashMap<>();
 
-        Winners w = new Winners(date, killer, playerWinners, winnerGroup);
+        Winners w = new Winners(date);
         winners.add(w);
-        sortWinners();
+        winners.sort(Comparator.naturalOrder());
         return w;
     }
 
@@ -563,5 +557,9 @@ public class DatabaseManager {
 
     public List<Winners> getWinners() {
         return winners;
+    }
+
+    private Set<GameConfiguration> getGames() {
+        return plugin.getConfigurationDao().getConfigurations(GameConfiguration.class);
     }
 }

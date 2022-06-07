@@ -1,30 +1,25 @@
 package me.roinujnosde.titansbattle.listeners;
 
+import me.roinujnosde.titansbattle.BaseGame;
+import me.roinujnosde.titansbattle.BaseGameConfiguration;
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
-import me.roinujnosde.titansbattle.managers.GameManager;
 import me.roinujnosde.titansbattle.managers.GroupManager;
-import me.roinujnosde.titansbattle.types.GameConfiguration;
+import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.Helper;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.jetbrains.annotations.NotNull;
 
-public class EntityDamageListener implements Listener {
+public class EntityDamageListener extends TBListener {
 
-    private final TitansBattle plugin = TitansBattle.getInstance();
-    private final GameManager gm;
-    private final DatabaseManager dm;
-
-    public EntityDamageListener() {
-        gm = plugin.getGameManager();
-        dm = plugin.getDatabaseManager();
+    public EntityDamageListener(@NotNull TitansBattle plugin) {
+        super(plugin);
     }
 
     @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -36,34 +31,21 @@ public class EntityDamageListener implements Listener {
         }
     }
 
-    //un-cancelling so mcMMO skills can be used
     //mcMMO's listener is on HIGHEST and ignoreCancelled = true, this will run before
     @EventHandler(priority = EventPriority.HIGH)
-    public void onDamageHigh(EntityDamageEvent event) {
-        if (isParticipant(event.getEntity())) {
-            event.setCancelled(false);
-        }
-    }
-
-    private boolean isParticipant(Entity entity) {
-        Game game = gm.getCurrentGame().orElse(null);
-        if (game == null || !(entity instanceof Player)) {
-            return false;
-        }
-        return game.isParticipant(dm.getWarrior(entity.getUniqueId()));
-    }
-
-    @EventHandler(priority = EventPriority.HIGHEST)
     public void onDamage(EntityDamageEvent event) {
-        if (!isParticipant(event.getEntity())) {
+        DatabaseManager dm = plugin.getDatabaseManager();
+
+        if (!(event.getEntity() instanceof Player)) {
             return;
         }
         Player defender = (Player) event.getEntity();
+        BaseGame game = plugin.getBaseGameFrom(defender);
+        if (game == null) {
+            return;
+        }
 
-        @SuppressWarnings("OptionalGetWithoutIsPresent")
-        Game game = gm.getCurrentGame().get();
-
-        if (!game.isInBattle(dm.getWarrior(defender.getUniqueId()))) {
+        if (!game.isInBattle(dm.getWarrior(defender))) {
             event.setCancelled(true);
             return;
         }
@@ -73,22 +55,23 @@ public class EntityDamageListener implements Listener {
         }
     }
 
-    private void processEntityDamageByEntityEvent(EntityDamageEvent event, Player defender, Game game) {
+    private void processEntityDamageByEntityEvent(EntityDamageEvent event, Player defender, BaseGame game) {
+        DatabaseManager dm = plugin.getDatabaseManager();
+
         EntityDamageByEntityEvent subEvent = (EntityDamageByEntityEvent) event;
         Player attacker = Helper.getPlayerAttackerOrKiller(subEvent.getDamager());
         if (!isDamageTypeAllowed(subEvent, game)) {
             event.setCancelled(true);
             return;
         }
-        if (attacker != null && !game.getConfig().isPvP()) {
-            event.setCancelled(true);
-            return;
+        if (attacker != null) {
+            Warrior warrior = dm.getWarrior(attacker);
+            if (!game.getConfig().isPvP() || !game.isInBattle(warrior)) {
+                event.setCancelled(true);
+                return;
+            }
         }
-        if (attacker == null || !game.isParticipant(dm.getWarrior(attacker.getUniqueId()))) {
-            return;
-        }
-
-        if (!game.getConfig().isGroupMode()) {
+        if (attacker == null || !game.getConfig().isGroupMode()) {
             return;
         }
 
@@ -98,13 +81,20 @@ public class EntityDamageListener implements Listener {
         }
     }
 
-    private boolean isDamageTypeAllowed(EntityDamageByEntityEvent event, Game game) {
-        GameConfiguration config = game.getConfig();
+    private boolean isDamageTypeAllowed(EntityDamageByEntityEvent event, BaseGame game) {
+        BaseGameConfiguration config = game.getConfig();
         if (event.getDamager() instanceof Projectile) {
             return config.isRangedDamage();
         } else {
             return config.isMeleeDamage();
         }
+    }
+
+    private boolean isParticipant(Entity entity) {
+        if (entity instanceof Player) {
+            return plugin.getBaseGameFrom((Player) entity) != null;
+        }
+        return false;
     }
 
 }

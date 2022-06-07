@@ -8,8 +8,8 @@ sql:
     mysql:
         hostname: "localhost"
         port: 3306
-        username: "root"
-        password: "thepassword"
+        username: "titansbattle"
+        password: ""
 
 #Language used in plugin's message
 language: en
@@ -22,6 +22,7 @@ commands:
     titansbattle: "titansbattle"
     create: "create"
     join: "join"
+    kick: "kick"
     exit: "exit"
     start: "start"
     cancel: "cancel"
@@ -42,6 +43,14 @@ commands:
     killer: "killer"
     groups: "groups"
     players: "players"
+    challenge: "challenge"
+    group: "group"
+    player: "player"
+    accept: "accept"
+    deny: "deny"
+    info: "info"
+    setwinner: "setwinner"
+    config: "config"
 
 #Sounds used in games, to disable one leave it ""
 sounds:
@@ -52,6 +61,7 @@ sounds:
   victory: "UI_TOAST_CHALLENGE_COMPLETE"
   enemy_death: "ENTITY_WOLF_GROWL"
   ally_death: "ENTITY_WOLF_HOWL"
+  border: "ENTITY_GHAST_SCREAM"
 
 #Date format used on /tb winners command
 date-format: "dd/MM/yyyy"
@@ -77,22 +87,34 @@ destinations:
     
 #Will the game begin automatically? Which game? When?
 #Game: the name of the game file
-#Day: 1 = Sunday
+#Frequency: HOURLY, DAILY, WEEKLY, MONTHLY
+#Day: the day of the week (1 = Monday), or the day of the month
 #Hour format: 0 to 24
 #Minute format: 0 to 59
-#If you want more schedulers, just follow the example below, copy them and change the number
+#If you want more events, just follow the example below, copy them and change the number
 scheduler:
   enabled: true
-  schedulers:
+  events:
     1:
-      game: GROUPS_FUN
-      day: 1
+      game: gladiador
+      frequency: DAILY
       hour: 18
       minute: 30
     2:
-      game: FREEFORALL_REAL
-      day: 2
-      hour: 10
+      game: gladiador
+      frequency: HOURLY
+      minute: 30
+    3:
+      game: gladiador
+      frequency: WEEKLY
+      day: 1
+      hour: 18
+      minute: 30
+    4:
+      game: gladiador
+      frequency: MONTHLY
+      day: 15
+      hour: 18
       minute: 30
           
 #Data used by the plugin, don't edit it.

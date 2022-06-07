@@ -24,7 +24,7 @@
 
 package me.roinujnosde.titansbattle.events;
 
-import me.roinujnosde.titansbattle.games.Game;
+import me.roinujnosde.titansbattle.BaseGame;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -37,18 +37,17 @@ public class PlayerExitGameEvent extends Event {
 
     private static final HandlerList HANDLERS = new HandlerList();
     private final Player player;
-    private final Game game;
+    private final BaseGame game;
 
-    public PlayerExitGameEvent(Player player, Game game) {
+    public PlayerExitGameEvent(Player player, BaseGame game) {
         this.player = player;
         this.game = game;
     }
 
     /**
-     * Returns the Game
      * @return the Game
      */
-    public Game getGame() {
+    public BaseGame getGame() {
         return game;
     }
 

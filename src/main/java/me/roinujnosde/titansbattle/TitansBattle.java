@@ -21,33 +21,28 @@
  ***************************************************************************** */
 package me.roinujnosde.titansbattle;
 
-import co.aikar.commands.ConditionFailedException;
-import co.aikar.commands.InvalidCommandArgument;
-import co.aikar.commands.PaperCommandManager;
-import me.roinujnosde.titansbattle.commands.TBCommands;
-import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
+import me.roinujnosde.titansbattle.challenges.Challenge;
+import me.roinujnosde.titansbattle.challenges.ChallengeRequest;
+import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.games.Game;
-import me.roinujnosde.titansbattle.listeners.*;
 import me.roinujnosde.titansbattle.managers.*;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.types.Prizes;
-import me.roinujnosde.titansbattle.types.Winners;
-import me.roinujnosde.titansbattle.utils.ConfigUtils;
+import me.roinujnosde.titansbattle.types.Warrior;
+import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
-import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.text.MessageFormat;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * @author RoinujNosde
@@ -56,18 +51,19 @@ import java.util.stream.Collectors;
 public final class TitansBattle extends JavaPlugin {
 
     private static TitansBattle instance;
-    private PaperCommandManager pcm;
     private GameManager gameManager;
     private ConfigManager configManager;
     private TaskManager taskManager;
     private LanguageManager languageManager;
     private DatabaseManager databaseManager;
     private @Nullable GroupManager groupManager;
-    private GameConfigurationDao gameConfigurationDao;
+    private ChallengeManager challengeManager;
+    private ListenerManager listenerManager;
+    private ConfigurationDao configurationDao;
 
     @Override
     public void onEnable() {
-        saveDefaultConfig();
+        setupConfig();
         registerSerializationClasses();
         instance = this;
         gameManager = new GameManager();
@@ -75,7 +71,9 @@ public final class TitansBattle extends JavaPlugin {
         taskManager = new TaskManager();
         languageManager = new LanguageManager();
         databaseManager = new DatabaseManager();
-        gameConfigurationDao = GameConfigurationDao.getInstance(this);
+        challengeManager = new ChallengeManager(this);
+        listenerManager = new ListenerManager(this);
+        configurationDao = new ConfigurationDao(getDataFolder());
 
         configManager.load();
         languageManager.setup();
@@ -83,123 +81,33 @@ public final class TitansBattle extends JavaPlugin {
 
         loadGroupsPlugin();
 
-        pcm = new PaperCommandManager(this);
-        pcm.enableUnstableAPI("help");
-        configureCommands();
-        registerEvents();
+        new CommandManager(this);
+        listenerManager.registerGeneralListeners();
         databaseManager.loadDataToMemory();
-        gameManager.startOrSchedule();
+        taskManager.setupScheduler();
         if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new TBExpansion(this).register();
         }
+        new Metrics(this, 14875);
     }
 
-    private void registerSerializationClasses() {
-        ConfigurationSerialization.registerClass(GameConfiguration.Prize.class);
-        ConfigurationSerialization.registerClass(GameConfiguration.class);
-        ConfigurationSerialization.registerClass(Kit.class);
-        ConfigurationSerialization.registerClass(Prizes.class);
-    }
+    public @Nullable BaseGame getBaseGameFrom(@NotNull Player player) {
+        Warrior warrior = getDatabaseManager().getWarrior(player);
 
-    private void configureCommands() {
-        setDefaultLocale();
-        registerDependencies();
-        registerCompletions();
-        registerContexts();
-        registerReplacements();
-        registerConditions();
-        registerCommands();
-    }
-
-    private void setDefaultLocale() {
-        String[] s = configManager.getLanguage().split("_");
-        pcm.getLocales().setDefaultLocale(new Locale(s[0]));
-    }
-
-    private void registerReplacements() {
-        ConfigurationSection commandsSection = getConfig().getConfigurationSection("commands");
-        if (commandsSection == null) {
-            return;
+        Optional<Game> currentGame = getGameManager().getCurrentGame();
+        if (currentGame.isPresent()) {
+            if (currentGame.get().isParticipant(warrior)) {
+                return currentGame.get();
+            }
         }
-        Set<String> commands = commandsSection.getKeys(false);
-        for (String command : commands) {
-            pcm.getCommandReplacements().addReplacement(command, commandsSection.getString(command) + "|" + command);
+        List<ChallengeRequest<?>> requests = getChallengeManager().getRequests();
+        for (ChallengeRequest<?> request : requests) {
+            Challenge challenge = request.getChallenge();
+            if (challenge.isParticipant(warrior)) {
+                return challenge;
+            }
         }
-    }
-
-    private void registerContexts() {
-        pcm.getCommandContexts().registerIssuerOnlyContext(Game.class, supplier -> gameManager.getCurrentGame().orElse(null));
-        pcm.getCommandContexts().registerContext(Date.class, supplier -> {
-            try {
-                return new SimpleDateFormat(configManager.getDateFormat()).parse(supplier.popFirstArg());
-            } catch (ParseException ex) {
-                supplier.getSender().sendMessage(getLang("invalid-date"));
-                throw new InvalidCommandArgument();
-            }
-        });
-    }
-
-    private void registerCommands() {
-        pcm.registerCommand(new TBCommands());
-    }
-
-    private void registerConditions() {
-        pcm.getCommandConditions().addCondition("happening", handler -> {
-            if (!gameManager.getCurrentGame().isPresent()) {
-                handler.getIssuer().sendMessage(getLang("not-starting-or-started"));
-                throw new ConditionFailedException();
-            }
-        });
-    }
-
-    private void registerCompletions() {
-        pcm.getCommandCompletions().registerCompletion("winners_dates", handler -> databaseManager.getWinners()
-                .stream().map(Winners::getDate).map(new SimpleDateFormat(configManager.getDateFormat())::format)
-                .collect(Collectors.toList()));
-        pcm.getCommandCompletions().registerCompletion("group_pages", handler -> {
-            int pages = databaseManager.getGroups().size() / configManager.getPageLimitRanking();
-            ArrayList<String> list = new ArrayList<>();
-            for (int i = 0; i < pages; i++) {
-                list.add(String.valueOf(i + 1));
-            }
-            return list;
-        });
-        pcm.getCommandCompletions().registerCompletion("warrior_pages", handler -> {
-            int pages = databaseManager.getWarriors().size() / configManager.getPageLimitRanking();
-            ArrayList<String> list = new ArrayList<>();
-            for (int i = 0; i < pages; i++) {
-                list.add(String.valueOf(i + 1));
-            }
-            return list;
-        });
-        pcm.getCommandCompletions().registerStaticCompletion("prizes_config_fields", ConfigUtils.getEditableFields(Prizes.class));
-        pcm.getCommandCompletions().registerStaticCompletion("game_config_fields", ConfigUtils.getEditableFields(GameConfiguration.class));
-        pcm.getCommandCompletions().registerStaticCompletion("warrior_order", Arrays.asList("kills", "deaths"));
-        pcm.getCommandCompletions().registerStaticCompletion("group_order", Arrays.asList("kills", "deaths", "defeats"));
-        pcm.getCommandCompletions().registerCompletion("games", handler -> gameConfigurationDao.getGameConfigurations()
-                .keySet());
-    }
-
-    private void registerDependencies() {
-        pcm.registerDependency(GameManager.class, gameManager);
-        pcm.registerDependency(GameConfigurationDao.class, gameConfigurationDao);
-        pcm.registerDependency(ConfigManager.class, configManager);
-        pcm.registerDependency(DatabaseManager.class, databaseManager);
-    }
-
-    private void loadGroupsPlugin() {
-        if (Bukkit.getPluginManager().getPlugin("SimpleClans") != null) {
-            setGroupManager(new SimpleClansGroupManager(this));
-        }
-    }
-
-    private void registerEvents() {
-        Bukkit.getPluginManager().registerEvents(new PlayerCommandPreprocessListener(), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerQuitListener(), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerJoinListener(), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerDeathListener(), this);
-        Bukkit.getPluginManager().registerEvents(new EntityDamageListener(), this);
-        Bukkit.getPluginManager().registerEvents(new PlayerRespawnListener(), this);
+        return null;
     }
 
     public DatabaseManager getDatabaseManager() {
@@ -208,6 +116,7 @@ public final class TitansBattle extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        challengeManager.getChallenges().forEach(c -> c.cancel(Bukkit.getConsoleSender()));
         gameManager.getCurrentGame().ifPresent(g -> g.cancel(Bukkit.getConsoleSender()));
         databaseManager.close();
     }
@@ -234,6 +143,14 @@ public final class TitansBattle extends JavaPlugin {
         return gameManager;
     }
 
+    public ChallengeManager getChallengeManager() {
+        return challengeManager;
+    }
+
+    public ListenerManager getListenerManager() {
+        return listenerManager;
+    }
+
     public TaskManager getTaskManager() {
         return taskManager;
     }
@@ -246,14 +163,18 @@ public final class TitansBattle extends JavaPlugin {
         return languageManager;
     }
 
+    public ConfigurationDao getConfigurationDao() {
+        return configurationDao;
+    }
+
     /**
      * Returns the language for the path on the config
      *
-     * @param path where the String is
+     * @param path   where the String is
      * @param config a FileConfiguration to access
      * @return the language from the config, with its color codes (&) translated
      */
-    public @NotNull String getLang(@NotNull String path, @Nullable FileConfiguration config) {
+    public @NotNull String getLang(@NotNull String path, @Nullable FileConfiguration config, Object... args) {
         String language = null;
         if (config != null) {
             language = config.getString("language." + path);
@@ -262,40 +183,36 @@ public final class TitansBattle extends JavaPlugin {
             language = getLanguageManager().getConfig().getString(path,
                     getLanguageManager().getEnglishLanguageFile().getString(path, "<MISSING KEY: " + path + ">"));
         }
-        return ChatColor.translateAlternateColorCodes('&', language);
+        return ChatColor.translateAlternateColorCodes('&', MessageFormat.format(language, args));
+    }
+
+    public String getLang(@NotNull String path, Object... args) {
+        return getLang(path, (FileConfiguration) null, args);
     }
 
     /**
-     * Returns the language for the path
+     * Returns the language for the path on the BaseGame config file
      *
      * @param path where the String is
-     * @return the language from the default language file
-     */
-    public String getLang(@NotNull String path) {
-        return getLang(path, (FileConfiguration) null);
-    }
-
-    /**
-     * Returns the language for the path on the Game config file
-     *
-     * @param path where the String is
-     * @param game the Game to find the String
-     * @return the overrider language if found, or from the default language
-     * file
+     * @param game the BaseGame to find the String
+     * @return the overrider language if found, or from the default language file
      */
     @NotNull
-    public String getLang(@NotNull String path, Game game) {
-        YamlConfiguration configFile = null;
-        if (game != null) {
-            configFile = gameConfigurationDao.getConfigFile(game.getConfig());
+    public String getLang(@NotNull String path, @Nullable BaseGame game, Object... args) {
+        if (game == null) {
+            return getLang(path, (FileConfiguration) null, args);
         }
-        return getLang(path, configFile);
+        return getLang(path, game.getConfig().getFileConfiguration(), args);
+    }
+
+    public String getLang(@NotNull String path, @NotNull BaseGameConfiguration config, Object... args) {
+        return getLang(path, config.getFileConfiguration(), args);
     }
 
     /**
      * Sends a message to the console
      *
-     * @param message message to send
+     * @param message             message to send
      * @param respectUserDecision should the message be sent if debug is false?
      */
     public void debug(String message, boolean respectUserDecision) {
@@ -308,4 +225,26 @@ public final class TitansBattle extends JavaPlugin {
     public void debug(String message) {
         debug(message, true);
     }
+
+    private void setupConfig() {
+        saveDefaultConfig();
+        // loads the config and copies default values
+        getConfig().options().copyDefaults(true);
+        // saves it back (to add new values)
+        saveConfig();
+    }
+
+    private void registerSerializationClasses() {
+        ConfigurationSerialization.registerClass(GameConfiguration.Prize.class);
+        ConfigurationSerialization.registerClass(BaseGameConfiguration.class);
+        ConfigurationSerialization.registerClass(Kit.class);
+        ConfigurationSerialization.registerClass(Prizes.class);
+    }
+
+    private void loadGroupsPlugin() {
+        if (Bukkit.getPluginManager().getPlugin("SimpleClans") != null) {
+            setGroupManager(new SimpleClansGroupManager(this));
+        }
+    }
+
 }

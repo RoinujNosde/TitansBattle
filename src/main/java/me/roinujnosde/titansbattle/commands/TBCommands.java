@@ -2,31 +2,36 @@ package me.roinujnosde.titansbattle.commands;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.CommandHelp;
-import co.aikar.commands.annotation.Optional;
 import co.aikar.commands.annotation.*;
+import co.aikar.commands.bukkit.contexts.OnlinePlayer;
+import me.roinujnosde.titansbattle.BaseGameConfiguration;
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
+import me.roinujnosde.titansbattle.challenges.ArenaConfiguration;
+import me.roinujnosde.titansbattle.dao.ConfigurationDao;
+import me.roinujnosde.titansbattle.exceptions.CommandNotSupportedException;
 import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
 import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
-import me.roinujnosde.titansbattle.types.*;
-import me.roinujnosde.titansbattle.utils.ConfigUtils;
+import me.roinujnosde.titansbattle.managers.TaskManager;
+import me.roinujnosde.titansbattle.types.GameConfiguration;
+import me.roinujnosde.titansbattle.types.Group;
+import me.roinujnosde.titansbattle.types.Warrior;
+import me.roinujnosde.titansbattle.types.Winners;
 import me.roinujnosde.titansbattle.utils.Helper;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
-import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
 
 @CommandAlias("%titansbattle|tb")
 public class TBCommands extends BaseCommand {
@@ -36,177 +41,101 @@ public class TBCommands extends BaseCommand {
     @Dependency
     private GameManager gameManager;
     @Dependency
+    private TaskManager taskManager;
+    @Dependency
     private ConfigManager configManager;
     @Dependency
     private DatabaseManager databaseManager;
     @Dependency
-    private GameConfigurationDao gameConfigDao;
-
-    @Subcommand("%create|create")
-    @CommandPermission("titansbattle.create")
-    public void create(CommandSender sender, String game) {
-        game = game.replace(" ", "_").replace(".", "");
-        gameConfigDao.createGame(game);
-        sender.sendMessage(String.format(ChatColor.GREEN + "[TitansBattle] Created game %s! Now edit its file in " +
-                "the games folder and reload.", game));
-        gameConfigDao.loadGameConfigurations();
-    }
-
-    @Subcommand("%edit|edit %prize|prize")
-    @CommandPermission("titansbattle.edit")
-    @CommandCompletion("@games @prizes_config_fields")
-    public void editPrizes(CommandSender sender,
-                           @Values("@games") String game,
-                           GameConfiguration.Prize prize,
-                           @Values("@prizes_config_fields") String field,
-                           String value) {
-        GameConfiguration config = gameConfigDao.getGameConfiguration(game);
-        Prizes prizes = Objects.requireNonNull(config).getPrizes(prize);
-        if (ConfigUtils.setValue(prizes, field, value)) {
-            sender.sendMessage(ChatColor.GREEN + "[TitansBattle] Successfully changed the field's value!");
-            gameConfigDao.save(config);
-        } else {
-            sender.sendMessage(ChatColor.GREEN + "[TitansBattle] Error changing the field's value!");
-        }
-    }
-
-    @Subcommand("%setprize|setprize")
-    @CommandPermission("titansbattle.setinventory")
-    @CommandCompletion("@games")
-    public void setPrizeInventory(Player sender, @Values("@games") String game, GameConfiguration.Prize prize, PrizeReceiver receiver) {
-        GameConfiguration config = Objects.requireNonNull(gameConfigDao.getGameConfiguration(game));
-        Prizes prizes = config.getPrizes(prize);
-        List<ItemStack> inventoryAsList = Helper.getInventoryAsList(sender);
-        switch (receiver) {
-            case LEADERS:
-                prizes.setLeaderItems(inventoryAsList);
-                break;
-            case MEMBERS:
-                prizes.setMemberItems(inventoryAsList);
-                break;
-        }
-        saveInventory(sender, config);
-    }
-
-    @Subcommand("%edit|edit %game|game")
-    @CommandPermission("titansbattle.edit")
-    @CommandCompletion("@games @game_config_fields")
-    public void editGame(CommandSender sender,
-                         @Values("@games") String game,
-                         @Values("@game_config_fields") String field,
-                         String value) {
-        GameConfiguration config = gameConfigDao.getGameConfiguration(game);
-        if (ConfigUtils.setValue(Objects.requireNonNull(config), field, value)) {
-            sender.sendMessage(ChatColor.GREEN + "[TitansBattle] Successfully changed the field's value!");
-            gameConfigDao.save(config);
-        } else {
-            sender.sendMessage(ChatColor.GREEN + "[TitansBattle] Error changing the field's value!");
-        }
-    }
+    private ConfigurationDao configDao;
 
     @Subcommand("%start|start")
     @CommandPermission("titansbattle.start")
     @CommandCompletion("@games")
-    public void start(CommandSender sender, @Values("@games") String game) {
+    @Description("{@@command.description.start}")
+    public void start(CommandSender sender, @Values("@games") GameConfiguration game) {
         java.util.Optional<Game> currentGame = gameManager.getCurrentGame();
         if (currentGame.isPresent()) {
             sender.sendMessage(plugin.getLang("starting-or-started", currentGame.orElse(null)));
             return;
         }
 
-        GameConfiguration config = gameConfigDao.getGameConfiguration(game);
-        gameManager.start(Objects.requireNonNull(config));
+        gameManager.start(game);
+    }
+
+    @Subcommand("%setwinner|setwinner")
+    @CommandPermission("titansbattle.setwinner")
+    @CommandCompletion("@players")
+    @Description("{@@command.description.setwinner}")
+    @Conditions("happening")
+    public void setWinner(CommandSender sender, Game game, @Conditions("participant") OnlinePlayer winner) {
+        Warrior warrior = databaseManager.getWarrior(winner.player);
+        try {
+            game.setWinner(warrior);
+        } catch (CommandNotSupportedException e) {
+            sender.sendMessage(plugin.getLang("command-not-supported-by-game", game));
+        }
+    }
+
+    @Subcommand("%kick|kick")
+    @CommandPermission("titansbattle.kick")
+    @Conditions("happening")
+    @Description("{@@command.description.kick}")
+    public void kick(CommandSender sender, Game game, OnlinePlayer player) {
+        Warrior warrior = databaseManager.getWarrior(player.getPlayer());
+        String wName = warrior.getName();
+        if (!game.isParticipant(warrior)) {
+            sender.sendMessage(MessageFormat.format(plugin.getLang("player_not_participating", game), wName));
+            return;
+        }
+        game.onKick(warrior);
+        sender.sendMessage(MessageFormat.format(plugin.getLang("has_been_kicked"), wName));
     }
 
     @Subcommand("%cancel|cancel")
     @CommandPermission("titansbattle.cancel")
     @Conditions("happening")
-    public void cancelGame(CommandSender sender, Game game) {
+    @Description("{@@command.description.cancel}")
+    public void cancel(CommandSender sender, Game game) {
         game.cancel(sender);
-    }
-
-    @Subcommand("%setdestination|setdestination GENERAL_EXIT")
-    @CommandPermission("titansbattle.setdestination")
-    public void setGeneralExit(Player player) {
-        configManager.setGeneralExit(player.getLocation());
-        configManager.save();
-        player.sendMessage(MessageFormat.format(plugin.getLang("destination_setted"), "GENERAL_EXIT"));
-    }
-
-    @Subcommand("%setdestination|setdestination")
-    @CommandPermission("titansbattle.setdestination")
-    @CommandCompletion("@games")
-    public void setDestination(Player player, @Values("@games") String game, Destination destination) {
-        GameConfiguration config = Objects.requireNonNull(gameConfigDao.getGameConfiguration(game));
-        Location loc = player.getLocation();
-        switch (destination) {
-            case EXIT:
-                config.setExit(loc);
-                break;
-            case ARENA:
-                config.setArena(loc);
-                break;
-            case LOBBY:
-                config.setLobby(loc);
-                break;
-            case WATCHROOM:
-                config.setWatchroom(loc);
-                break;
-        }
-        gameConfigDao.save(config);
-        player.sendMessage(MessageFormat.format(plugin.getLang("destination_setted"), destination));
     }
 
     @Subcommand("%reload|reload")
     @CommandPermission("titansbattle.reload")
+    @Description("{@@command.description.reload}")
     public void reload(CommandSender sender) {
         gameManager.getCurrentGame().ifPresent(game -> game.cancel(sender));
         plugin.saveDefaultConfig();
         configManager.load();
         plugin.getLanguageManager().reload();
-        gameConfigDao.loadGameConfigurations();
+        configDao.loadConfigurations();
+        taskManager.setupScheduler();
         sender.sendMessage(plugin.getLang("configuration-reloaded"));
-    }
-
-    @Subcommand("%setkit|setkit")
-    @CommandPermission("titansbattle.setinventory")
-    @CommandCompletion("@games")
-    public void setKit(Player sender, @Values("@games") String game) {
-        GameConfiguration config = gameConfigDao.getGameConfiguration(game);
-        Objects.requireNonNull(config);
-        config.setKit(new Kit(sender.getInventory()));
-        saveInventory(sender, config);
-    }
-
-    private void saveInventory(@NotNull CommandSender sender, @NotNull GameConfiguration config) {
-        if (gameConfigDao.save(config)) {
-            sender.sendMessage(plugin.getLang("inventory-set"));
-        } else {
-            sender.sendMessage(plugin.getLang("error-saving-game-config"));
-        }
     }
 
     @Subcommand("%join|join")
     @CommandPermission("titansbattle.join")
     @Conditions("happening")
+    @Description("{@@command.description.join}")
     public void join(Player sender) {
         plugin.debug(String.format("%s used /tb join", sender.getName()));
-        gameManager.getCurrentGame().ifPresent(g -> g.onJoin(databaseManager.getWarrior(sender.getUniqueId())));
+        gameManager.getCurrentGame().ifPresent(g -> g.onJoin(databaseManager.getWarrior(sender)));
     }
 
     @Subcommand("%exit|exit|leave")
     @CommandPermission("titansbattle.exit")
-    @Conditions("happening")
-    public void leave(Player sender, Game game) {
-        Warrior warrior = databaseManager.getWarrior(sender.getUniqueId());
-        if (!game.isParticipant(warrior)) {
-            sender.sendMessage(plugin.getLang("not_participating", game));
-            return;
-        }
-        game.onLeave(warrior);
+    @Conditions("participant")
+    @Description("{@@command.description.exit}")
+    public void leave(Player sender) {
+        Warrior warrior = databaseManager.getWarrior(sender);
+        //noinspection ConstantConditions
+        plugin.getBaseGameFrom(sender).onLeave(warrior);
     }
 
-    @HelpCommand
+    @Subcommand("%help|help")
+    @CatchUnknown
+    @Default
+    @Description("{@@command.description.help}")
     public void doHelp(CommandHelp help) {
         help.showHelp();
     }
@@ -430,10 +359,11 @@ public class TBCommands extends BaseCommand {
 
         @Subcommand("%groups|groups")
         @CommandPermission("titansbattle.ranking")
-        @CommandCompletion("@games @group_order @group_pages")
+        @CommandCompletion("@games @order_by:type=group @pages:type=group")
+        @Description("{@@command.description.ranking.groups}")
         public void groupsRanking(CommandSender sender,
                                   @Values("@games") String game,
-                                  @Values("@group_order") @Optional @Nullable String order,
+                                  @Values("@order_by:type=group") @Optional @Nullable String order,
                                   @Optional @Default("1") int page) {
             final List<Group> groups;
             if (plugin.getGroupManager() != null) {
@@ -476,10 +406,11 @@ public class TBCommands extends BaseCommand {
 
         @Subcommand("%players|players")
         @CommandPermission("titansbattle.ranking")
-        @CommandCompletion("@games @warrior_order @warrior_pages")
+        @CommandCompletion("@games @order_by:type=warrior @pages:type=warrior")
+        @Description("{@@command.description.ranking.players}")
         public void playersRanking(CommandSender sender,
                                    @Values("@games") String game,
-                                   @Values("@warrior_order") @Optional @Nullable String order,
+                                   @Values("@order_by:type=warrior") @Optional @Nullable String order,
                                    @Optional @Default("1") int page) {
             final List<Warrior> warriors = new ArrayList<>(databaseManager.getWarriors());
             if (warriors.isEmpty()) {
@@ -519,54 +450,53 @@ public class TBCommands extends BaseCommand {
     @Subcommand("%winners|winners")
     @CommandPermission("titansbattle.winners")
     @CommandCompletion("@games @winners_dates")
-    public void winners(CommandSender sender, @Values("@games") String game, @Optional @Nullable Date date) {
+    @Description("{@@command.description.winners}")
+    public void winners(CommandSender sender, @Values("@games") GameConfiguration game, @Optional @Nullable Date date) {
         Winners winners = databaseManager.getLatestWinners();
         if (date != null) {
             winners = databaseManager.getWinners(date);
         }
         date = winners.getDate();
-        YamlConfiguration gameConfig = gameConfigDao.getConfigFile(gameConfigDao.getGameConfiguration(game));
 
-        List<UUID> playerWinners = winners.getPlayerWinners(game);
+        List<UUID> playerWinners = winners.getPlayerWinners(game.getName());
         String members;
         if (playerWinners == null) {
-            members = plugin.getLang("winners-no-player-winners", gameConfig);
+            members = plugin.getLang("winners-no-player-winners", game);
         } else {
             members = Helper.buildStringFrom(Helper.uuidListToPlayerNameList(playerWinners));
         }
-        UUID uuid = winners.getKiller(game);
+        UUID uuid = winners.getKiller(game.getName());
         String name;
         if (uuid == null) {
-            name = plugin.getLang("winners-no-killer", gameConfig);
+            name = plugin.getLang("winners-no-killer", game);
         } else {
             name = Bukkit.getOfflinePlayer(uuid).getName();
         }
 
-        String group = winners.getWinnerGroup(game);
+        String group = winners.getWinnerGroup(game.getName());
         if (group == null) {
-            group = plugin.getLang("winners-no-winner-group", gameConfig);
+            group = plugin.getLang("winners-no-winner-group", game);
         }
         String dateFormat = plugin.getConfigManager().getDateFormat();
-        sender.sendMessage(MessageFormat.format(plugin.getLang("winners", gameConfig),
+        sender.sendMessage(MessageFormat.format(plugin.getLang("winners", game),
                 new SimpleDateFormat(dateFormat).format(date), name, group, members));
     }
 
     @Subcommand("%watch|watch")
     @CommandPermission("titansbattle.watch")
-    @Conditions("happening")
-    public void watch(Player sender, Game game) {
-        Location watchroom = game.getConfig().getWatchroom();
-        if (watchroom != null) {
-            sender.teleport(watchroom);
-            SoundUtils.playSound(SoundUtils.Type.WATCH, plugin.getConfig(), sender);
+    @CommandCompletion("@arenas:in_use")
+    @Description("{@@command.description.watch}")
+    public void watch(Player sender, Game game, @Optional ArenaConfiguration arena) {
+        BaseGameConfiguration config;
+        if (arena == null && game == null) {
+            sender.sendMessage(plugin.getLang("not-starting-or-started"));
+            return;
         }
+        config = (arena == null) ? game.getConfig() : arena;
+
+        Location watchroom = config.getWatchroom();
+        sender.teleport(watchroom);
+        SoundUtils.playSound(SoundUtils.Type.WATCH, plugin.getConfig(), sender);
     }
 
-    public enum Destination {
-        EXIT, ARENA, LOBBY, WATCHROOM
-    }
-
-    public enum PrizeReceiver {
-        LEADERS, MEMBERS
-    }
 }

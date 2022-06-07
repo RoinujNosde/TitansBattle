@@ -1,8 +1,10 @@
 package me.roinujnosde.titansbattle.games;
 
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.events.GroupWinEvent;
+import me.roinujnosde.titansbattle.events.PlayerWinEvent;
+import me.roinujnosde.titansbattle.exceptions.CommandNotSupportedException;
 import me.roinujnosde.titansbattle.types.*;
-import me.roinujnosde.titansbattle.types.GameConfiguration.Prize;
 import me.roinujnosde.titansbattle.utils.Helper;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
 import org.bukkit.Bukkit;
@@ -15,6 +17,8 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import static me.roinujnosde.titansbattle.BaseGameConfiguration.Prize.*;
 
 public class EliminationTournamentGame extends Game {
     private final List<Duel<Warrior>> playerDuelists = new ArrayList<>();
@@ -60,7 +64,7 @@ public class EliminationTournamentGame extends Game {
         List<Warrior> list = new ArrayList<>();
         if (getConfig().isGroupMode()) {
             Group winnerGroup = Objects.requireNonNull(groupDuelists.get(0).getOther(defeated.getGroup()));
-            list = getPlayerParticipants().stream().filter(p -> winnerGroup.isMember(p.getUniqueId()))
+            list = getParticipants().stream().filter(p -> winnerGroup.isMember(p.getUniqueId()))
                     .collect(Collectors.toList());
         } else {
             Warrior other = playerDuelists.get(0).getOther(defeated);
@@ -130,7 +134,7 @@ public class EliminationTournamentGame extends Game {
         battleForThirdPlace = false;
         thirdPlaceWinners = duelWinners;
         teleport(duelWinners, getConfig().getWatchroom());
-        playerParticipants.removeIf(thirdPlaceWinners::contains);
+        participants.removeIf(thirdPlaceWinners::contains);
         if (getConfig().isUseKits()) {
             thirdPlaceWinners.forEach(Kit::clearInventory);
         }
@@ -186,14 +190,9 @@ public class EliminationTournamentGame extends Game {
             if (player == null) return;
             setKit(warrior);
             teleport(warrior, getConfig().getLobby());
-        } else if (casualties.contains(warrior)) {
-            teleport(warrior, getConfig().getWatchroom());
+        } else {
+            super.onRespawn(warrior);
         }
-    }
-
-    @Override
-    public boolean shouldClearDropsOnDeath(@NotNull Warrior warrior) {
-        return isParticipant(warrior) && !shouldKeepInventoryOnDeath(warrior);
     }
 
     @Override
@@ -219,10 +218,12 @@ public class EliminationTournamentGame extends Game {
 
     @Override
     protected void onLobbyEnd() {
+        super.onLobbyEnd();
         if (getConfig().isPowerOfTwo() && !isPowerOfTwo(getPlayerOrGroupCount())) {
             kickExcessiveParticipants();
         }
         startNextDuel();
+        broadcast(getGameInfoMessage());
     }
 
     private void kickExcessiveParticipants() {
@@ -235,9 +236,9 @@ public class EliminationTournamentGame extends Game {
 
     private void kickExcessivePlayers() {
         Set<Warrior> toKick = new HashSet<>();
-        for (int i = playerParticipants.size(); i > 2; i--) {
+        for (int i = participants.size(); i > 2; i--) {
             if (!isPowerOfTwo(i)) {
-                toKick.add(playerParticipants.get(i - 1));
+                toKick.add(participants.get(i - 1));
                 continue;
             }
             break;
@@ -256,17 +257,17 @@ public class EliminationTournamentGame extends Game {
             break;
         }
         for (Group group : toKick) {
-            kickExcessive(playerParticipants.stream().filter(group::isMember).collect(Collectors.toSet()));
+            kickExcessive(participants.stream().filter(group::isMember).collect(Collectors.toSet()));
         }
     }
 
     private void kickExcessive(@NotNull Set<Warrior> warriors) {
-        playerParticipants.removeIf(warriors::contains);
+        participants.removeIf(warriors::contains);
         Set<Player> players = warriors.stream().map(Warrior::toOnlinePlayer).filter(Objects::nonNull)
                 .collect(Collectors.toSet());
         teleport(warriors, getConfig().getWatchroom());
         players.forEach(player -> {
-            player.sendMessage(plugin.getLang("kicked_to_adjust_duels", this));
+            player.sendMessage(getLang("kicked_to_adjust_duels"));
             if (getConfig().isUseKits()) {
                 Kit.clearInventory(player);
             }
@@ -290,8 +291,8 @@ public class EliminationTournamentGame extends Game {
 
     private void generateDuelists() {
         if (getWaitingThirdPlaceCount() == 2) {
-            gameManager.broadcastKey("battle_for_third_place", this);
-            playerParticipants.addAll(waitingThirdPlace);
+            broadcastKey("battle_for_third_place");
+            participants.addAll(waitingThirdPlace);
             if (getConfig().isGroupMode()) {
                 generateDuelist(getWaitingThirdPlaceGroups(), groupDuelists);
             } else {
@@ -302,10 +303,10 @@ public class EliminationTournamentGame extends Game {
             return;
         }
         if (getPlayerOrGroupCount() == 2) {
-            gameManager.broadcastKey("final_battle", this);
+            broadcastKey("final_battle");
         }
         if (!getConfig().isGroupMode()) {
-            generateDuelist(playerParticipants, playerDuelists);
+            generateDuelist(participants, playerDuelists);
         } else {
             ArrayList<Group> groups = new ArrayList<>(getGroupParticipants().keySet());
             generateDuelist(groups, groupDuelists);
@@ -333,7 +334,7 @@ public class EliminationTournamentGame extends Game {
         generateDuelists();
         teleportNextDuelists();
         informOtherDuelists();
-        startPreparationTask();
+        startPreparation();
     }
 
     private int getPlayerOrGroupCount() {
@@ -341,42 +342,41 @@ public class EliminationTournamentGame extends Game {
         if (getConfig().isGroupMode()) {
             participants = getGroupParticipants().size();
         } else {
-            participants = playerParticipants.size();
+            participants = this.participants.size();
         }
         return participants;
     }
 
     @Override
     public @NotNull Collection<Warrior> getCurrentFighters() {
-        return getPlayerParticipants().stream().filter(this::isCurrentDuelist).collect(Collectors.toList());
+        return getParticipants().stream().filter(this::isCurrentDuelist).collect(Collectors.toList());
     }
 
     private void informOtherDuelists() {
-        String message = plugin.getLang("wait_for_your_turn", this);
+        String message = getLang("wait_for_your_turn");
         Consumer<Warrior> sendMessage = warrior -> {
             if (!isCurrentDuelist(warrior)) {
                 warrior.sendMessage(message);
             }
         };
-        getPlayerParticipants().forEach(sendMessage);
+        getParticipants().forEach(sendMessage);
         waitingThirdPlace.forEach(sendMessage);
     }
 
     private void teleportNextDuelists() {
         if (!getConfig().isGroupMode()) {
-            for (Warrior w : playerDuelists.get(0).getDuelists()) {
-                teleport(w, getConfig().getArena());
-            }
+            teleportToArena(playerDuelists.get(0).getDuelists());
         } else {
             List<Group> duelists = groupDuelists.get(0).getDuelists();
-            getPlayerParticipants().stream().filter(player -> {
+            List<Warrior> warriors = getParticipants().stream().filter(player -> {
                 for (Group g : duelists) {
                     if (g.isMember(player.getUniqueId())) {
                         return true;
                     }
                 }
                 return false;
-            }).forEach(p -> teleport(p, getConfig().getArena()));
+            }).collect(Collectors.toList());
+            teleportToArena(warriors);
         }
     }
 
@@ -394,7 +394,7 @@ public class EliminationTournamentGame extends Game {
 
     @NotNull
     private String getWinnerName(@Nullable List<Warrior> warriors) {
-        String name = plugin.getLang("no_winner_tournament", this);
+        String name = getLang("no_winner_tournament");
         if (getConfig().isGroupMode()) {
             Group group = getAnyGroup(warriors);
             if (group != null) {
@@ -408,7 +408,7 @@ public class EliminationTournamentGame extends Game {
 
     @Override
     protected void processWinners() {
-        Winners todaysWinners = databaseManager.getTodaysWinners();
+        Winners todayWinners = databaseManager.getTodaysWinners();
 
         Group firstGroup = getAnyGroup(firstPlaceWinners);
         //we must clear the inventory before adding the casualties, otherwise the already dead would lose their items again
@@ -417,30 +417,39 @@ public class EliminationTournamentGame extends Game {
         }
         if (getConfig().isGroupMode() && firstGroup != null) {
             casualties.stream().filter(firstGroup::isMember).forEach(firstPlaceWinners::add);
-            todaysWinners.setWinnerGroup(getConfig().getName(), firstGroup.getName());
+            todayWinners.setWinnerGroup(getConfig().getName(), firstGroup.getName());
+            GroupWinEvent event = new GroupWinEvent(firstGroup);
+            Bukkit.getPluginManager().callEvent(event);
         }
-        todaysWinners.setWinners(getConfig().getName(), Helper.warriorListToUuidList(firstPlaceWinners));
-        givePrizes(Prize.FIRST, firstGroup, firstPlaceWinners);
-        givePrizes(Prize.SECOND, getAnyGroup(secondPlaceWinners), secondPlaceWinners);
-        givePrizes(Prize.THIRD, getAnyGroup(thirdPlaceWinners), thirdPlaceWinners);
+        PlayerWinEvent event = new PlayerWinEvent(this, firstPlaceWinners);
+        Bukkit.getPluginManager().callEvent(event);
+        todayWinners.setWinners(getConfig().getName(), Helper.warriorListToUuidList(firstPlaceWinners));
+        givePrizes(FIRST, firstGroup, firstPlaceWinners);
+        givePrizes(SECOND, getAnyGroup(secondPlaceWinners), secondPlaceWinners);
+        givePrizes(THIRD, getAnyGroup(thirdPlaceWinners), thirdPlaceWinners);
         SoundUtils.playSound(SoundUtils.Type.VICTORY, plugin.getConfig(), firstPlaceWinners, secondPlaceWinners,
                 thirdPlaceWinners);
         Warrior killer = findKiller();
         if (killer != null) {
-            givePrizes(Prize.KILLER, null, Collections.singletonList(killer));
+            givePrizes(KILLER, null, Collections.singletonList(killer));
             gameManager.setKiller(getConfig(), killer, null);
             SoundUtils.playSound(SoundUtils.Type.VICTORY, plugin.getConfig(), killer.toOnlinePlayer());
-            todaysWinners.setKiller(getConfig().getName(), killer.getUniqueId());
+            todayWinners.setKiller(getConfig().getName(), killer.getUniqueId());
         }
-        gameManager.broadcastKey("who_won_tournament", this, getWinnerName(firstPlaceWinners),
+        broadcastKey("who_won_tournament", getWinnerName(firstPlaceWinners),
                 getWinnerName(secondPlaceWinners), getWinnerName(thirdPlaceWinners));
         firstPlaceWinners.forEach(warrior -> warrior.increaseVictories(getConfig().getName()));
     }
 
     @Override
+    public void setWinner(@NotNull Warrior warrior) throws CommandNotSupportedException {
+        throw new CommandNotSupportedException();
+    }
+
+    @Override
     protected @NotNull String getGameInfoMessage() {
-        String gameInfo = plugin.getLang("game_info_duels", this);
-        String nextDuels = plugin.getLang("game_info_next_duels", this);
+        String gameInfo = getLang("game_info_duels");
+        String nextDuels = getLang("game_info_next_duels");
         String[] firstDuel;
         StringBuilder builder = new StringBuilder();
         if (getConfig().isGroupMode()) {
@@ -458,7 +467,7 @@ public class EliminationTournamentGame extends Game {
     }
 
     private <D> void populateDuelsMessage(StringBuilder builder, List<Duel<D>> list, Function<D, String> getName) {
-        String nextDuelsLineMessage = plugin.getLang("game_info_duels_line", this);
+        String nextDuelsLineMessage = getLang("game_info_duels_line");
         if (list.size() > 1) {
             for (int i = 1; i < list.size(); i++) {
                 @NotNull String[] name = duelistsToNameArray(i, list, getName);

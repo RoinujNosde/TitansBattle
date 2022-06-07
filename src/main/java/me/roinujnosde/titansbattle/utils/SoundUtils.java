@@ -46,6 +46,6 @@ public class SoundUtils {
     }
 
     public enum Type {
-        JOIN_GAME, LEAVE_GAME, ALLY_DEATH, ENEMY_DEATH, WATCH, TELEPORT, VICTORY
+        JOIN_GAME, LEAVE_GAME, ALLY_DEATH, ENEMY_DEATH, WATCH, TELEPORT, VICTORY, BORDER
     }
 }

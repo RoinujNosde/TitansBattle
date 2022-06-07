@@ -20,6 +20,11 @@ public class SimpleClansGroup extends Group {
     }
 
     @Override
+    public @NotNull String getUniqueName() {
+        return clan.getTag();
+    }
+
+    @Override
     public @NotNull String getId() {
         return clan.getTag();
     }

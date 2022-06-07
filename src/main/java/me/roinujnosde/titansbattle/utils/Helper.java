@@ -1,7 +1,7 @@
 package me.roinujnosde.titansbattle.utils;
 
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
+import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Warrior;
@@ -12,7 +12,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Projectile;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.projectiles.ProjectileSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -27,24 +26,14 @@ public class Helper {
     private Helper() {
     }
 
-    /**
-     * Gets the player inventory and converts it to a List
-     *
-     * @param player the player
-     * @return the inventory as list
-     */
-    public static List<ItemStack> getInventoryAsList(Player player) {
-        return Arrays.stream(player.getInventory().getContents()).filter(Objects::nonNull).collect(Collectors.toList());
-    }
-
     @Nullable
     public static GameConfiguration getGameConfigurationFromWinnerOrKiller(@Nullable Player player) {
         if (player == null) {
             return null;
         }
         final UUID uniqueId = player.getUniqueId();
-        GameConfigurationDao dao = GameConfigurationDao.getInstance(plugin);
-        for (GameConfiguration game : dao.getGameConfigurations().values()) {
+        ConfigurationDao dao = plugin.getConfigurationDao();
+        for (GameConfiguration game : dao.getConfigurations(GameConfiguration.class)) {
             String gameName = game.getName();
             Winners w = plugin.getDatabaseManager().getLatestWinners();
             if (w.getKiller(gameName) == null) {
@@ -69,10 +58,9 @@ public class Helper {
         if (player == null) {
             return null;
         }
-        GameConfigurationDao dao = GameConfigurationDao.getInstance(plugin);
         GameConfiguration gameConfig = getGameConfigurationFromWinnerOrKiller(player);
         if (gameConfig != null) {
-            return dao.getConfigFile(gameConfig);
+            return gameConfig.getFileConfiguration();
         }
         return null;
     }
@@ -84,7 +72,8 @@ public class Helper {
      * @return true if he is a Winner
      */
     public static boolean isWinner(Player player) {
-        for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
+        ConfigurationDao dao = plugin.getConfigurationDao();
+        for (GameConfiguration game : dao.getConfigurations(GameConfiguration.class)) {
             List<UUID> winners = plugin.getDatabaseManager().getLatestWinners().getPlayerWinners(game.getName());
             if (winners == null) {
                 continue;
@@ -103,7 +92,8 @@ public class Helper {
      * @return true if he is a Winner
      */
     public static boolean isKiller(Player player) {
-        for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
+        ConfigurationDao dao = plugin.getConfigurationDao();
+        for (GameConfiguration game : dao.getConfigurations(GameConfiguration.class)) {
             Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
             UUID killer = latestWinners.getKiller(game.getName());
             if (killer == null) {
@@ -124,7 +114,8 @@ public class Helper {
      */
     public static boolean isKillerPriority(Player player) {
         if (isKiller(player)) {
-            for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
+            ConfigurationDao dao = plugin.getConfigurationDao();
+            for (GameConfiguration game : dao.getConfigurations(GameConfiguration.class)) {
                 Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
                 UUID killer = latestWinners.getKiller(game.getName());
                 if (killer == null) {
@@ -146,7 +137,8 @@ public class Helper {
      */
     public static boolean isKillerJoinMessageEnabled(Player player) {
         if (isKiller(player)) {
-            for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
+            ConfigurationDao dao = plugin.getConfigurationDao();
+            for (GameConfiguration game : dao.getConfigurations(GameConfiguration.class)) {
                 Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
                 UUID killer = latestWinners.getKiller(game.getName());
                 if (killer == null) {
@@ -168,7 +160,8 @@ public class Helper {
      */
     public static boolean isKillerQuitMessageEnabled(Player player) {
         if (isKiller(player)) {
-            for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
+            ConfigurationDao dao = plugin.getConfigurationDao();
+            for (GameConfiguration game : dao.getConfigurations(GameConfiguration.class)) {
                 Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
                 UUID killer = latestWinners.getKiller(game.getName());
                 if (killer == null) {
@@ -244,7 +237,8 @@ public class Helper {
      */
     public static boolean isWinnerJoinMessageEnabled(Player player) {
         if (isKiller(player)) {
-            for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
+            ConfigurationDao dao = plugin.getConfigurationDao();
+            for (GameConfiguration game : dao.getConfigurations(GameConfiguration.class)) {
                 Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
                 List<UUID> playerWinners = latestWinners.getPlayerWinners(game.getName());
                 if (playerWinners == null) {
@@ -266,7 +260,8 @@ public class Helper {
      */
     public static boolean isWinnerQuitMessageEnabled(Player player) {
         if (isWinner(player)) {
-            for (GameConfiguration game : GameConfigurationDao.getInstance(plugin).getGameConfigurations().values()) {
+            ConfigurationDao dao = plugin.getConfigurationDao();
+            for (GameConfiguration game : dao.getConfigurations(GameConfiguration.class)) {
                 Winners latestWinners = plugin.getDatabaseManager().getLatestWinners();
                 List<UUID> playerWinners = latestWinners.getPlayerWinners(game.getName());
                 if (playerWinners == null) {
@@ -298,50 +293,6 @@ public class Helper {
             }
         }
         return investigated;
-    }
-
-    /**
-     * Gets a String representation of a String List
-     * Example: "RoinujNosde, Lannister & Killer07"
-     *
-     * @param list the String list
-     * @return the String representation
-     * @deprecated use {@link Helper#buildStringFrom(Collection)}
-     */
-    @Deprecated
-    public static String getStringFromStringList(List<String> list) {
-        if (list == null || list.isEmpty()) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        for (String a : list) {
-            //Checa se é o primeiro vencedor
-            if (a.equalsIgnoreCase(list.get(0))) {
-                sb.append(a);
-                //Checa se é o último vencedor
-            } else if (a.equals(list.get(list.size() - 1))) {
-                sb.append(" & ");
-                sb.append(a);
-                //Não é nenhum dos acima
-            } else {
-                sb.append(", ");
-                sb.append(a);
-            }
-        }
-        return sb.toString();
-    }
-
-    /**
-     * Gets the current time in seconds
-     *
-     * @return the current time in seconds
-     */
-    public static int getCurrentTimeInSeconds() {
-        Calendar today = Calendar.getInstance();
-        int hour = today.get(Calendar.HOUR_OF_DAY);
-        int minute = today.get(Calendar.MINUTE);
-
-        return ((hour * 60 * 60) + (minute * 60));
     }
 
     /**
@@ -412,5 +363,17 @@ public class Helper {
         boolean sameMonth = d1.get(Calendar.MONTH) == d2.get(Calendar.MONTH);
         boolean sameDay = d1.get(Calendar.DAY_OF_MONTH) == d2.get(Calendar.DAY_OF_MONTH);
         return sameDay && sameMonth && sameYear;
+    }
+
+    public static <V> @NotNull Map<String, V> caseInsensitiveMap() {
+        return caseInsensitiveMap(null);
+    }
+
+    public static <V> @NotNull Map<String, V> caseInsensitiveMap(@Nullable Map<String, V> map) {
+        TreeMap<String, V> treeMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+        if (map != null) {
+            treeMap.putAll(map);
+        }
+        return treeMap;
     }
 }

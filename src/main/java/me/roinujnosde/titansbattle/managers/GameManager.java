@@ -1,17 +1,14 @@
 package me.roinujnosde.titansbattle.managers;
 
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.dao.GameConfigurationDao;
 import me.roinujnosde.titansbattle.events.NewKillerEvent;
-import me.roinujnosde.titansbattle.games.EliminationTournamentGame;
-import me.roinujnosde.titansbattle.games.FreeForAllGame;
+import me.roinujnosde.titansbattle.exceptions.GameTypeNotFoundException;
+import me.roinujnosde.titansbattle.exceptions.InvalidGameException;
 import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
-import me.roinujnosde.titansbattle.types.Scheduler;
 import me.roinujnosde.titansbattle.types.Warrior;
-import me.roinujnosde.titansbattle.utils.Helper;
+import me.roinujnosde.titansbattle.utils.MessageUtils;
 import org.bukkit.Bukkit;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -26,59 +23,20 @@ public class GameManager {
     private @Nullable Game currentGame;
 
     /**
-     * Gets the current game, or null, if there is no one happening
+     * Gets the current game
      *
      * @return the current game
      */
-    public @NotNull Optional<Game> getCurrentGame() {
+    public Optional<Game> getCurrentGame() {
         return Optional.ofNullable(currentGame);
     }
 
     public void setCurrentGame(@Nullable Game game) {
         this.currentGame = game;
-    }
-
-    /**
-     * Initiates the schedule task or starts the game
-     */
-    public void startOrSchedule() {
-        if (!plugin.getConfigManager().isScheduler()) {
-            plugin.debug("Scheduler disabled", true);
-            return;
-        }
-        plugin.debug("Scheduler enabled", true);
-        TaskManager tm = plugin.getTaskManager();
-        if (currentGame != null) {
-            plugin.debug("Already happening or starting", true);
-            tm.startSchedulerTask(300);
-            return;
-        }
-        int currentTimeInSeconds = Helper.getCurrentTimeInSeconds();
-        int oneDay = 86400;
-
-        Scheduler nextScheduler = Scheduler.getNextSchedulerOfDay();
-        if (nextScheduler == null) {
-            plugin.debug("No next scheduler today", true);
-            tm.startSchedulerTask(oneDay - currentTimeInSeconds);
-            return;
-        }
-        int nextHour = nextScheduler.getHour();
-        int nextMinute = nextScheduler.getMinute();
-        int nextTimeInSeconds = (nextHour * 60 * 60) + (nextMinute * 60);
-        plugin.debug(String.format("Scheduler Time: %s:%s", nextHour, nextMinute), true);
-
-        if (currentTimeInSeconds == nextTimeInSeconds) {
-            plugin.debug("It's time!", true);
-            GameConfigurationDao dao = GameConfigurationDao.getInstance(plugin);
-            GameConfiguration config = dao.getGameConfiguration(nextScheduler.getGameName());
-            if (config == null) {
-                plugin.debug(String.format("Game %s not found!", nextScheduler.getGameName()), false);
-                return;
-            }
-            start(config);
+        if (game != null) {
+            plugin.getListenerManager().registerBattleListeners();
         } else {
-            plugin.debug("It's not time yet!", true);
-            tm.startSchedulerTask(nextTimeInSeconds - currentTimeInSeconds);
+            plugin.getListenerManager().unregisterBattleListeners();
         }
     }
 
@@ -92,10 +50,9 @@ public class GameManager {
         if (!gameConfig.isKiller()) {
             return;
         }
-        GameConfigurationDao dao = GameConfigurationDao.getInstance(plugin);
         Bukkit.getPluginManager().callEvent(new NewKillerEvent(killer, victim));
-        Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("new_killer",
-                dao.getConfigFile(gameConfig)), killer.getName()));
+        Bukkit.getServer().getOnlinePlayers().forEach((p) -> MessageUtils.sendActionBar(p,
+                MessageFormat.format(plugin.getLang("new_killer", gameConfig.getFileConfiguration()), killer.getName())));
         plugin.getDatabaseManager().getTodaysWinners().setKiller(gameConfig.getName(), killer.getUniqueId());
     }
 
@@ -111,45 +68,38 @@ public class GameManager {
     }
 
     public void start(@NotNull GameConfiguration config) {
-        Game game;
-        if (config.isEliminationTournament()) {
-            game = new EliminationTournamentGame(plugin, config);
-        } else {
-            game = new FreeForAllGame(plugin, config);
+        if (currentGame != null) {
+            plugin.getLogger().warning("A game is already running!");
+            return;
         }
+
+        Game game = instantiateGame(config.getType(), config);
         game.start();
     }
 
-    public void broadcastKey(@NotNull String messageKey, @Nullable FileConfiguration config, Object... args) {
-        String message = MessageFormat.format(plugin.getLang(messageKey, config), args);
-        if (message.isEmpty()) {
-            return;
+    private Game instantiateGame(String className, GameConfiguration config)
+            throws InvalidGameException, GameTypeNotFoundException {
+        try {
+            Class<? extends Game> gameClass = getGameClass(className).asSubclass(Game.class);
+            return gameClass.getConstructor(TitansBattle.class, GameConfiguration.class).newInstance(plugin, config);
+        } catch (ClassCastException ex) {
+            throw new InvalidGameException("class does not extend Game");
+        } catch (NoSuchMethodException ex) {
+            throw new InvalidGameException("required constructor (TitansBattle, GameConfiguration) not found");
+        } catch (ReflectiveOperationException ex) {
+            throw new RuntimeException(ex);
         }
-        Bukkit.broadcastMessage(message);
     }
 
-    public void broadcast(@NotNull String message, @Nullable Game game) {
-        broadcast(message, game, false);
-    }
-
-    public void broadcast(@NotNull String message, @Nullable Game game, boolean participantsOnly) {
-        if (message.isEmpty()) {
-            return;
+    private Class<?> getGameClass(String className) throws GameTypeNotFoundException {
+        try {
+            return Class.forName("me.roinujnosde.titansbattle.games." + className);
+        } catch (ClassNotFoundException ignored) {}
+        try {
+            return Class.forName(className);
+        } catch (ClassNotFoundException ex) {
+            throw new GameTypeNotFoundException(className);
         }
-        if (game != null && participantsOnly) {
-            game.sendMessageToParticipants(message);
-            return;
-        }
-        Bukkit.broadcastMessage(message);
     }
 
-    public void broadcastKey(@NotNull String messageKey, @Nullable Game game, Object... args) {
-        broadcastKey(messageKey, game, false, args);
-    }
-
-    public void broadcastKey(@NotNull String messageKey, @Nullable Game game, boolean participantsOnly, Object... args) {
-        String message = plugin.getLang(messageKey, game);
-        message = MessageFormat.format(message, args);
-        broadcast(message, game, participantsOnly);
-    }
 }

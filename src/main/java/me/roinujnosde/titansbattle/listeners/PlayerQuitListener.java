@@ -23,34 +23,35 @@
  */
 package me.roinujnosde.titansbattle.listeners;
 
+import me.roinujnosde.titansbattle.BaseGame;
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.managers.GameManager;
+import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.Helper;
+import me.roinujnosde.titansbattle.utils.MessageUtils;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.jetbrains.annotations.NotNull;
 
 /**
  *
  * @author RoinujNosde
  */
-public class PlayerQuitListener implements Listener {
+public class PlayerQuitListener extends TBListener {
 
-    private final GameManager gm;
-    private final TitansBattle plugin;
-
-    public PlayerQuitListener() {
-        plugin = TitansBattle.getInstance();
-        gm = plugin.getGameManager();
+    public PlayerQuitListener(@NotNull TitansBattle plugin) {
+        super(plugin);
     }
 
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         Player player = event.getPlayer();
-        gm.getCurrentGame().ifPresent(game -> game.onDisconnect(plugin.getDatabaseManager()
-                .getWarrior(player.getUniqueId())));
+        Warrior warrior = plugin.getDatabaseManager().getWarrior(player);
+        BaseGame game = plugin.getBaseGameFrom(player);
+        if (game != null) {
+            game.onDisconnect(warrior);
+        }
         sendQuitMessage(player);
     }
 
@@ -61,19 +62,19 @@ public class PlayerQuitListener implements Listener {
             FileConfiguration config = Helper.getConfigFromWinnerOrKiller(player);
             if (Helper.isKiller(player) && Helper.isWinner(player)) {
                 if (Helper.isKillerPriority(player) && killerQuitMessageEnabled) {
-                    gm.broadcastKey("killer-has-left", config, player.getName());
+                    MessageUtils.broadcastKey("killer-has-left", config, player.getName());
                     return;
                 }
                 if (winnerQuitMessageEnabled) {
-                    gm.broadcastKey("winner-has-left", config, player.getName());
+                    MessageUtils.broadcastKey("winner-has-left", config, player.getName());
                 }
                 return;
             }
             if (Helper.isKiller(player) && killerQuitMessageEnabled) {
-                gm.broadcastKey("killer-has-left", config, player.getName());
+                MessageUtils.broadcastKey("killer-has-left", config, player.getName());
             }
             if (Helper.isWinner(player) && winnerQuitMessageEnabled) {
-                gm.broadcastKey("winner-has-left", config, player.getName());
+                MessageUtils.broadcastKey("winner-has-left", config, player.getName());
             }
         }
     }

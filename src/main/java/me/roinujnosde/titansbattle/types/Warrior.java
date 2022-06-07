@@ -29,9 +29,12 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Supplier;
+
+import static me.roinujnosde.titansbattle.utils.Helper.caseInsensitiveMap;
 
 /**
  *
@@ -40,21 +43,30 @@ import java.util.function.Supplier;
 public class Warrior {
 
     private final Supplier<GroupManager> groupManager;
-    private final OfflinePlayer player;
+    private final OfflinePlayer offlinePlayer;
+    private @Nullable WeakReference<Player> playerReference;
     private final Map<String, Integer> kills;
     private final Map<String, Integer> deaths;
     private final Map<String, Integer> victories;
 
-    public Warrior(@NotNull OfflinePlayer player,
+    public Warrior(@NotNull OfflinePlayer offlinePlayer, @NotNull Supplier<GroupManager> groupManager) {
+        this(offlinePlayer, groupManager, null, null, null);
+    }
+
+    public Warrior(@NotNull OfflinePlayer offlinePlayer,
                    @NotNull Supplier<GroupManager> groupManager,
-                   @NotNull Map<String, Integer> kills,
-                   @NotNull Map<String, Integer> deaths,
-                   @NotNull Map<String, Integer> victories) {
+                   @Nullable Map<String, Integer> kills,
+                   @Nullable Map<String, Integer> deaths,
+                   @Nullable Map<String, Integer> victories) {
         this.groupManager = groupManager;
-        this.player = player;
-        this.kills = kills;
-        this.deaths = deaths;
-        this.victories = victories;
+        this.offlinePlayer = offlinePlayer;
+        Player player = offlinePlayer.getPlayer();
+        if (player != null) {
+            this.playerReference = new WeakReference<>(player);
+        }
+        this.kills = caseInsensitiveMap(kills);
+        this.deaths = caseInsensitiveMap(deaths);
+        this.victories = caseInsensitiveMap(victories);
     }
 
     @Override
@@ -74,7 +86,7 @@ public class Warrior {
 
     @NotNull
     public String getName() {
-        return player.getName() != null ? player.getName() : "null";
+        return offlinePlayer.getName() != null ? offlinePlayer.getName() : "null";
     }
 
     public void sendMessage(@Nullable String message) {
@@ -88,24 +100,35 @@ public class Warrior {
     @Override
     public String toString() {
         return "Warrior{" +
-                "name=" + player.getName() +
-                ", uuid=" + player.getUniqueId() +
+                "name=" + offlinePlayer.getName() +
+                ", uuid=" + offlinePlayer.getUniqueId() +
                 '}';
     }
 
     @Nullable
     public Player toOnlinePlayer() {
-        return player.getPlayer();
+        if (playerReference != null && playerReference.get() != null) {
+            return playerReference.get();
+        }
+        return offlinePlayer.getPlayer();
+    }
+
+    public void setOnlinePlayer(@NotNull Player player) {
+        if (!player.getUniqueId().equals(getUniqueId())) {
+            throw new IllegalArgumentException(String.format("different UUIDs: %s %s", getUniqueId(),
+                    player.getUniqueId()));
+        }
+        this.playerReference = new WeakReference<>(player);
     }
 
     @NotNull
     public OfflinePlayer toPlayer() {
-        return player;
+        return offlinePlayer;
     }
 
     @NotNull
     public UUID getUniqueId() {
-        return player.getUniqueId();
+        return offlinePlayer.getUniqueId();
     }
 
     @Nullable
@@ -114,7 +137,11 @@ public class Warrior {
         if (groupManager == null) {
             return null;
         }
-        return groupManager.getGroup(player.getUniqueId());
+        return groupManager.getGroup(offlinePlayer.getUniqueId());
+    }
+
+    public int getTotalKills() {
+        return getSum(kills);
     }
 
     public int getKills(@NotNull String game) {
@@ -130,6 +157,10 @@ public class Warrior {
         }
     }
 
+    public int getTotalDeaths() {
+        return getSum(deaths);
+    }
+
     public int getDeaths(@NotNull String game) {
         return deaths.getOrDefault(game, 0);
     }
@@ -141,6 +172,10 @@ public class Warrior {
             GroupData data = group.getData();
             data.setDeaths(game, data.getDeaths(game) + 1);
         }
+    }
+
+    public int getTotalVictories() {
+        return getSum(victories);
     }
 
     public int getVictories(@NotNull String game) {
@@ -161,5 +196,9 @@ public class Warrior {
 
     public void increaseVictories(@NotNull String game) {
         setVictories(game, getVictories(game) + 1);
+    }
+
+    private <T> int getSum(Map<T, Integer> map) {
+        return map.values().stream().mapToInt(i -> i).sum();
     }
 }

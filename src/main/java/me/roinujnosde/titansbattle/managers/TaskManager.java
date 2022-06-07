@@ -24,15 +24,17 @@
 package me.roinujnosde.titansbattle.managers;
 
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Prizes;
+import me.roinujnosde.titansbattle.types.Event;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 import java.text.MessageFormat;
-import java.util.Collection;
-import java.util.Iterator;
+import java.util.*;
 import java.util.Map.Entry;
 
 /**
@@ -42,11 +44,31 @@ public class TaskManager {
 
     private final TitansBattle plugin = TitansBattle.getInstance();
 
-    BukkitTask schedulerTask;
+    private Timer schedulerTimer;
     BukkitTask giveItemsTask;
 
-    public void startSchedulerTask(long interval) {
-        schedulerTask = new SchedulerTask().runTaskLater(plugin, interval * 20);
+    public void setupScheduler() {
+        if (schedulerTimer != null) {
+            schedulerTimer.cancel();
+        }
+        if (!plugin.getConfigManager().isScheduler()) {
+            return;
+        }
+        schedulerTimer = new Timer("TitansBattle Scheduler", true);
+
+        boolean loggedMonthly = false;
+        for (Event event : plugin.getConfigManager().getEvents()) {
+            TimerTask task = createTimerTask(event);
+            if (event.getFrequency() == Event.Frequency.MONTHLY) {
+                schedulerTimer.schedule(task, event.getDelay());
+                if (!loggedMonthly) {
+                    plugin.getLogger().info("Scheduled a monthly event. This event will be repeated only after a restart.");
+                    loggedMonthly = true;
+                }
+                continue;
+            }
+            schedulerTimer.scheduleAtFixedRate(task, event.getDelay(), event.getFrequency().getPeriod());
+        }
     }
 
     public void startGiveItemsTask(long interval) {
@@ -55,6 +77,25 @@ public class TaskManager {
             giveItemsTask.cancel();
         }
         giveItemsTask = new GiveItemsTask().runTaskTimer(plugin, interval, interval);
+    }
+
+    private TimerTask createTimerTask(Event event) {
+        return new TimerTask() {
+            @Override
+            public void run() {
+                Optional<GameConfiguration> config = plugin.getConfigurationDao()
+                        .getConfiguration(event.getGameName(), GameConfiguration.class);
+                if (!config.isPresent()) {
+                    plugin.getLogger().warning(String.format("Game %s not found!", event.getGameName()));
+                    return;
+                }
+                if (plugin.getGameManager().getCurrentGame().isPresent()) {
+                    plugin.getLogger().info("There is a game running. Skipping event.");
+                    return;
+                }
+                Bukkit.getScheduler().runTask(plugin, () -> plugin.getGameManager().start(config.get()));
+            }
+        };
     }
 
     private class GiveItemsTask extends BukkitRunnable {
@@ -83,20 +124,4 @@ public class TaskManager {
         }
     }
 
-
-    private class SchedulerTask extends BukkitRunnable {
-
-        @Override
-        public void run() {
-            plugin.getGameManager().startOrSchedule();
-        }
-
-    }
-
-    public void killAllTasks() {
-        if (schedulerTask != null) {
-            schedulerTask.cancel();
-            plugin.getGameManager().startOrSchedule();
-        }
-    }
 }

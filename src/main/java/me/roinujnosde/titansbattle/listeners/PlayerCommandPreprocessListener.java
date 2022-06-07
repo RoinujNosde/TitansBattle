@@ -23,14 +23,14 @@
  */
 package me.roinujnosde.titansbattle.listeners;
 
+import me.roinujnosde.titansbattle.BaseGame;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.managers.ConfigManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
-import me.roinujnosde.titansbattle.games.Game;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.jetbrains.annotations.NotNull;
 
 import java.text.MessageFormat;
 
@@ -38,28 +38,29 @@ import java.text.MessageFormat;
  *
  * @author RoinujNosde
  */
-public class PlayerCommandPreprocessListener implements Listener {
+public class PlayerCommandPreprocessListener extends TBListener {
 
-    private final GameManager gm;
-    private final ConfigManager cm;
-    private final TitansBattle plugin;
-
-    public PlayerCommandPreprocessListener() {
-        plugin = TitansBattle.getInstance();
-        gm = plugin.getGameManager();
-        cm = plugin.getConfigManager();
+    public PlayerCommandPreprocessListener(@NotNull TitansBattle plugin) {
+        super(plugin);
     }
 
     @EventHandler
     public void onCommandEveryone(PlayerCommandPreprocessEvent event) {
-        Game game = gm.getCurrentGame().orElse(null);
+        GameManager gm = plugin.getGameManager();
+        ConfigManager cm = plugin.getConfigManager();
+
+        BaseGame game = gm.getCurrentGame().orElse(null);
         if (game == null) {
+            return;
+        }
+        Player player = event.getPlayer();
+        if (canBypassCommandRestrictions(player)) {
             return;
         }
         for (String command : cm.getBlockedCommandsEveryone()) {
             if (event.getMessage().startsWith(command)) {
-                event.getPlayer().sendMessage(MessageFormat.format(plugin.getLang("command-blocked-for-everyone",
-                        game), event.getMessage()));
+                player.sendMessage(MessageFormat.format(plugin.getLang("command-blocked-for-everyone", game),
+                        event.getMessage()));
                 event.setCancelled(true);
                 break;
             }
@@ -68,12 +69,11 @@ public class PlayerCommandPreprocessListener implements Listener {
 
     @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent event) {
+        ConfigManager cm = plugin.getConfigManager();
+
         Player player = event.getPlayer();
-        Game game = gm.getCurrentGame().orElse(null);
+        BaseGame game = plugin.getBaseGameFrom(player);
         if (game == null) {
-            return;
-        }
-        if (!game.isParticipant(plugin.getDatabaseManager().getWarrior(player.getUniqueId()))) {
             return;
         }
         for (String command : cm.getAllowedCommands()) {
@@ -81,8 +81,14 @@ public class PlayerCommandPreprocessListener implements Listener {
                 return;
             }
         }
-        player.sendMessage(MessageFormat.format(plugin.getLang("command-not-allowed", game), event.getMessage()));
-        event.setCancelled(true);
+        if (!canBypassCommandRestrictions(player)) {
+            player.sendMessage(MessageFormat.format(plugin.getLang("command-not-allowed", game), event.getMessage()));
+            event.setCancelled(true);
+        }
+    }
+
+    private boolean canBypassCommandRestrictions(Player player) {
+        return player.hasPermission("titansbattle.command-bypass");
     }
 
 }

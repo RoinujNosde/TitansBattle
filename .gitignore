@@ -2,3 +2,7 @@
 /dependency-reduced-pom.xml
 /target/
 /.idea/
+/.settings/
+.project
+.classpath
+/.vscode/

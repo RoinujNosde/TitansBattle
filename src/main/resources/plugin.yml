@@ -1,7 +1,7 @@
 main: "me.roinujnosde.titansbattle.TitansBattle"
 name: "TitansBattle"
 author: "RoinujNosde"
-version: ${project.version}
+version: "${project.version}-${git.commit.id.describe-short}"
 api-version: 1.13
 softdepend:
   - "SimpleClans"
@@ -9,17 +9,22 @@ softdepend:
   - "mcMMO"
   - "PlaceholderAPI"
   - "Essentials"
+  - "Multiverse-Core"
 permissions:
   titansbattle.admin:
     description: "Gives access to administrator commands"
     default: op
     children:
       titansbattle.player: true
+      titansbattle.create: true
       titansbattle.reload: true
       titansbattle.cancel: true
       titansbattle.start: true
       titansbattle.setdestination: true
       titansbattle.setinventory: true
+      titansbattle.command-bypass: true
+      titansbattle.kick: true
+      titansbattle.setwinner: true
   titansbattle.player:
     description: "Gives access to player commands"
     default: false
@@ -30,6 +35,15 @@ permissions:
       titansbattle.help: true
       titansbattle.winners: true
       titansbattle.ranking: true
+      titansbattle.challenge.group: true
+      titansbattle.challenge.player: true
+      titansbattle.challenge.accept: true
+  titansbattle.challenge.accept:
+    default: false
+  titansbattle.challenge.player:
+    default: false
+  titansbattle.challenge.group:
+    default: false
   titansbattle.join:
     default: false
   titansbattle.exit:
@@ -38,17 +52,27 @@ permissions:
     default: false
   titansbattle.help:
     default: false
+  titansbattle.create:
+    default: false
   titansbattle.reload:
     default: false
   titansbattle.cancel:
     default: false
   titansbattle.start:
     default: false
+  titansbattle.kick:
+    default: false
+    description: Allows kicking players from games
   titansbattle.setdestination:
     default: false
+  titansbattle.command-bypass:
+    default: false
+    description: Bypasses command restrictions in games
   titansbattle.winners:
     default: false
   titansbattle.setinventory:
     default: false
   titansbattle.ranking:
+    default: false
+  titansbattle.setwinner:
     default: false

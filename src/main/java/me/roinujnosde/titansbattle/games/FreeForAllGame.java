@@ -16,9 +16,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import static me.roinujnosde.titansbattle.types.GameConfiguration.Prize.FIRST;
-import static me.roinujnosde.titansbattle.types.GameConfiguration.Prize.KILLER;
+import static me.roinujnosde.titansbattle.BaseGameConfiguration.Prize.FIRST;
+import static me.roinujnosde.titansbattle.BaseGameConfiguration.Prize.KILLER;
 import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.VICTORY;
 
 public class FreeForAllGame extends Game {
@@ -33,12 +34,12 @@ public class FreeForAllGame extends Game {
 
     @Override
     public boolean isInBattle(@NotNull Warrior warrior) {
-        return battle && playerParticipants.contains(warrior);
+        return battle && participants.contains(warrior);
     }
 
     @Override
     public @NotNull Collection<Warrior> getCurrentFighters() {
-        return playerParticipants;
+        return participants;
     }
 
     @Override
@@ -48,23 +49,23 @@ public class FreeForAllGame extends Game {
                 killer = findKiller();
                 getGroupParticipants().keySet().stream().findAny().ifPresent(g -> {
                     winnerGroup = g;
-                    getPlayerParticipants().stream().filter(p -> g.isMember(p.getUniqueId())).forEach(winners::add);
+                    getParticipants().stream().filter(p -> g.isMember(p.getUniqueId())).forEach(winners::add);
                 });
                 finish(false);
             }
-        } else if (playerParticipants.size() == 1) {
+        } else if (participants.size() == 1) {
             killer = findKiller();
-            winners = getPlayerParticipants();
+            winners = getParticipants();
             finish(false);
         }
     }
 
     @Override
     protected void onLobbyEnd() {
-        Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("game_started", this),
-                getConfig().getPreparationTime()));
-        teleportAll(getConfig().getArena());
-        startPreparationTask();
+        super.onLobbyEnd();
+        broadcastKey("game_started", getConfig().getPreparationTime());
+        teleportToArena(getParticipants());
+        startPreparation();
     }
 
     @Override
@@ -90,9 +91,25 @@ public class FreeForAllGame extends Game {
         }
         today.setWinners(gameName, Helper.warriorListToUuidList(winners));
         String winnerName = getConfig().isGroupMode() ? winnerGroup.getName() : winners.get(0).getName();
-        Bukkit.getServer().broadcastMessage(MessageFormat.format(plugin.getLang("who_won", this), winnerName));
+        broadcastKey("who_won", winnerName);
         winners.forEach(w -> w.increaseVictories(gameName));
         givePrizes(FIRST, winnerGroup, winners);
+    }
+
+    @Override
+    public void setWinner(@NotNull Warrior warrior) {
+        if (!isParticipant(warrior)) {
+            return;
+        }
+        killer = findKiller();
+        if (getConfig().isGroupMode()) {
+            winnerGroup = warrior.getGroup();
+            //noinspection ConstantConditions
+            winners = getParticipants().stream().filter(p -> winnerGroup.isMember(p.getUniqueId())).collect(Collectors.toList());
+        } else {
+            winners.add(warrior);
+        }
+        finish(false);
     }
 
     @Override
@@ -102,7 +119,7 @@ public class FreeForAllGame extends Game {
         if (groupManager != null && getConfig().isGroupMode()) {
             groupsText = groupManager.buildStringFrom(getGroupParticipants().keySet());
         }
-        return MessageFormat.format(plugin.getLang("game_info", this),
-                getPlayerParticipants().size(), getGroupParticipants().size(), groupsText);
+        return MessageFormat.format(getLang("game_info"),
+                getParticipants().size(), getGroupParticipants().size(), groupsText);
     }
 }
