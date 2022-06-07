@@ -176,12 +176,12 @@
 
     <distributionManagement>
         <repository>
-            <id>codemc-releases</id>
-            <url>https://repo.codemc.io/repository/maven-releases/</url>
+            <id>reposilite</id>
+            <url>https://repo.roinujnosde.me/releases/</url>
         </repository>
         <snapshotRepository>
-            <id>codemc-snapshots</id>
-            <url>https://repo.codemc.io/repository/maven-snapshots/</url>
+            <id>reposilite</id>
+            <url>https://repo.roinujnosde.me/snapshots/</url>
         </snapshotRepository>
     </distributionManagement>
 </project>
