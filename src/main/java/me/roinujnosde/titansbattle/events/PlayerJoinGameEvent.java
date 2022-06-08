@@ -25,6 +25,7 @@ package me.roinujnosde.titansbattle.events;
 
 import me.roinujnosde.titansbattle.BaseGame;
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.types.Warrior;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
@@ -39,10 +40,12 @@ public class PlayerJoinGameEvent extends Event implements Cancellable {
 
     private static final HandlerList HANDLERS = new HandlerList();
     private boolean cancelled = false;
+    private final Warrior warrior;
     private final Player player;
     private final BaseGame game;
 
-    public PlayerJoinGameEvent(@NotNull Player player, @NotNull BaseGame game) {
+    public PlayerJoinGameEvent(@NotNull Warrior warrior, @NotNull Player player, @NotNull BaseGame game) {
+        this.warrior = warrior;
         this.player = player;
         this.game = game;
     }
@@ -54,7 +57,16 @@ public class PlayerJoinGameEvent extends Event implements Cancellable {
     public BaseGame getGame() {
         return game;
     }
-    
+
+    /**
+     * Returns the Warrior
+     *
+     * @return the Warrior
+     */
+    public Warrior getWarrior() {
+        return warrior;
+    }
+
     /**
      * Returns the Player
      * @return the Player
@@ -85,6 +97,7 @@ public class PlayerJoinGameEvent extends Event implements Cancellable {
         cancelled = cancel;
     }
 
+    @SuppressWarnings("unused")
     public static HandlerList getHandlerList() {
         return HANDLERS;
     }

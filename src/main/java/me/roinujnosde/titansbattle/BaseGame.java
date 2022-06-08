@@ -22,6 +22,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -264,7 +265,7 @@ public abstract class BaseGame {
         return otherGame.getConfig().getName().equals(getConfig().getName());
     }
 
-    protected @NotNull String getLang(@NotNull String key) {
+    public @NotNull String getLang(@NotNull String key) {
         return plugin.getLang(key, this);
     }
 
@@ -340,54 +341,17 @@ public abstract class BaseGame {
     @SuppressWarnings({"BooleanMethodIsAlwaysInverted"})
     protected boolean canJoin(@NotNull Warrior warrior) {
         Player player = warrior.toOnlinePlayer();
-        String reason = null;
         if (player == null) {
-            plugin.debug(String.format("canJoin() -> player %s %s == null", warrior.getName(), warrior.getUniqueId()), false);
+            plugin.getLogger().log(Level.WARNING, "Joining player {0} ({1}) is null",
+                    new Object[]{warrior.getName(), warrior.getUniqueId()});
             return false;
         }
-        if (!isLobby()) {
-            reason = getLang("game_is_happening");
-            plugin.debug("happening");
-        }
-        if (isParticipant(warrior)) {
-            reason = getLang("already-joined");
-            plugin.debug("already in");
-        }
-        if (participants.size() >= getConfig().getMaximumPlayers() && getConfig().getMaximumPlayers() > 0) {
-            reason = getLang("maximum-players");
-            plugin.debug("max players");
-        }
-        if (getConfig().isGroupMode()) {
-            if (warrior.getGroup() == null) {
-                reason = getLang("not_in_a_group");
-                plugin.debug("not in group");
-            }
-            if (!getGroupParticipants().containsKey(warrior.getGroup())
-                    && getGroupParticipants().size() >= getConfig().getMaximumGroups()
-                    && getConfig().getMaximumGroups() > 0) {
-                reason = getLang("maximum-groups");
-                plugin.debug("max groups");
-            }
-            Integer amountOfPlayers = getGroupParticipants().getOrDefault(warrior.getGroup(), 0);
-            if (amountOfPlayers >= getConfig().getMaximumPlayersPerGroup() &&
-                    getConfig().getMaximumPlayersPerGroup() > 0) {
-                reason = getLang("maximum-players-per-group");
-                plugin.debug("max per group");
-            }
-        }
-        if (getConfig().isUseKits() && Kit.inventoryHasItems(player)) {
-            reason = getLang("clear-your-inventory");
-            plugin.debug("clear inv");
-        }
 
-        PlayerJoinGameEvent event = new PlayerJoinGameEvent(player, this);
+        PlayerJoinGameEvent event = new PlayerJoinGameEvent(warrior, player, this);
         Bukkit.getPluginManager().callEvent(event);
         plugin.debug("cancel: " + event.isCancelled());
-        plugin.debug("reason: >>>" + reason + "<<<");
-        if (reason != null) {
-            player.sendMessage(reason);
-        }
-        return reason == null && !event.isCancelled();
+
+        return !event.isCancelled();
     }
 
     protected void processPlayerExit(@NotNull Warrior warrior) {
@@ -457,9 +421,7 @@ public abstract class BaseGame {
                 if (remaining <= 0) {
                     return;
                 }
-                p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(
-                        MessageFormat.format(getLang("action-bar-remaining-opponents"),
-                                remaining)));
+                p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(MessageFormat.format(getLang("action-bar-remaining-opponents"), remaining)));
             });
         } catch (NoSuchMethodError ignored) {
         }
@@ -557,15 +519,13 @@ public abstract class BaseGame {
                     weaponName = itemMeta.getDisplayName();
                 }
             }
-            broadcastKey("killed_by", victim.getName(), killsCount.getOrDefault(victim, 0),
-                    killer.getName(), killsCount.get(killer), weaponName);
+            broadcastKey("killed_by", victim.getName(), killsCount.getOrDefault(victim, 0), killer.getName(), killsCount.get(killer), weaponName);
         }
     }
 
     protected void startPreparation() {
         addTask(new PreparationTimeTask().runTaskLater(plugin, getConfig().getPreparationTime() * 20));
-        addTask(new CountdownTitleTask(getCurrentFighters(), getConfig().getPreparationTime())
-                .runTaskTimer(plugin, 0L, 20L));
+        addTask(new CountdownTitleTask(getCurrentFighters(), getConfig().getPreparationTime()).runTaskTimer(plugin, 0L, 20L));
         if (getConfig().isWorldBorder()) {
             long borderInterval = getConfig().getBorderInterval() * 20L;
             WorldBorder worldBorder = getConfig().getBorderCenter().getWorld().getWorldBorder();
@@ -586,8 +546,7 @@ public abstract class BaseGame {
         public void run() {
             long seconds = times * interval;
             if (times > 0) {
-                broadcastKey("starting_game", seconds, getConfig().getMinimumGroups(), getConfig().getMinimumPlayers(),
-                        getGroupParticipants().size(), getParticipants().size());
+                broadcastKey("starting_game", seconds, getConfig().getMinimumGroups(), getConfig().getMinimumPlayers(), getGroupParticipants().size(), getParticipants().size());
                 times--;
             } else {
                 processEnd();
@@ -667,8 +626,7 @@ public abstract class BaseGame {
         @SuppressWarnings("deprecation")
         @Override
         public void run() {
-            List<Player> players = warriors.stream().map(Warrior::toOnlinePlayer).filter(Objects::nonNull)
-                    .collect(Collectors.toList());
+            List<Player> players = warriors.stream().map(Warrior::toOnlinePlayer).filter(Objects::nonNull).collect(Collectors.toList());
             String title;
             if (timer > 0) {
                 title = getColor() + "" + timer;

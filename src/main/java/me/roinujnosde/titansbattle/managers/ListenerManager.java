@@ -29,6 +29,7 @@ public class ListenerManager {
         registerListener(new EntityDamageListener(plugin));
         registerListener(new PlayerTeleportListener(plugin));
         registerListener(new BlockUpdateListener(plugin));
+        registerListener(new JoinGameListener(plugin));
         plugin.getLogger().info("Registering battle listeners...");
     }
 

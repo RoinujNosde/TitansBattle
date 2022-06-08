@@ -1,7 +1,8 @@
-package me.roinujnosde.titansbattle;
+package me.roinujnosde.titansbattle.hooks;
 
 import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Warrior;
