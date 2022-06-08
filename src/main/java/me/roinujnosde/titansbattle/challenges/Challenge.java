@@ -28,13 +28,13 @@ public class Challenge extends BaseGame {
     }
 
     @Override
-    protected @NotNull String getLang(@NotNull String key) {
+    public @NotNull String getLang(@NotNull String key, Object... args) {
         String lang = null;
         if (!key.startsWith("challenge_")) {
-            lang = super.getLang("challenge_" + key);
+            lang = super.getLang("challenge_" + key, args);
         }
         if (lang == null || lang.startsWith("<MISSING KEY:")) {
-            lang = super.getLang(key);
+            lang = super.getLang(key, args);
         }
         return lang;
     }

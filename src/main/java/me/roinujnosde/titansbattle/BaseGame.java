@@ -265,8 +265,8 @@ public abstract class BaseGame {
         return otherGame.getConfig().getName().equals(getConfig().getName());
     }
 
-    public @NotNull String getLang(@NotNull String key) {
-        return plugin.getLang(key, this);
+    public @NotNull String getLang(@NotNull String key, Object... args) {
+        return plugin.getLang(key, this, args);
     }
 
     protected boolean teleport(@Nullable Warrior warrior, @NotNull Location destination) {

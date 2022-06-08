@@ -30,6 +30,8 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
     protected Boolean keepExp = false;
     protected Boolean useKits = false;
     protected Kit kit;
+    @Path("items.whitelist")
+    protected List<String> whitelistedItems;
     @Path("prizes")
     private Map<String, Prizes> prizesMap = createPrizesMap();
 
@@ -147,6 +149,10 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
 
     public @Nullable Kit getKit() {
         return kit;
+    }
+
+    public @Nullable List<String> getWhitelistedItems() {
+        return whitelistedItems;
     }
 
     public void setKit(Kit kit) {

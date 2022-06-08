@@ -10,8 +10,10 @@ import me.roinujnosde.titansbattle.types.Warrior;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.List;
 import java.util.Map;
 
 public class JoinGameListener extends TBListener {
@@ -80,9 +82,31 @@ public class JoinGameListener extends TBListener {
         }
     }
 
-    private void cancelWithMessage(PlayerJoinGameEvent event, String key) {
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    public void whitelist(PlayerJoinGameEvent event) {
+        BaseGameConfiguration config = event.getGame().getConfig();
         Player player = event.getPlayer();
-        String message = event.getGame().getLang(key);
+        List<String> whitelist = config.getWhitelistedItems();
+        if (whitelist == null || whitelist.isEmpty()) {
+            return;
+        }
+        items:
+        for (ItemStack item : player.getInventory().getContents()) {
+            for (String allowedItem : whitelist) {
+                if (allowedItem.equals(item.getType().name())) {
+                    continue items;
+                }
+
+                event.setCancelled(true);
+                cancelWithMessage(event, "item_not_allowed", item.getType());
+                break items;
+            }
+        }
+    }
+
+    private void cancelWithMessage(PlayerJoinGameEvent event, String key, Object... args) {
+        Player player = event.getPlayer();
+        String message = event.getGame().getLang(key, args);
 
         player.sendMessage(message);
         event.setCancelled(true);
