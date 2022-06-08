@@ -32,6 +32,8 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
     protected Kit kit;
     @Path("items.whitelist")
     protected List<String> whitelistedItems;
+    @Path("items.blacklist")
+    protected List<String> blacklistedItems;
     @Path("prizes")
     private Map<String, Prizes> prizesMap = createPrizesMap();
 
@@ -153,6 +155,10 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
 
     public @Nullable List<String> getWhitelistedItems() {
         return whitelistedItems;
+    }
+
+    public List<String> getBlacklistedItems() {
+        return blacklistedItems;
     }
 
     public void setKit(Kit kit) {
@@ -287,6 +293,7 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
     public enum Prize implements ConfigurationSerializable {
         FIRST, SECOND, THIRD, KILLER;
 
+        @SuppressWarnings("unused")
         public static Prize deserialize(Map<String, Object> data) {
             return Prize.valueOf((String) data.get("prize"));
         }

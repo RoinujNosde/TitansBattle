@@ -84,9 +84,8 @@ public class JoinGameListener extends TBListener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void whitelist(PlayerJoinGameEvent event) {
-        BaseGameConfiguration config = event.getGame().getConfig();
         Player player = event.getPlayer();
-        List<String> whitelist = config.getWhitelistedItems();
+        List<String> whitelist = event.getGame().getConfig().getWhitelistedItems();
         if (whitelist == null || whitelist.isEmpty()) {
             return;
         }
@@ -97,9 +96,25 @@ public class JoinGameListener extends TBListener {
                     continue items;
                 }
 
-                event.setCancelled(true);
                 cancelWithMessage(event, "item_not_allowed", item.getType());
                 break items;
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    public void blacklist(PlayerJoinGameEvent event) {
+        Player player = event.getPlayer();
+        List<String> blacklist =  event.getGame().getConfig().getBlacklistedItems();
+        if (blacklist == null || blacklist.isEmpty()) {
+            return;
+        }
+        for (ItemStack item : player.getInventory().getContents()) {
+            for (String blockedItem : blacklist) {
+                if (blockedItem.equals(item.getType().name())) {
+                    cancelWithMessage(event, "item_not_allowed", item.getType());
+                    break;
+                }
             }
         }
     }
