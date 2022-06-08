@@ -1,4 +1,4 @@
-name: Publish
+name: Publish to CurseForge
 'on':
   release:
     types:
@@ -12,9 +12,6 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
-          server-id: reposilite
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
       - name: Build with Maven
         run: mvn -B package --file pom.xml && echo "FINAL_NAME=$(mvn help:evaluate -Dexpression=project.build.finalName -q -DforceStdout)" >> $GITHUB_ENV
       - name: CurseForge
@@ -30,8 +27,3 @@ jobs:
           game_versions: '8849,8503,7915,7667,7330,7105,6588,630,591,585,531'
           release_type: release
           relations: 'simpleclans-2-5:optionalDependency'
-      - name: Reposilite
-        run: mvn -B deploy
-        env:
-          MAVEN_USERNAME: titansbattle
-          MAVEN_PASSWORD: '${{ secrets.REPOSILITE_TOKEN }}'
