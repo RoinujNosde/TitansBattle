@@ -119,6 +119,7 @@ public abstract class BaseGame {
         participants.add(warrior);
         setKit(warrior);
         broadcastKey("player_joined", player.getName());
+        player.sendMessage(getLang("objective"));
         if (participants.size() == getConfig().getMaximumPlayers() && lobbyTask != null) {
             lobbyTask.processEnd();
         }
