@@ -1,0 +1,33 @@
+name: Build and Upload
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Set up Java
+        uses: actions/setup-java@v2
+        with:
+          distribution: 'adopt'
+          java-version: '17'
+
+      - name: Cache Maven repo
+        uses: actions/cache@v2
+        id: cache
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+
+      - name: Build with Maven
+        run: mvn clean package --file pom.xml -X -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2
+        
+      - name: Upload
+        uses: actions/upload-artifact@v2.2.4
+        with:
+          name: TitansBattle
+          path: target/TitansBattle*.jar
