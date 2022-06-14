@@ -24,7 +24,7 @@ jobs:
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
 
       - name: Build with Maven
-        run: mvn clean package --file pom.xml -X -Dhttps.protocols=TLSv1,TLSv1.1,TLSv1.2
+        run: mvn clean package --file pom.xml
         
       - name: Upload
         uses: actions/upload-artifact@v2.2.4
