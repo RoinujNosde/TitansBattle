@@ -1,9 +1,6 @@
 package me.roinujnosde.titansbattle.commands.conditions;
 
-import co.aikar.commands.BukkitCommandIssuer;
-import co.aikar.commands.ConditionContext;
-import co.aikar.commands.ConditionFailedException;
-import co.aikar.commands.InvalidCommandArgument;
+import co.aikar.commands.*;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.challenges.ChallengeRequest;
 import me.roinujnosde.titansbattle.types.Warrior;
@@ -24,6 +21,9 @@ public class CanChallengeCondition extends AbstractCommandCondition {
     @Override
     public void validateCondition(ConditionContext<BukkitCommandIssuer> context) throws InvalidCommandArgument {
         Player player = context.getIssuer().getPlayer();
+        if (player == null) {
+            throw new ConditionFailedException(MessageKeys.NOT_ALLOWED_ON_CONSOLE);
+        }
         Warrior warrior = plugin.getDatabaseManager().getWarrior(player);
         boolean groupMode = Boolean.parseBoolean(context.getConfigValue("group", "false"));
 
