@@ -70,7 +70,7 @@ public class JoinGameListener extends TBListener {
 
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void groupMode(PlayerJoinGameEvent event) {
-        if (event.getWarrior().getGroup() == null) {
+        if (event.getGame().getConfig().isGroupMode() && event.getWarrior().getGroup() == null) {
             cancelWithMessage(event, "not_in_a_group");
         }
     }

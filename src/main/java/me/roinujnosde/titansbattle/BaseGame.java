@@ -305,7 +305,8 @@ public abstract class BaseGame {
         if (warriors == null) {
             return;
         }
-        List<Player> players = getPlayerParticipantsStream().collect(Collectors.toList());
+        List<Player> players = warriors.stream().map(Warrior::toOnlinePlayer).filter(Objects::nonNull)
+                .collect(Collectors.toList());
         if (group != null) {
             for (Player p : players) {
                 if (group.isLeaderOrOfficer(p.getUniqueId())) {
