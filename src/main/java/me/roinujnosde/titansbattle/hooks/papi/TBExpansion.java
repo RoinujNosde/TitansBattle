@@ -1,4 +1,4 @@
-package me.roinujnosde.titansbattle.hooks;
+package me.roinujnosde.titansbattle.hooks.papi;
 
 import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;

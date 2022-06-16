@@ -80,10 +80,10 @@ public class Prizes implements ConfigurationSerializable {
             giveItemsToPlayers(plugin, members, memberItems);
         }
         if (leaderCommandsEnabled) {
-            runCommandsOnPlayers(leaders, leaderCommands, leaderCommandsSomeNumber, leaderCommandsSomeNumberDivide);
+            runCommandsOnPlayers(plugin, leaders, leaderCommands, leaderCommandsSomeNumber, leaderCommandsSomeNumberDivide);
         }
         if (memberCommandsEnabled) {
-            runCommandsOnPlayers(members, memberCommands, memberCommandsSomeNumber, memberCommandsSomeNumberDivide);
+            runCommandsOnPlayers(plugin, members, memberCommands, memberCommandsSomeNumber, memberCommandsSomeNumberDivide);
         }
     }
 
@@ -100,15 +100,16 @@ public class Prizes implements ConfigurationSerializable {
         }
     }
 
-    private void runCommandsOnPlayers(List<Player> players, List<String> commands, double someNumber, boolean divide) {
+    private void runCommandsOnPlayers(TitansBattle plugin, List<Player> players, List<String> commands,
+                                      double someNumber, boolean divide) {
         if (divide) {
             someNumber = someNumber / players.size();
         }
         for (Player player : players) {
             for (String command : commands) {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(),
-                        command.replaceAll("%player%", player.getName()).replaceAll("%some_number%",
-                                Double.toString(someNumber)));
+                command = plugin.getPlaceholderHook().parse(player, command,
+                        "%player%", player.getName(), "%some_number%", Double.toString(someNumber));
+                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
             }
         }
     }

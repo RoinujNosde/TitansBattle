@@ -25,7 +25,7 @@ import me.roinujnosde.titansbattle.challenges.Challenge;
 import me.roinujnosde.titansbattle.challenges.ChallengeRequest;
 import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.games.Game;
-import me.roinujnosde.titansbattle.hooks.TBExpansion;
+import me.roinujnosde.titansbattle.hooks.papi.PlaceholderHook;
 import me.roinujnosde.titansbattle.managers.*;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Kit;
@@ -61,6 +61,7 @@ public final class TitansBattle extends JavaPlugin {
     private ChallengeManager challengeManager;
     private ListenerManager listenerManager;
     private ConfigurationDao configurationDao;
+    private PlaceholderHook placeholderHook;
 
     @Override
     public void onEnable() {
@@ -86,9 +87,7 @@ public final class TitansBattle extends JavaPlugin {
         listenerManager.registerGeneralListeners();
         databaseManager.loadDataToMemory();
         taskManager.setupScheduler();
-        if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            new TBExpansion(this).register();
-        }
+        placeholderHook = new PlaceholderHook(this);
         new Metrics(this, 14875);
     }
 
@@ -166,6 +165,10 @@ public final class TitansBattle extends JavaPlugin {
 
     public ConfigurationDao getConfigurationDao() {
         return configurationDao;
+    }
+
+    public PlaceholderHook getPlaceholderHook() {
+        return placeholderHook;
     }
 
     /**
