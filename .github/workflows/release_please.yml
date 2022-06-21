@@ -12,4 +12,4 @@ jobs:
           release-type: maven
           package-name: TitansBattle
           token: ${{ secrets.PAT_TOKEN }}
-          fork: true
+          fork: false
