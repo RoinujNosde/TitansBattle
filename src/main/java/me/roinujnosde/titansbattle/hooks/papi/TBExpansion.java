@@ -35,8 +35,8 @@ public class TBExpansion extends PlaceholderExpansion {
         LAST_WINNER_KILLER_PATTERN = Pattern.compile("last_(?<type>winner|killer)_(?<game>\\S+)");
         PREFIX_PATTERN = Pattern.compile("(?<game>^\\S+)_(?<type>winner|killer)_prefix");
         PLACEHOLDERS = Arrays.asList("%titansbattle_arena_in_use_<arena>%", "%titansbattle_last_winner_group_<game>%",
-                "%titansbattle_<game>_<killer ou winner>_prefix%", "%titansbattle_group_total_victories%",
-                "%titansbattle_total_kills%", "%titansbattle_total_deaths%");
+                "%titansbattle_last_<killer|winner>_<game>%", "%titansbattle_<game>_<killer|winner>_prefix%",
+                "%titansbattle_group_total_victories%", "%titansbattle_total_kills%", "%titansbattle_total_deaths%");
     }
 
     public TBExpansion(TitansBattle plugin) {
