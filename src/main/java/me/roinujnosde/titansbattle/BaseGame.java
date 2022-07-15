@@ -67,9 +67,6 @@ public abstract class BaseGame {
         if (!getConfig().locationsSet()) {
             throw new IllegalStateException("You didn't set all locations!");
         }
-            if (plugin.getConfig().getBoolean("webhook")) {
-                discordAnnounce("start_game_announce");
-            }
         LobbyStartEvent event = new LobbyStartEvent(this);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {
