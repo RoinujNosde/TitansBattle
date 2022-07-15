@@ -64,12 +64,6 @@ public class TBCommands extends BaseCommand {
             sender.sendMessage(plugin.getLang("starting-or-started", currentGame.orElse(null)));
             return;
         }
-        ForkJoinPool.commonPool().execute(() -> {
-
-            if (plugin.getConfig().getBoolean("webhook")) {
-                plugin.sendDiscordMessage(plugin.getLang("start_game_announce").replace("\n", "\\n"));
-            }
-        });
         gameManager.start(game);
     }
 
