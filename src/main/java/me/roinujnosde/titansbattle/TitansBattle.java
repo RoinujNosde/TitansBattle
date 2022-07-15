@@ -47,7 +47,6 @@ import java.net.MalformedURLException;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 import static net.sacredlabyrinth.phaed.simpleclans.chat.ChatHandler.plugin;
 
