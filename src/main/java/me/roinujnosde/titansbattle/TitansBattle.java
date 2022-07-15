@@ -47,6 +47,9 @@ import java.net.MalformedURLException;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+
+import static net.sacredlabyrinth.phaed.simpleclans.chat.ChatHandler.plugin;
 
 /**
  * @author RoinujNosde
@@ -255,19 +258,22 @@ public final class TitansBattle extends JavaPlugin {
     }
 
     public void sendDiscordMessage(String message) {
-        if (getConfig().getBoolean("webhook")) {
-            String url = getConfig().getString("webhook_url");
-            DiscordWebhook webhook = new DiscordWebhook(url);
-            webhook.setContent(message);
-            try {
-                webhook.execute();
-            } catch (MalformedURLException e) {
-                System.out.println("[TitansBattle] Invalid webhook URL");
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
 
-            } catch (IOException e) {
-                e.printStackTrace();
+            if (getConfig().getBoolean("webhook")) {
+                String url = getConfig().getString("webhook_url");
+                DiscordWebhook webhook = new DiscordWebhook(url);
+                webhook.setContent(message);
+                try {
+                    webhook.execute();
+                } catch (MalformedURLException e) {
+                    System.out.println("[TitansBattle] Invalid webhook URL");
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
-        }
+        });
     }
 
 }

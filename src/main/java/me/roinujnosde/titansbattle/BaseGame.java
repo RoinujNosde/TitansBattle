@@ -23,7 +23,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.text.MessageFormat;
 import java.util.*;
-import java.util.concurrent.ForkJoinPool;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -68,12 +67,9 @@ public abstract class BaseGame {
         if (!getConfig().locationsSet()) {
             throw new IllegalStateException("You didn't set all locations!");
         }
-        ForkJoinPool.commonPool().execute(() -> {
-
             if (plugin.getConfig().getBoolean("webhook")) {
                 discordAnnounce("start_game_announce");
             }
-        });
         LobbyStartEvent event = new LobbyStartEvent(this);
         Bukkit.getPluginManager().callEvent(event);
         if (event.isCancelled()) {

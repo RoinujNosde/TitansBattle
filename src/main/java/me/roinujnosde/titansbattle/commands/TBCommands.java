@@ -4,7 +4,6 @@ import co.aikar.commands.BaseCommand;
 import co.aikar.commands.CommandHelp;
 import co.aikar.commands.annotation.*;
 import co.aikar.commands.bukkit.contexts.OnlinePlayer;
-import me.roinujnosde.titansbattle.BaseGame;
 import me.roinujnosde.titansbattle.BaseGameConfiguration;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.challenges.ArenaConfiguration;
@@ -19,7 +18,6 @@ import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.types.Winners;
-import me.roinujnosde.titansbattle.utils.DiscordWebhook;
 import me.roinujnosde.titansbattle.utils.Helper;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
 import org.bukkit.Bukkit;
@@ -28,15 +26,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.Nullable;
 
-import java.io.IOException;
-import java.net.MalformedURLException;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ForkJoinPool;
 
 @CommandAlias("%titansbattle|tb")
 public class TBCommands extends BaseCommand {
@@ -53,6 +48,9 @@ public class TBCommands extends BaseCommand {
     private DatabaseManager databaseManager;
     @Dependency
     private ConfigurationDao configDao;
+
+    public TBCommands() {
+    }
 
     @Subcommand("%start|start")
     @CommandPermission("titansbattle.start")
