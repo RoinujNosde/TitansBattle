@@ -49,9 +49,6 @@ public class TBCommands extends BaseCommand {
     @Dependency
     private ConfigurationDao configDao;
 
-    public TBCommands() {
-    }
-
     @Subcommand("%start|start")
     @CommandPermission("titansbattle.start")
     @CommandCompletion("@games")
