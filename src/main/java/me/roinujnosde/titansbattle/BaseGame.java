@@ -240,7 +240,7 @@ public abstract class BaseGame {
     }
 
     public void discordAnnounce(@NotNull String key) {
-        plugin.sendDiscordMessage(getLang(key).replace("\n", "\\n"));
+        plugin.sendDiscordMessage(getLang(key));
     }
 
     public void broadcast(@Nullable String message, Object... args) {

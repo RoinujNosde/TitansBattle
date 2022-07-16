@@ -59,9 +59,7 @@ public abstract class Game extends BaseGame {
     @Override
     public void start() {
         super.start();
-        if (plugin.getConfig().getBoolean("webhook")) {
-            discordAnnounce("start_game_announce");
-        }
+        discordAnnounce("discord_game_starting");
         gameManager.setCurrentGame(this);
     }
 

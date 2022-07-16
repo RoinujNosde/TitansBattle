@@ -81,9 +81,8 @@ blocked_commands_everyone:
   - "/f kick"
   - "/marry tp"
 
-#Send a webhook in game start?
-webhook: false
-webhook_url: ""
+#Send a webhook in game start
+discord_webhook_url: ""
 
 #Destinations
 destinations:

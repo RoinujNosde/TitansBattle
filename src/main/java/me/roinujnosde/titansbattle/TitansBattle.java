@@ -52,7 +52,6 @@ import static net.sacredlabyrinth.phaed.simpleclans.chat.ChatHandler.plugin;
 
 /**
  * @author RoinujNosde
- *
  */
 public final class TitansBattle extends JavaPlugin {
 
@@ -258,11 +257,10 @@ public final class TitansBattle extends JavaPlugin {
 
     public void sendDiscordMessage(String message) {
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-
-            if (getConfig().getBoolean("webhook")) {
-                String url = getConfig().getString("webhook_url");
+            String url = getConfig().getString("discord_webhook_url");
+            if (url != null && !url.isEmpty()) {
                 DiscordWebhook webhook = new DiscordWebhook(url);
-                webhook.setContent(message);
+                webhook.setContent(message.replace("\n", "\\n"));
                 try {
                     webhook.execute();
                 } catch (MalformedURLException e) {
