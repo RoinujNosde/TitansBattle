@@ -239,8 +239,8 @@ public abstract class BaseGame {
         broadcast(getLang(key), args);
     }
 
-    public void discordAnnounce(@NotNull String key) {
-        plugin.sendDiscordMessage(getLang(key));
+    public void discordAnnounce(@NotNull String key, Object... args) {
+        plugin.sendDiscordMessage(getLang(key, args));
     }
 
     public void broadcast(@Nullable String message, Object... args) {
