@@ -123,6 +123,7 @@ error-saving-game-config: "&b» Erro ao salvar a configuração do jogo!"
 error-saving-config: "&c» Erro ao salvar configuração!"
 challenge_starting_game: " \n&b» Iniciando desafio em {0} segundos! \n» Necessários: {1} grupos, {2} jogadores\n» Participando: {3} grupos, {4} jogadores.\n "
 starting_game: "!!broadcast \n&b» Iniciando jogo em {0} segundos! Entre usando /tb join.\n» Necessários: {1} grupos, {2} jogadores\n» Participando: {3} grupos, {4} jogadores.\n "
+discord_game_starting: "» Iniciada a contagem para um novo jogo! \nEntre no servidor para participar."
 players-ranking:
   victories-title: "V"
   kills-title: "A"

@@ -59,7 +59,6 @@ public class TBCommands extends BaseCommand {
             sender.sendMessage(plugin.getLang("starting-or-started", currentGame.orElse(null)));
             return;
         }
-
         gameManager.start(game);
     }
 

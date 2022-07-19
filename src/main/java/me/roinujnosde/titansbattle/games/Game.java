@@ -59,6 +59,7 @@ public abstract class Game extends BaseGame {
     @Override
     public void start() {
         super.start();
+        discordAnnounce("discord_game_starting");
         gameManager.setCurrentGame(this);
     }
 

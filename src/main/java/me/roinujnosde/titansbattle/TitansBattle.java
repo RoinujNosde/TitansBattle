@@ -25,6 +25,7 @@ import me.roinujnosde.titansbattle.challenges.Challenge;
 import me.roinujnosde.titansbattle.challenges.ChallengeRequest;
 import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.games.Game;
+import me.roinujnosde.titansbattle.hooks.discord.DiscordWebhook;
 import me.roinujnosde.titansbattle.hooks.papi.PlaceholderHook;
 import me.roinujnosde.titansbattle.managers.*;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
@@ -41,13 +42,16 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
+
+import static net.sacredlabyrinth.phaed.simpleclans.chat.ChatHandler.plugin;
 
 /**
  * @author RoinujNosde
- *
  */
 public final class TitansBattle extends JavaPlugin {
 
@@ -249,6 +253,21 @@ public final class TitansBattle extends JavaPlugin {
         if (Bukkit.getPluginManager().getPlugin("SimpleClans") != null) {
             setGroupManager(new SimpleClansGroupManager(this));
         }
+    }
+
+    public void sendDiscordMessage(String message) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+            String url = getConfig().getString("discord_webhook_url");
+            if (url != null && !url.isEmpty()) {
+                DiscordWebhook webhook = new DiscordWebhook(url);
+                webhook.setContent(message.replace("\n", "\\n"));
+                try {
+                    webhook.execute();
+                } catch (IOException e) {
+                    getLogger().log(Level.SEVERE, "Error sending webhook message", e);
+                }
+            }
+        });
     }
 
 }
