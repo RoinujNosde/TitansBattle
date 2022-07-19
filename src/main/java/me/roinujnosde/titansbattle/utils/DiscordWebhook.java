@@ -8,7 +8,7 @@ import java.io.OutputStream;
 import java.net.URL;
 
 /**
- * Class used to execute Discord Webhooks with low effort
+ * Classs used to execute Discord Webhooks with low effort
  */
 public class DiscordWebhook {
 
