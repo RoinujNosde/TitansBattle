@@ -1,6 +1,6 @@
-package me.roinujnosde.titansbattle.utils;
+package me.roinujnosde.titansbattle.hooks.discord;
 
-import org.json.simple.JSONObject;
+import com.google.gson.JsonObject;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
@@ -8,7 +8,7 @@ import java.io.OutputStream;
 import java.net.URL;
 
 /**
- * Class used to execute Discord Webhooks with low effort
+ * Class used to execute Discord Webhooks
  */
 public class DiscordWebhook {
 
@@ -29,16 +29,13 @@ public class DiscordWebhook {
     }
 
     public void execute() throws IOException {
-
-        JSONObject json = new JSONObject();
-
-        //noinspection unchecked
-        json.put("content", content);
+        JsonObject json = new JsonObject();
+        json.addProperty("content", content);
 
         URL url = new URL(this.url);
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
         connection.addRequestProperty("Content-Type", "application/json");
-        connection.addRequestProperty("TitansBattle", "Java-DiscordWebhook-BY-Gelox_");
+        connection.addRequestProperty("User-Agent", "TitansBattle");
         connection.setDoOutput(true);
         connection.setRequestMethod("POST");
 
@@ -47,7 +44,7 @@ public class DiscordWebhook {
         stream.flush();
         stream.close();
 
-        connection.getInputStream().close(); //I'm not sure why but it doesn't work without getting the InputStream
+        connection.getInputStream().close();
         connection.disconnect();
     }
 

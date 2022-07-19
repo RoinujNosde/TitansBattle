@@ -25,13 +25,13 @@ import me.roinujnosde.titansbattle.challenges.Challenge;
 import me.roinujnosde.titansbattle.challenges.ChallengeRequest;
 import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.games.Game;
+import me.roinujnosde.titansbattle.hooks.discord.DiscordWebhook;
 import me.roinujnosde.titansbattle.hooks.papi.PlaceholderHook;
 import me.roinujnosde.titansbattle.managers.*;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.types.Prizes;
 import me.roinujnosde.titansbattle.types.Warrior;
-import me.roinujnosde.titansbattle.utils.DiscordWebhook;
 import org.bstats.bukkit.Metrics;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -43,10 +43,10 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Level;
 
 import static net.sacredlabyrinth.phaed.simpleclans.chat.ChatHandler.plugin;
 
@@ -263,11 +263,8 @@ public final class TitansBattle extends JavaPlugin {
                 webhook.setContent(message.replace("\n", "\\n"));
                 try {
                     webhook.execute();
-                } catch (MalformedURLException e) {
-                    System.out.println("[TitansBattle] Invalid webhook URL");
-
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    getLogger().log(Level.SEVERE, "Error sending webhook message", e);
                 }
             }
         });
