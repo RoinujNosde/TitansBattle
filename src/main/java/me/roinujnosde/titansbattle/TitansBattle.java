@@ -48,8 +48,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.logging.Level;
 
-import static net.sacredlabyrinth.phaed.simpleclans.chat.ChatHandler.plugin;
-
 /**
  * @author RoinujNosde
  */
@@ -256,7 +254,7 @@ public final class TitansBattle extends JavaPlugin {
     }
 
     public void sendDiscordMessage(String message) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+        Bukkit.getScheduler().runTaskAsynchronously(this, () -> {
             String url = getConfig().getString("discord_webhook_url");
             if (url != null && !url.isEmpty()) {
                 DiscordWebhook webhook = new DiscordWebhook(url);
