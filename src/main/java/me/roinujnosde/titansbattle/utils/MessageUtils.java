@@ -14,7 +14,7 @@ import me.roinujnosde.titansbattle.TitansBattle;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 
-public class MessageUtils {
+public final class MessageUtils {
 
     private static Class<?> baseComponentClass;
     private static Class<?> chatSerializerClass;
