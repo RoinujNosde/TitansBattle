@@ -495,10 +495,15 @@ public class DatabaseManager {
     }
 
     public void saveAll() {
+        // Copying collections for async use, avoiding ConcurrentModificationException
+        final Map<String, GroupData> groups = new HashMap<>(getGroups());
+        final Set<Warrior> warriors = new HashSet<>(getWarriors());
+        final List<Winners> winners = new ArrayList<>(getWinners());
+
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            getGroups().forEach(this::update);
-            getWarriors().forEach(this::update);
-            getWinners().forEach(this::update);
+            groups.forEach(this::update);
+            warriors.forEach(this::update);
+            winners.forEach(this::update);
         });
     }
 

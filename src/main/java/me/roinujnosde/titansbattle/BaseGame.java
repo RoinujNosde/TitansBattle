@@ -44,7 +44,7 @@ public abstract class BaseGame {
     protected boolean battle;
     protected final List<Warrior> participants = new ArrayList<>();
     protected final HashMap<Warrior, Integer> killsCount = new HashMap<>();
-    protected final List<Warrior> casualties = new ArrayList<>();
+    protected final Set<Warrior> casualties = new HashSet<>();
     protected final Set<Warrior> casualtiesWatching = new HashSet<>();
 
     private final List<BukkitTask> tasks = new ArrayList<>();
@@ -225,7 +225,7 @@ public abstract class BaseGame {
         return groups;
     }
 
-    public List<Warrior> getCasualties() {
+    public Collection<Warrior> getCasualties() {
         return casualties;
     }
 
@@ -237,6 +237,10 @@ public abstract class BaseGame {
 
     public void broadcastKey(@NotNull String key, Object... args) {
         broadcast(getLang(key), args);
+    }
+
+    public void discordAnnounce(@NotNull String key, Object... args) {
+        plugin.sendDiscordMessage(getLang(key, args));
     }
 
     public void broadcast(@Nullable String message, Object... args) {
