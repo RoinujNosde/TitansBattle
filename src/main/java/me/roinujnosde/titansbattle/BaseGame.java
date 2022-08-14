@@ -13,7 +13,11 @@ import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -172,8 +176,13 @@ public abstract class BaseGame {
         if (getConfig().isUseKits()) {
             plugin.getConfigManager().getClearInventory().add(warrior.getUniqueId());
         }
+        if (!isLobby()) {
+            processInventoryOnExit(warrior);
+            onDeath(warrior, getLastAttacker(warrior));
+            return;
+        }
         casualties.add(warrior);
-        casualtiesWatching.add(warrior); //adding to this Collection, so they are not teleport on respawn
+        casualtiesWatching.add(warrior); //adding to this Collection, so they are not teleported on respawn
         plugin.getConfigManager().getRespawn().add(warrior.getUniqueId());
         plugin.getConfigManager().save();
         processPlayerExit(warrior);
@@ -186,12 +195,51 @@ public abstract class BaseGame {
         if (getConfig().isUseKits()) {
             Kit.clearInventory(warrior.toOnlinePlayer());
         }
+        if (!isLobby()) {
+            processInventoryOnExit(warrior);
+            onDeath(warrior, getLastAttacker(warrior));
+            return;
+        }
         casualties.add(warrior);
         casualtiesWatching.add(warrior); //adding to this Collection, so they are not teleport on respawn
         Player player = Objects.requireNonNull(warrior.toOnlinePlayer());
         player.sendMessage(getLang("you-have-left"));
         SoundUtils.playSound(LEAVE_GAME, plugin.getConfig(), player);
         processPlayerExit(warrior);
+    }
+
+    protected @Nullable Warrior getLastAttacker(@NotNull Warrior victim) {
+        Player player = victim.toOnlinePlayer();
+        EntityDamageEvent event = player != null ? player.getLastDamageCause() : null;
+        if (event instanceof EntityDamageByEntityEvent) {
+            Entity attacker = ((EntityDamageByEntityEvent) event).getDamager();
+            if (attacker instanceof Player) {
+                return plugin.getDatabaseManager().getWarrior((Player) attacker);
+            }
+            if (attacker instanceof Projectile) {
+                return plugin.getDatabaseManager().getWarrior((Player) ((Projectile) attacker).getShooter());
+            }
+        }
+        return null;
+    }
+
+    protected void processInventoryOnExit(@NotNull Warrior warrior) {
+        Player player = warrior.toOnlinePlayer();
+        if (player == null) {
+            plugin.debug("processInventoryOnExit() -> null player");
+            return;
+        }
+        if (shouldKeepInventoryOnDeath(warrior)) {
+            return;
+        }
+        if (!shouldClearDropsOnDeath(warrior)) {
+            return;
+        }
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item == null) continue;
+            player.getWorld().dropItemNaturally(player.getLocation(), item);
+        }
+        Kit.clearInventory(player);
     }
 
     public void onRespawn(@NotNull Warrior warrior) {
