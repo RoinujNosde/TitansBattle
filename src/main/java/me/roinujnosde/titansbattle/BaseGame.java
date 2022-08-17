@@ -237,7 +237,7 @@ public abstract class BaseGame {
         }
         for (ItemStack item : player.getInventory().getContents()) {
             if (item == null) continue;
-            player.getWorld().dropItemNaturally(player.getLocation(), item);
+            player.getWorld().dropItemNaturally(player.getLocation(), item.clone());
         }
         Kit.clearInventory(player);
     }
