@@ -176,7 +176,7 @@ public abstract class BaseGame {
         if (getConfig().isUseKits()) {
             plugin.getConfigManager().getClearInventory().add(warrior.getUniqueId());
         }
-        if (!isLobby()) {
+        if (!isLobby() && getCurrentFighters().contains(warrior)) {
             processInventoryOnExit(warrior);
             onDeath(warrior, getLastAttacker(warrior));
             return;
@@ -195,7 +195,7 @@ public abstract class BaseGame {
         if (getConfig().isUseKits()) {
             Kit.clearInventory(warrior.toOnlinePlayer());
         }
-        if (!isLobby()) {
+        if (!isLobby() && getCurrentFighters().contains(warrior)) {
             processInventoryOnExit(warrior);
             onDeath(warrior, getLastAttacker(warrior));
             return;
