@@ -232,7 +232,7 @@ public abstract class BaseGame {
         if (shouldKeepInventoryOnDeath(warrior)) {
             return;
         }
-        if (!shouldClearDropsOnDeath(warrior)) {
+        if (shouldClearDropsOnDeath(warrior)) {
             return;
         }
         for (ItemStack item : player.getInventory().getContents()) {
