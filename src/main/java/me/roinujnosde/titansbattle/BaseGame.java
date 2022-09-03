@@ -229,7 +229,8 @@ public abstract class BaseGame {
             plugin.debug("processInventoryOnExit() -> null player");
             return;
         }
-        if (shouldKeepInventoryOnDeath(warrior)) {
+        World world = player.getWorld();
+        if (shouldKeepInventoryOnDeath(warrior) || Boolean.parseBoolean(world.getGameRuleValue("keepInventory"))) {
             return;
         }
         if (shouldClearDropsOnDeath(warrior)) {
@@ -237,7 +238,7 @@ public abstract class BaseGame {
         }
         for (ItemStack item : player.getInventory().getContents()) {
             if (item == null) continue;
-            player.getWorld().dropItemNaturally(player.getLocation(), item.clone());
+            world.dropItemNaturally(player.getLocation(), item.clone());
         }
         Kit.clearInventory(player);
     }
