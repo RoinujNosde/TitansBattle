@@ -417,6 +417,7 @@ public class EliminationTournamentGame extends Game {
         }
         if (getConfig().isGroupMode() && firstGroup != null) {
             casualties.stream().filter(firstGroup::isMember).forEach(firstPlaceWinners::add);
+            firstPlaceWinners = firstPlaceWinners.stream().distinct().collect(Collectors.toList());
             todayWinners.setWinnerGroup(getConfig().getName(), firstGroup.getName());
             GroupWinEvent event = new GroupWinEvent(firstGroup);
             Bukkit.getPluginManager().callEvent(event);
