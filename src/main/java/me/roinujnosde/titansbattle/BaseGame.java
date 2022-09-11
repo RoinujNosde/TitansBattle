@@ -177,8 +177,12 @@ public abstract class BaseGame {
             plugin.getConfigManager().getClearInventory().add(warrior.getUniqueId());
         }
         if (!isLobby() && getCurrentFighters().contains(warrior)) {
-            processInventoryOnExit(warrior);
-            onDeath(warrior, getLastAttacker(warrior));
+            //processInventoryOnExit(warrior);
+            //onDeath(warrior, getLastAttacker(warrior));
+            Player player = warrior.toOnlinePlayer();
+            if (player != null) {
+                player.setHealth(0);
+            }
             return;
         }
         casualties.add(warrior);
@@ -195,14 +199,15 @@ public abstract class BaseGame {
         if (getConfig().isUseKits()) {
             Kit.clearInventory(warrior.toOnlinePlayer());
         }
+        Player player = Objects.requireNonNull(warrior.toOnlinePlayer());
         if (!isLobby() && getCurrentFighters().contains(warrior)) {
-            processInventoryOnExit(warrior);
-            onDeath(warrior, getLastAttacker(warrior));
+            //processInventoryOnExit(warrior);
+            //onDeath(warrior, getLastAttacker(warrior));
+            player.setHealth(0);
             return;
         }
         casualties.add(warrior);
         casualtiesWatching.add(warrior); //adding to this Collection, so they are not teleport on respawn
-        Player player = Objects.requireNonNull(warrior.toOnlinePlayer());
         player.sendMessage(getLang("you-have-left"));
         SoundUtils.playSound(LEAVE_GAME, plugin.getConfig(), player);
         processPlayerExit(warrior);
