@@ -1,1 +1,6 @@
 ---
+command.description.create: "Erstellt eine Spieldatei"
+command.description.edit.prize: "Bearbeitet die Preise für ein Spiel"
+command.description.setprize: "Legt Ihr Inventar als Preis für ein Spiel fest"
+command.description.edit.game: "Bearbeitet die Konfiguration für ein Spiel"
+command.description.start: "Startet ein Spiel"
