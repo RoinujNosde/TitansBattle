@@ -206,8 +206,6 @@ public abstract class BaseGame {
             player.setHealth(0);
             return;
         }
-        casualties.add(warrior);
-        casualtiesWatching.add(warrior); //adding to this Collection, so they are not teleport on respawn
         player.sendMessage(getLang("you-have-left"));
         SoundUtils.playSound(LEAVE_GAME, plugin.getConfig(), player);
         processPlayerExit(warrior);
