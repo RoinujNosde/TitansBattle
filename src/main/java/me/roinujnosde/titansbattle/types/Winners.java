@@ -86,6 +86,10 @@ public class Winners implements Comparable<Winners> {
         playerWinners.put(game, winners);
     }
 
+    public boolean isEmpty(String game) {
+        return killer.get(game) == null && playerWinners.get(game) == null && winnerGroup.get(game) == null;
+    }
+
     @Override
     public int compareTo(@NotNull Winners o) {
         return this.date.compareTo(o.date);

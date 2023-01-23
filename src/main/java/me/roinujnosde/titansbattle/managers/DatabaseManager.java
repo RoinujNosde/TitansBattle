@@ -142,28 +142,14 @@ public class DatabaseManager {
 
     private void update(Winners winners) {
         HashSet<GameConfiguration> updated = new HashSet<>();
-        String date = new SimpleDateFormat("dd/MM/yyyy").format(winners.getDate());
 
         String update = "UPDATE tb_winners SET killer=?, player_winners=?, winner_group=? WHERE date=? AND game=?;";
         try (PreparedStatement statement = getConnection().prepareStatement(update)) {
             for (GameConfiguration game : getGames()) {
-                String killer = null;
-                if (winners.getKiller(game.getName()) != null) {
-                    killer = winners.getKiller(game.getName()).toString();
+                if (winners.isEmpty(game.getName())) {
+                    continue;
                 }
-                String player_winners;
-                JsonArray ja = new JsonArray();
-                if (winners.getPlayerWinners(game.getName()) != null) {
-                    winners.getPlayerWinners(game.getName()).stream().map(UUID::toString).forEach(ja::add);
-                }
-                player_winners = new Gson().toJson(ja);
-                String winner_group = winners.getWinnerGroup(game.getName());
-
-                statement.setString(1, killer);
-                statement.setString(2, player_winners);
-                statement.setString(3, winner_group);
-                statement.setString(4, date);
-                statement.setString(5, game.getName());
+                setValues(winners, statement, game);
 
                 int count = statement.executeUpdate();
                 if (count != 0) {
@@ -177,25 +163,8 @@ public class DatabaseManager {
         String insert = "INSERT INTO tb_winners (killer, player_winners, winner_group, date, game) VALUES (?, ?, ?, ?, ?);";
         try (PreparedStatement statement = getConnection().prepareStatement(insert)) {
             for (GameConfiguration game : getGames()) {
-                if (!updated.contains(game)) {
-                    String gameName = game.getName();
-                    String killer = null;
-                    if (winners.getKiller(gameName) != null) {
-                        killer = winners.getKiller(gameName).toString();
-                    }
-                    String player_winners;
-                    JsonArray ja = new JsonArray();
-                    if (winners.getPlayerWinners(gameName) != null) {
-                        winners.getPlayerWinners(gameName).stream().map(UUID::toString).forEach(ja::add);
-                    }
-                    player_winners = new Gson().toJson(ja);
-                    String winner_group = winners.getWinnerGroup(gameName);
-
-                    statement.setString(1, killer);
-                    statement.setString(2, player_winners);
-                    statement.setString(3, winner_group);
-                    statement.setString(4, date);
-                    statement.setString(5, gameName);
+                if (!updated.contains(game) && !winners.isEmpty(game.getName())) {
+                    setValues(winners, statement, game);
 
                     statement.execute();
                 }
@@ -203,6 +172,29 @@ public class DatabaseManager {
         } catch (SQLException ex) {
             plugin.debug("Error while saving the winners: " + ex.getMessage(), false);
         }
+    }
+
+    private void setValues(Winners winners, PreparedStatement statement, GameConfiguration game) throws SQLException {
+        String date = new SimpleDateFormat("dd/MM/yyyy").format(winners.getDate());
+
+        String name = game.getName();
+        String killer = null;
+        if (winners.getKiller(name) != null) {
+            killer = winners.getKiller(name).toString();
+        }
+        String player_winners;
+        JsonArray ja = new JsonArray();
+        if (winners.getPlayerWinners(name) != null) {
+            winners.getPlayerWinners(name).stream().map(UUID::toString).forEach(ja::add);
+        }
+        player_winners = new Gson().toJson(ja);
+        String winner_group = winners.getWinnerGroup(name);
+
+        statement.setString(1, killer);
+        statement.setString(2, player_winners);
+        statement.setString(3, winner_group);
+        statement.setString(4, date);
+        statement.setString(5, name);
     }
 
     private void update(@NotNull String id, @NotNull GroupData data) {

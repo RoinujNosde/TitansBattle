@@ -1,5 +1,20 @@
 # Changelog
 
+## [6.2.0](https://github.com/RoinujNosde/TitansBattle/compare/v6.1.0...v6.2.0) (2022-08-09)
+
+
+### Features
+
+* added hook with Discord for sending game start messages  ([#82](https://github.com/RoinujNosde/TitansBattle/issues/82)) ([993502a](https://github.com/RoinujNosde/TitansBattle/commit/993502a7f4797d59cda1f8240c865353dd7132c7))
+* **lang:** new Crowdin updates ([#83](https://github.com/RoinujNosde/TitansBattle/issues/83)) ([9845f7e](https://github.com/RoinujNosde/TitansBattle/commit/9845f7e671276e5ca1bf7c10fd63284e33f07463))
+
+
+### Bug Fixes
+
+* allowing duplicate elements in casualties ([#80](https://github.com/RoinujNosde/TitansBattle/issues/80)) ([3f9031c](https://github.com/RoinujNosde/TitansBattle/commit/3f9031c76e9d59d3cf93e60d45f0262660f3cdf0))
+* ConcurrentModificationException on saveAll task ([a4d5103](https://github.com/RoinujNosde/TitansBattle/commit/a4d5103a992879a62089e6b97f7ef96602ea1958))
+* removes out of place reference to SimpleClans ([#85](https://github.com/RoinujNosde/TitansBattle/issues/85)) ([c646061](https://github.com/RoinujNosde/TitansBattle/commit/c646061b86811ab5db97fe1c84a2b5c448f32669))
+
 ## [6.1.0](https://github.com/RoinujNosde/TitansBattle/compare/v6.0.0...v6.1.0) (2022-06-30)
 
 
