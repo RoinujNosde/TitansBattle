@@ -126,6 +126,8 @@ error-saving-config: "&c» Error saving config!"
 challenge_starting_game: " \n&b» Starting challenge in {0} seconds! \n» Needed: {1} groups, {2} players\n» Participating: {3} groups, {4} players.\n "
 starting_game: "!!broadcast \n&b» Starting game in {0} seconds! Join using /tb join.\n» Needed: {1} groups, {2} players\n» Participating: {3} groups, {4} players.\n "
 discord_game_starting: "» The countdown to a new game has started! \nJoin the server to participate."
+discord_who_won: "» Game over! Winner group is: {0}."
+discord_who_won_tournament: "» Game over! Winners are:\n  &b1# &f{0}\n  &b2# &f{1}\n  &b3# &f{2}."
 players-ranking:
     victories-title: "V"
     kills-title: "K"

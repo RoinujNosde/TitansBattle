@@ -103,6 +103,7 @@ public class Challenge extends BaseGame {
         SoundUtils.playSound(VICTORY, plugin.getConfig(), winners);
         givePrizes(FIRST, winnerGroup, winners);
         broadcastKey("who_won", winnerName, getLoserName());
+        discordAnnounce("discord_who_won", winnerName, getLoserName());
     }
 
     @Override
