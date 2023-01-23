@@ -439,6 +439,8 @@ public class EliminationTournamentGame extends Game {
         }
         broadcastKey("who_won_tournament", getWinnerName(firstPlaceWinners),
                 getWinnerName(secondPlaceWinners), getWinnerName(thirdPlaceWinners));
+        discordAnnounce("discord_who_won_tournament", getWinnerName(firstPlaceWinners),
+                getWinnerName(secondPlaceWinners), getWinnerName(thirdPlaceWinners));
         firstPlaceWinners.forEach(warrior -> warrior.increaseVictories(getConfig().getName()));
     }
 
