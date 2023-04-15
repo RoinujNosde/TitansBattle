@@ -7,6 +7,7 @@ import me.roinujnosde.titansbattle.events.PlayerJoinGameEvent;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.types.Warrior;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -102,10 +103,29 @@ public class JoinGameListener extends TBListener {
         }
     }
 
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    public void offhandWhitelist(PlayerJoinGameEvent event) {
+        try {
+            Player player = event.getPlayer();
+            List<String> whitelist = event.getGame().getConfig().getWhitelistedItems();
+            if (whitelist == null) {
+                return;
+            }
+
+            ItemStack item = player.getInventory().getItemInOffHand();
+            if (item.getType() == Material.AIR || whitelist.contains(item.getType().name())) {
+                return;
+            }
+            cancelWithMessage(event, "item_not_allowed", item.getType());
+        } catch (NoSuchMethodError ignored) {
+        }
+    }
+
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void blacklist(PlayerJoinGameEvent event) {
         Player player = event.getPlayer();
-        List<String> blacklist =  event.getGame().getConfig().getBlacklistedItems();
+        List<String> blacklist = event.getGame().getConfig().getBlacklistedItems();
         if (blacklist == null || blacklist.isEmpty()) {
             return;
         }
@@ -116,6 +136,23 @@ public class JoinGameListener extends TBListener {
                     break;
                 }
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    public void offhandBlacklist(PlayerJoinGameEvent event) {
+        try {
+            Player player = event.getPlayer();
+            List<String> blacklist = event.getGame().getConfig().getBlacklistedItems();
+            if (blacklist == null) {
+                return;
+            }
+            ItemStack item = player.getInventory().getItemInOffHand();
+            if (item.getType() == Material.AIR || !blacklist.contains(item.getType().name())) {
+                return;
+            }
+            cancelWithMessage(event, "item_not_allowed", item.getType());
+        } catch (NoSuchMethodError ignored) {
         }
     }
 
