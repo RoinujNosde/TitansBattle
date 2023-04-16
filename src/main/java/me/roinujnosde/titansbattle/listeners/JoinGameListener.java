@@ -92,6 +92,9 @@ public class JoinGameListener extends TBListener {
         }
         items:
         for (ItemStack item : player.getInventory().getContents()) {
+            if (item == null) {
+                continue;
+            }
             for (String allowedItem : whitelist) {
                 if (allowedItem.equals(item.getType().name())) {
                     continue items;
@@ -130,6 +133,9 @@ public class JoinGameListener extends TBListener {
             return;
         }
         for (ItemStack item : player.getInventory().getContents()) {
+            if (item == null) {
+                continue;
+            }
             for (String blockedItem : blacklist) {
                 if (blockedItem.equals(item.getType().name())) {
                     cancelWithMessage(event, "item_not_allowed", item.getType());
