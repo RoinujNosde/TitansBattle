@@ -435,6 +435,7 @@ public class EliminationTournamentGame extends Game {
             givePrizes(KILLER, null, Collections.singletonList(killer));
             gameManager.setKiller(getConfig(), killer, null);
             SoundUtils.playSound(SoundUtils.Type.VICTORY, plugin.getConfig(), killer.toOnlinePlayer());
+            discordAnnounce("discord_who_won_killer", killer.getName());
             todayWinners.setKiller(getConfig().getName(), killer.getUniqueId());
         }
         broadcastKey("who_won_tournament", getWinnerName(firstPlaceWinners),
