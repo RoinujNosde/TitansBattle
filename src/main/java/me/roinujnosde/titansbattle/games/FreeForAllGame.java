@@ -87,6 +87,7 @@ public class FreeForAllGame extends Game {
         if (killer != null) {
             plugin.getGameManager().setKiller(getConfig(), killer, null);
             SoundUtils.playSound(VICTORY, plugin.getConfig(), killer.toOnlinePlayer());
+            discordAnnounce("discord_who_won_killer", killer.getName(), killsCount.get(killer));
             givePrizes(KILLER, null, Collections.singletonList(killer));
         }
         today.setWinners(gameName, Helper.warriorListToUuidList(winners));
