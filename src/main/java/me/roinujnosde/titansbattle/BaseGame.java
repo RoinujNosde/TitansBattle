@@ -123,7 +123,7 @@ public abstract class BaseGame {
         SoundUtils.playSound(JOIN_GAME, plugin.getConfig(), player);
         participants.add(warrior);
         setKit(warrior);
-        broadcastKey("player_joined", player.getName());
+        broadcastKey("player_joined", warrior.getName());
         player.sendMessage(getLang("objective"));
         if (participants.size() == getConfig().getMaximumPlayers() && lobbyTask != null) {
             lobbyTask.processEnd();
