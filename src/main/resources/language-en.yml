@@ -128,6 +128,7 @@ starting_game: "!!broadcast \n&b» Starting game in {0} seconds! Join using /tb 
 discord_game_starting: "» The countdown to a new game has started! \nJoin the server to participate."
 discord_who_won: "» Game over! Winner group is: {0}."
 discord_who_won_tournament: "» Game over! Winners are:\n  &b1# &f{0}\n  &b2# &f{1}\n  &b3# &f{2}."
+discord_who_won_killer: "» Game over! Killer is: {0} Kills: {1}."
 players-ranking:
     victories-title: "V"
     kills-title: "K"
