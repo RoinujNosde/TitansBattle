@@ -37,8 +37,6 @@ import static org.bukkit.ChatColor.*;
 
 public abstract class BaseGame {
 
-    private static final int MAX_ENTRANCES = 2;
-
     protected final TitansBattle plugin;
     protected final GroupManager groupManager;
     protected final GameManager gameManager;
@@ -539,32 +537,17 @@ public abstract class BaseGame {
     }
 
     protected void teleportToArena(List<Warrior> warriors) {
-        Location entrance1 = getConfig().getArenaEntrance(1);
-        Location entrance2 = getConfig().getArenaEntrance(2);
-        if (entrance2 == null) {
-            teleport(warriors, entrance1);
+        Map<Integer, Location> arenaEntrances = getConfig().getArenaEntrances();
+        if (arenaEntrances.size() == 1) {
+            teleport(warriors, arenaEntrances.get(0));
             return;
         }
-        if (getConfig().isGroupMode()) {
-            List<Group> groups = warriors.stream().map(Warrior::getGroup).distinct().collect(Collectors.toList());
-            if (groups.size() != MAX_ENTRANCES) {
-                teleport(warriors, entrance1);
-                return;
+
+        long maxParticipants = getConfig().isGroupMode() ? warriors.stream().map(Warrior::getGroup).distinct().count() : warriors.size();
+        for (Warrior warrior : warriors) {
+            for (int i = 0; i < maxParticipants; i++) {
+                teleport(warrior, arenaEntrances.get(i % arenaEntrances.size()));
             }
-            for (Warrior warrior : warriors) {
-                if (groups.get(0).equals(warrior.getGroup())) {
-                    teleport(warrior, entrance1);
-                } else {
-                    teleport(warrior, entrance2);
-                }
-            }
-        } else {
-            if (warriors.size() != MAX_ENTRANCES) {
-                teleport(warriors, entrance1);
-                return;
-            }
-            teleport(warriors.get(0), entrance1);
-            teleport(warriors.get(1), entrance2);
         }
     }
 
