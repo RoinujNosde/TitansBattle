@@ -205,8 +205,8 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
         return lobby;
     }
 
-    public Location getArenaEntrance(int index) {
-        return arenaEntrances.get(index);
+    public Map<Integer, Location> getArenaEntrances() {
+        return arenaEntrances;
     }
 
     public Location getBorderCenter() {
