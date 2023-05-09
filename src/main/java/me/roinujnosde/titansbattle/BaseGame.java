@@ -24,11 +24,13 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import sun.jvm.hotspot.utilities.IntArray;
 
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static me.roinujnosde.titansbattle.BaseGameConfiguration.Prize;
@@ -543,10 +545,16 @@ public abstract class BaseGame {
             return;
         }
 
-        long maxParticipants = getConfig().isGroupMode() ? warriors.stream().map(Warrior::getGroup).distinct().count() : warriors.size();
-        for (Warrior warrior : warriors) {
-            for (int i = 0; i < maxParticipants; i++) {
-                teleport(warrior, arenaEntrances.get(i % arenaEntrances.size()));
+        if (config.isGroupMode()) {
+            List<Group> groups = warriors.stream().map(Warrior::getGroup).distinct().collect(Collectors.toList());
+
+            for (int i = 0; i < groups.size(); i++) {
+                Set<Warrior> warriorsInGroup = Objects.requireNonNull(plugin.getGroupManager()).getWarriors(groups.get(i));
+                teleport(warriorsInGroup, arenaEntrances.get(i % arenaEntrances.size()));
+            }
+        } else {
+            for (int i = 0; i < warriors.size(); i++) {
+                teleport(warriors.get(i), arenaEntrances.get(i % arenaEntrances.size()));
             }
         }
     }
