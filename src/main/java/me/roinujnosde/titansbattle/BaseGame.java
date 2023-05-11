@@ -537,7 +537,7 @@ public abstract class BaseGame {
     }
 
     protected void teleportToArena(List<Warrior> warriors) {
-        Map<Integer, Location> arenaEntrances = getConfig().getArenaEntrances();
+        List<Location> arenaEntrances = new ArrayList<>(getConfig().getArenaEntrances().values());
         if (arenaEntrances.size() == 1) {
             teleport(warriors, arenaEntrances.get(0));
             return;
