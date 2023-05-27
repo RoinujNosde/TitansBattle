@@ -258,7 +258,7 @@ public final class TitansBattle extends JavaPlugin {
             String url = getConfig().getString("discord_webhook_url");
             if (url != null && !url.isEmpty()) {
                 DiscordWebhook webhook = new DiscordWebhook(url);
-                webhook.setContent(message.replace("\n", "\\n"));
+                webhook.setContent(message.replace("§", "&"));
                 try {
                     webhook.execute();
                 } catch (IOException e) {
