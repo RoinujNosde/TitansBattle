@@ -1,6 +1,7 @@
 package me.roinujnosde.titansbattle.hooks.discord;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 
 import javax.net.ssl.HttpsURLConnection;
 import java.io.IOException;
@@ -29,8 +30,8 @@ public class DiscordWebhook {
     }
 
     public void execute() throws IOException {
-        JsonObject json = new JsonObject();
-        json.addProperty("content", content);
+        JsonParser parser = new JsonParser();
+        JsonObject json = parser.parse(content).getAsJsonObject();
 
         URL url = new URL(this.url);
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
