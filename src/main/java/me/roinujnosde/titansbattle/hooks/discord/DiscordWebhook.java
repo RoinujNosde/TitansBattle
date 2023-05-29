@@ -30,8 +30,14 @@ public class DiscordWebhook {
     }
 
     public void execute() throws IOException {
-        JsonParser parser = new JsonParser();
-        JsonObject json = parser.parse(content).getAsJsonObject();
+        JsonObject json = new JsonObject();
+
+        if (content.contains("embeds")) {
+            JsonParser parser = new JsonParser();
+            json = parser.parse(content).getAsJsonObject();
+        } else {
+            json.addProperty("content", content);
+        }
 
         URL url = new URL(this.url);
         HttpsURLConnection connection = (HttpsURLConnection) url.openConnection();
