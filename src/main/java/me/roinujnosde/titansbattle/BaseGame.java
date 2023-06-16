@@ -548,6 +548,8 @@ public abstract class BaseGame {
 
             for (int i = 0; i < groups.size(); i++) {
                 Set<Warrior> groupWarriors = Objects.requireNonNull(plugin.getGroupManager()).getWarriors(groups.get(i));
+                groupWarriors.retainAll(warriors);
+
                 teleport(groupWarriors, arenaEntrances.get(i % arenaEntrances.size()));
             }
         } else {
