@@ -37,8 +37,6 @@ import static org.bukkit.ChatColor.*;
 
 public abstract class BaseGame {
 
-    private static final int MAX_ENTRANCES = 2;
-
     protected final TitansBattle plugin;
     protected final GroupManager groupManager;
     protected final GameManager gameManager;
@@ -123,7 +121,7 @@ public abstract class BaseGame {
         SoundUtils.playSound(JOIN_GAME, plugin.getConfig(), player);
         participants.add(warrior);
         setKit(warrior);
-        broadcastKey("player_joined", player.getName());
+        broadcastKey("player_joined", warrior.getName());
         player.sendMessage(getLang("objective"));
         if (participants.size() == getConfig().getMaximumPlayers() && lobbyTask != null) {
             lobbyTask.processEnd();
@@ -539,32 +537,25 @@ public abstract class BaseGame {
     }
 
     protected void teleportToArena(List<Warrior> warriors) {
-        Location entrance1 = getConfig().getArenaEntrance(1);
-        Location entrance2 = getConfig().getArenaEntrance(2);
-        if (entrance2 == null) {
-            teleport(warriors, entrance1);
+        List<Location> arenaEntrances = new ArrayList<>(getConfig().getArenaEntrances().values());
+        if (arenaEntrances.size() == 1) {
+            teleport(warriors, arenaEntrances.get(0));
             return;
         }
-        if (getConfig().isGroupMode()) {
+
+        if (config.isGroupMode()) {
             List<Group> groups = warriors.stream().map(Warrior::getGroup).distinct().collect(Collectors.toList());
-            if (groups.size() != MAX_ENTRANCES) {
-                teleport(warriors, entrance1);
-                return;
-            }
-            for (Warrior warrior : warriors) {
-                if (groups.get(0).equals(warrior.getGroup())) {
-                    teleport(warrior, entrance1);
-                } else {
-                    teleport(warrior, entrance2);
-                }
+
+            for (int i = 0; i < groups.size(); i++) {
+                Set<Warrior> groupWarriors = Objects.requireNonNull(plugin.getGroupManager()).getWarriors(groups.get(i));
+                groupWarriors.retainAll(warriors);
+
+                teleport(groupWarriors, arenaEntrances.get(i % arenaEntrances.size()));
             }
         } else {
-            if (warriors.size() != MAX_ENTRANCES) {
-                teleport(warriors, entrance1);
-                return;
+            for (int i = 0; i < warriors.size(); i++) {
+                teleport(warriors.get(i), arenaEntrances.get(i % arenaEntrances.size()));
             }
-            teleport(warriors.get(0), entrance1);
-            teleport(warriors.get(1), entrance2);
         }
     }
 
