@@ -105,7 +105,7 @@ public class FreeForAllGame extends Game {
         }
         killer = findKiller();
         if (getConfig().isGroupMode()) {
-            winnerGroup = warrior.getGroup();
+            winnerGroup = getGroup(warrior);
             //noinspection ConstantConditions
             winners = getParticipants().stream().filter(p -> winnerGroup.isMember(p.getUniqueId())).collect(Collectors.toList());
         } else {

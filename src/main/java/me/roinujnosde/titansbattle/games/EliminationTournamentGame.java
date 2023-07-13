@@ -49,11 +49,11 @@ public class EliminationTournamentGame extends Game {
         if (!getConfig().isGroupMode()) {
             return playerDuelists.size() != 0 && playerDuelists.get(0).isDuelist(warrior);
         }
-        return groupDuelists.size() != 0 && groupDuelists.get(0).isDuelist(warrior.getGroup());
+        return groupDuelists.size() != 0 && groupDuelists.get(0).isDuelist(getGroup(warrior));
     }
 
     private List<Warrior> getDuelLosers(@NotNull Warrior defeated) {
-        Group group = defeated.getGroup();
+        Group group = getGroup(defeated);
         if (group != null && getConfig().isGroupMode()) {
             return casualties.stream().filter(p -> group.isMember(p.getUniqueId())).collect(Collectors.toList());
         }
@@ -63,7 +63,7 @@ public class EliminationTournamentGame extends Game {
     private List<Warrior> getDuelWinners(@NotNull Warrior defeated) {
         List<Warrior> list = new ArrayList<>();
         if (getConfig().isGroupMode()) {
-            Group winnerGroup = Objects.requireNonNull(groupDuelists.get(0).getOther(defeated.getGroup()));
+            Group winnerGroup = Objects.requireNonNull(groupDuelists.get(0).getOther(getGroup(defeated)));
             list = getParticipants().stream().filter(p -> winnerGroup.isMember(p.getUniqueId()))
                     .collect(Collectors.toList());
         } else {
@@ -81,7 +81,7 @@ public class EliminationTournamentGame extends Game {
     private void removeDuelist(@NotNull Warrior warrior) {
         if (getConfig().isGroupMode()) {
             if (lost(warrior)) {
-                groupDuelists.removeIf(duel -> duel.isDuelist(warrior.getGroup()));
+                groupDuelists.removeIf(duel -> duel.isDuelist(getGroup(warrior)));
             }
             return;
         }
@@ -178,7 +178,7 @@ public class EliminationTournamentGame extends Game {
 
     private boolean lost(@NotNull Warrior warrior) {
         if (getConfig().isGroupMode()) {
-            return !getGroupParticipants().containsKey(warrior.getGroup());
+            return !getGroupParticipants().containsKey(getGroup(warrior));
         }
         return true;
     }
@@ -286,7 +286,7 @@ public class EliminationTournamentGame extends Game {
 
     @NotNull
     private List<Group> getWaitingThirdPlaceGroups() {
-        return waitingThirdPlace.stream().map(Warrior::getGroup).distinct().collect(Collectors.toList());
+        return waitingThirdPlace.stream().map(this::getGroup).distinct().collect(Collectors.toList());
     }
 
     private void generateDuelists() {
@@ -383,7 +383,7 @@ public class EliminationTournamentGame extends Game {
     private @Nullable Group getAnyGroup(@Nullable List<Warrior> warriors) {
         if (warriors != null && getConfig().isGroupMode()) {
             for (Warrior warrior : warriors) {
-                Group group = warrior.getGroup();
+                Group group = getGroup(warrior);
                 if (group != null) {
                     return group;
                 }
