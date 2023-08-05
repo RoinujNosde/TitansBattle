@@ -53,6 +53,7 @@ public class ItemsProtectionListener extends TBListener {
             if (new NBTItem(item).getBoolean(Kit.NBT_TAG)) {
                 plugin.getLogger().log(Level.INFO, format("Removed kit item from %s's inventory", player.getName()));
                 inventory.remove(item);
+                item.setAmount(0);
             }
         }
     }
