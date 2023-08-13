@@ -24,6 +24,7 @@ permissions:
       titansbattle.setinventory: true
       titansbattle.command-bypass: true
       titansbattle.kick: true
+      titansbattle.insert: true
       titansbattle.setwinner: true
   titansbattle.player:
     description: "Gives access to player commands"
