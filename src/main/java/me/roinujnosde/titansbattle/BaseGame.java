@@ -45,6 +45,7 @@ public abstract class BaseGame {
     protected boolean lobby;
     protected boolean battle;
     protected final List<Warrior> participants = new ArrayList<>();
+    protected final Map<Warrior, Group> groups = new HashMap<>();
     protected final HashMap<Warrior, Integer> killsCount = new HashMap<>();
     protected final Set<Warrior> casualties = new HashSet<>();
     protected final Set<Warrior> casualtiesWatching = new HashSet<>();
@@ -120,6 +121,7 @@ public abstract class BaseGame {
         }
         SoundUtils.playSound(JOIN_GAME, plugin.getConfig(), player);
         participants.add(warrior);
+        groups.put(warrior, warrior.getGroup());
         setKit(warrior);
         broadcastKey("player_joined", warrior.getName());
         player.sendMessage(getLang("objective"));
@@ -270,9 +272,13 @@ public abstract class BaseGame {
         }
         Map<Group, Integer> groups = new HashMap<>();
         for (Warrior w : participants) {
-            groups.compute(w.getGroup(), (g, i) -> i == null ? 1 : i + 1);
+            groups.compute(getGroup(w), (g, i) -> i == null ? 1 : i + 1);
         }
         return groups;
+    }
+
+    protected @Nullable Group getGroup(@NotNull Warrior warrior) {
+        return groups.get(warrior);
     }
 
     public Collection<Warrior> getCasualties() {
@@ -422,7 +428,7 @@ public abstract class BaseGame {
             Bukkit.getPluginManager().callEvent(event);
         }
         participants.remove(warrior);
-        Group group = warrior.getGroup();
+        Group group = getGroup(warrior);
         if (!isLobby()) {
             runCommandsAfterBattle(Collections.singletonList(warrior));
             processRemainingPlayers(warrior);
@@ -492,7 +498,7 @@ public abstract class BaseGame {
         Warrior warrior = plugin.getDatabaseManager().getWarrior(player);
         for (Map.Entry<Group, Integer> entry : getGroupParticipants().entrySet()) {
             Group group = entry.getKey();
-            if (group.equals(warrior.getGroup())) {
+            if (group.equals(getGroup(warrior))) {
                 continue;
             }
             opponents += entry.getValue();
@@ -544,7 +550,7 @@ public abstract class BaseGame {
         }
 
         if (config.isGroupMode()) {
-            List<Group> groups = warriors.stream().map(Warrior::getGroup).distinct().collect(Collectors.toList());
+            List<Group> groups = warriors.stream().map(this::getGroup).distinct().collect(Collectors.toList());
 
             for (int i = 0; i < groups.size(); i++) {
                 Set<Warrior> groupWarriors = Objects.requireNonNull(plugin.getGroupManager()).getWarriors(groups.get(i));

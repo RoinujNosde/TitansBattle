@@ -112,7 +112,7 @@ public class Challenge extends BaseGame {
             return;
         }
         if (getConfig().isGroupMode()) {
-            winnerGroup = warrior.getGroup();
+            winnerGroup = getGroup(warrior);
             winners = getParticipants().stream().filter(p -> winnerGroup.isMember(p.getUniqueId())).collect(Collectors.toList());
         } else {
             winners.add(warrior);
@@ -130,6 +130,6 @@ public class Challenge extends BaseGame {
             return lastCasualty.getName();
         }
         
-        return lastCasualty.getGroup().getName();
+        return getGroup(lastCasualty).getName();
     }
 }
