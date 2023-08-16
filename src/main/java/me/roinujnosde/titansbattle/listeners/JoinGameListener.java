@@ -28,7 +28,7 @@ public class JoinGameListener extends TBListener {
     public void gameHappening(PlayerJoinGameEvent event) {
         BaseGame game = event.getGame();
         if (TBCommands.isInsertCalled) {
-            return; // Se o insert foi chamado, simplesmente retorne e não faça nada
+            return;
         }
         if (!game.isLobby()) {
             cancelWithMessage(event, "game_is_happening");
