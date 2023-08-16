@@ -14,8 +14,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.logging.Level;
-
 import static java.lang.String.format;
 
 public class ItemsProtectionListener extends TBListener {
@@ -51,7 +49,7 @@ public class ItemsProtectionListener extends TBListener {
                 continue;
             }
             if (new NBTItem(item).getBoolean(Kit.NBT_TAG)) {
-                plugin.getLogger().log(Level.INFO, format("Removed kit item from %s's inventory", player.getName()));
+                plugin.debug(format("Removing kit item from %s's inventory", player.getName()));
                 inventory.remove(item);
             }
         }
