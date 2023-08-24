@@ -39,7 +39,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.serialization.ConfigurationSerialization;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.bukkit.scheduler.BukkitWorker;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -98,8 +97,10 @@ public final class TitansBattle extends JavaPlugin {
         Warrior warrior = getDatabaseManager().getWarrior(player);
 
         Optional<Game> currentGame = getGameManager().getCurrentGame();
-        if (currentGame.isPresent() && (currentGame.get().isParticipant(warrior))) {
+        if (currentGame.isPresent()) {
+            if (currentGame.get().isParticipant(warrior)) {
                 return currentGame.get();
+            }
         }
         List<ChallengeRequest<?>> requests = getChallengeManager().getRequests();
         for (ChallengeRequest<?> request : requests) {
@@ -120,7 +121,6 @@ public final class TitansBattle extends JavaPlugin {
         challengeManager.getChallenges().forEach(c -> c.cancel(Bukkit.getConsoleSender()));
         gameManager.getCurrentGame().ifPresent(g -> g.cancel(Bukkit.getConsoleSender()));
         databaseManager.close();
-        disableAsyncTask();
     }
 
     public static TitansBattle getInstance() {
@@ -266,14 +266,6 @@ public final class TitansBattle extends JavaPlugin {
                 }
             }
         });
-    }
-
-    private void disableAsyncTask() {
-        for (BukkitWorker worker : getServer().getScheduler().getActiveWorkers()) {
-            if (worker.getOwner() == this) {
-                worker.getThread().interrupt();
-            }
-        }
     }
 
 }
