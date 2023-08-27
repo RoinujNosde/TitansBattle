@@ -51,6 +51,7 @@ public class ItemsProtectionListener extends TBListener {
             if (new NBTItem(item).getBoolean(Kit.NBT_TAG)) {
                 plugin.debug(format("Removing kit item from %s's inventory", player.getName()));
                 inventory.remove(item);
+                item.setAmount(0);
             }
         }
     }
