@@ -84,32 +84,32 @@ public class DatabaseManager {
     public void setup() {
         try (Statement stmt = getConnection().createStatement()) {
             stmt.execute("CREATE TABLE IF NOT EXISTS tb_warriors "
-                              + "(displayname varchar(30) NOT NULL,"
-                              + " uuid varchar(255) NOT NULL,"
-                              + " kills int NOT NULL,"
-                              + " deaths int NOT NULL,"
-                              + " victories int NOT NULL,"
-                              + " game varchar(20) NOT NULL,"
-                              + " PRIMARY KEY (uuid, game));");
+                         + "(displayname varchar(30) NOT NULL,"
+                         + " uuid varchar(255) NOT NULL,"
+                         + " kills int NOT NULL,"
+                         + " deaths int NOT NULL,"
+                         + " victories int NOT NULL,"
+                         + " game varchar(20) NOT NULL,"
+                         + " PRIMARY KEY (uuid, game));");
             addPrimaryKeyIfNotExists("tb_warriors", "uuid, game");
 
             stmt.execute("CREATE TABLE IF NOT EXISTS tb_groups"
-                              + "(identification varchar(255) NOT NULL,"
-                              + " kills int NOT NULL,"
-                              + " deaths int NOT NULL,"
-                              + " victories int NOT NULL,"
-                              + " defeats int NOT NULL,"
-                              + " game varchar(20) NOT NULL,"
-                              + " PRIMARY KEY (identification, game));");
+                         + "(identification varchar(255) NOT NULL,"
+                         + " kills int NOT NULL,"
+                         + " deaths int NOT NULL,"
+                         + " victories int NOT NULL,"
+                         + " defeats int NOT NULL,"
+                         + " game varchar(20) NOT NULL,"
+                         + " PRIMARY KEY (identification, game));");
             addPrimaryKeyIfNotExists("tb_groups", "identification, game");
 
             stmt.execute("CREATE TABLE IF NOT EXISTS tb_winners"
-                              + "(date varchar(10) NOT NULL,"
-                              + " killer varchar(255),"
-                              + " player_winners text,"
-                              + " winner_group varchar(255),"
-                              + " game varchar(20) NOT NULL,"
-                              + " PRIMARY KEY (date, game));");
+                         + "(date varchar(10) NOT NULL,"
+                         + " killer varchar(255),"
+                         + " player_winners text,"
+                         + " winner_group varchar(255),"
+                         + " game varchar(20) NOT NULL,"
+                         + " PRIMARY KEY (date, game));");
             addPrimaryKeyIfNotExists("tb_winners", "date, game");
 
         } catch (SQLException ex) {
@@ -121,7 +121,7 @@ public class DatabaseManager {
         long start = System.currentTimeMillis();
         boolean hasPrimaryKey = false;
 
-        if (isSQLite()) {
+        if (isSQLite) {
             try (Statement stmt = getConnection().createStatement();
                  ResultSet rs = stmt.executeQuery("PRAGMA table_info(" + tableName + ")")) {
                 while (rs.next()) {
@@ -141,7 +141,7 @@ public class DatabaseManager {
         }
 
         if (!hasPrimaryKey) {
-            if (isSQLite()) {
+            if (isSQLite) {
                 plugin.debug("The SQLite table " + tableName + " doesn't have a primary key. Adding one...", false);
                 try (Statement stmt = getConnection().createStatement()) {
                     String tempTableName = tableName + "_temp";
@@ -212,10 +212,6 @@ public class DatabaseManager {
             connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath());
             isSQLite = true;
         }
-    }
-
-    private boolean isSQLite() {
-        return isSQLite;
     }
 
     private Connection getConnection() throws SQLException {
@@ -292,7 +288,7 @@ public class DatabaseManager {
     @NotNull
     private String getUpsertWinners() {
         String upsertWinners;
-        if (isSQLite()) {
+        if (isSQLite) {
             upsertWinners = "INSERT INTO tb_winners (killer, player_winners, winner_group, date, game) VALUES (?, ?, ?, ?, ?) " +
                             "ON CONFLICT(date, game) DO UPDATE SET killer=excluded.killer, player_winners=excluded.player_winners, winner_group=excluded.winner_group;";
         } else {
@@ -376,7 +372,7 @@ public class DatabaseManager {
     @NotNull
     private String getUpsertGroups() {
         String upsertGroups;
-        if (isSQLite()) {
+        if (isSQLite) {
             upsertGroups = "INSERT INTO tb_groups (identification, kills, deaths, victories, game, defeats) " +
                            "VALUES (?, ?, ?, ?, ?, ?) " +
                            "ON CONFLICT(identification, game) DO UPDATE SET " +
@@ -455,7 +451,7 @@ public class DatabaseManager {
     @NotNull
     private String getUpsertWarrior() {
         String upsertWarrior;
-        if (isSQLite()) {
+        if (isSQLite) {
             upsertWarrior = "INSERT INTO tb_warriors (uuid, kills, deaths, victories, game, displayname) " +
                             "VALUES (?, ?, ?, ?, ?, ?) " +
                             "ON CONFLICT(uuid, game) DO UPDATE SET " +
@@ -677,9 +673,30 @@ public class DatabaseManager {
 
     public void saveAll() {
         // Copying collections for async use, avoiding ConcurrentModificationException
-        final Map<String, GroupData> groupsMap = new HashMap<>(getGroups());
-        final Set<Warrior> warriorsSet = new HashSet<>(getWarriors());
-        final List<Winners> winnersList = new ArrayList<>(getWinners());
+        final Map<String, GroupData> groupsMap = new HashMap<>(groups.size());
+
+        for (Map.Entry<String, GroupData> entry : groups.entrySet()) {
+            if (entry.getValue().isModified()) {
+                groupsMap.put(entry.getKey(), entry.getValue());
+                entry.getValue().setModified(false);
+            }
+        }
+
+        final Set<Warrior> warriorsSet = new HashSet<>(warriors.size());
+        for (Warrior warrior : warriors) {
+            if (warrior.isModified()) {
+                warriorsSet.add(warrior);
+                warrior.setModified(false);
+            }
+        }
+
+        List<Winners> winnersList = new ArrayList<>(winners.size());
+        for (Winners winner : winners) {
+            if (winner.isModified()) {
+                winnersList.add(winner);
+                winner.setModified(false);
+            }
+        }
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
             updateGroups(groupsMap);
