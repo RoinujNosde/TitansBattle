@@ -153,7 +153,7 @@ public class EliminationTournamentGame extends Game {
         if (player == null) return;
 
         waitingThirdPlace.add(warrior);
-        Bukkit.getScheduler().runTask(plugin, () -> player.spigot().respawn());
+        Bukkit.getScheduler().runTaskLater(plugin, () -> player.spigot().respawn(), 1L);
     }
 
     private void processNotCurrentDuelistLeaving(@NotNull Warrior warrior, List<Warrior> duelLosers) {
