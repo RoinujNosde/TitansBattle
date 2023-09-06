@@ -37,7 +37,6 @@ import java.util.function.Supplier;
 import static me.roinujnosde.titansbattle.utils.Helper.caseInsensitiveMap;
 
 /**
- *
  * @author RoinujNosde
  */
 public class Warrior {
@@ -48,9 +47,11 @@ public class Warrior {
     private final Map<String, Integer> kills;
     private final Map<String, Integer> deaths;
     private final Map<String, Integer> victories;
+    private boolean isModified;
 
     public Warrior(@NotNull OfflinePlayer offlinePlayer, @NotNull Supplier<GroupManager> groupManager) {
         this(offlinePlayer, groupManager, null, null, null);
+        isModified = true;
     }
 
     public Warrior(@NotNull OfflinePlayer offlinePlayer,
@@ -100,9 +101,9 @@ public class Warrior {
     @Override
     public String toString() {
         return "Warrior{" +
-                "name=" + offlinePlayer.getName() +
-                ", uuid=" + offlinePlayer.getUniqueId() +
-                '}';
+               "name=" + offlinePlayer.getName() +
+               ", uuid=" + offlinePlayer.getUniqueId() +
+               '}';
     }
 
     @Nullable
@@ -181,24 +182,36 @@ public class Warrior {
     public int getVictories(@NotNull String game) {
         return victories.getOrDefault(game, 0);
     }
-    
+
     public void setKills(@NotNull String game, int newKills) {
         kills.put(game, newKills);
+        isModified = true;
     }
-    
+
     public void setDeaths(@NotNull String game, int newDeaths) {
         deaths.put(game, newDeaths);
+        isModified = true;
     }
 
     public void setVictories(@NotNull String game, int newVictories) {
         victories.put(game, newVictories);
+        isModified = true;
     }
 
     public void increaseVictories(@NotNull String game) {
         setVictories(game, getVictories(game) + 1);
+        isModified = true;
     }
 
     private <T> int getSum(Map<T, Integer> map) {
         return map.values().stream().mapToInt(i -> i).sum();
+    }
+
+    public boolean isModified() {
+        return isModified;
+    }
+
+    public void setModified(boolean isModified) {
+        this.isModified = isModified;
     }
 }
