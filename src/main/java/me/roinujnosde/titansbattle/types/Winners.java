@@ -34,7 +34,6 @@ import java.util.UUID;
 import static me.roinujnosde.titansbattle.utils.Helper.caseInsensitiveMap;
 
 /**
- *
  * @author RoinujNosde
  */
 public class Winners implements Comparable<Winners> {
@@ -43,9 +42,11 @@ public class Winners implements Comparable<Winners> {
     private final Map<String, UUID> killer;
     private final Map<String, List<UUID>> playerWinners;
     private final Map<String, String> winnerGroup;
+    private boolean isModified;
 
     public Winners(@NotNull Date date) {
         this(date, null, null, null);
+        isModified = true;
     }
 
     public Winners(@NotNull Date date,
@@ -76,18 +77,29 @@ public class Winners implements Comparable<Winners> {
 
     public void setKiller(String game, UUID uuid) {
         killer.put(game, uuid);
+        isModified = true;
     }
 
     public void setWinnerGroup(String game, String group) {
         winnerGroup.put(game, group);
+        isModified = true;
     }
 
     public void setWinners(String game, List<UUID> winners) {
         playerWinners.put(game, winners);
+        isModified = true;
     }
 
     public boolean isEmpty(String game) {
         return killer.get(game) == null && playerWinners.get(game) == null && winnerGroup.get(game) == null;
+    }
+
+    public boolean isModified() {
+        return isModified;
+    }
+
+    public void setModified(boolean isModified) {
+        this.isModified = isModified;
     }
 
     @Override

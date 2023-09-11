@@ -38,11 +38,25 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * @author RoinujNosde
@@ -69,25 +83,25 @@ public class DatabaseManager {
         try {
             Statement statement = getConnection().createStatement();
             statement.execute("CREATE TABLE IF NOT EXISTS tb_warriors "
-                    + "(displayname varchar(30) NOT NULL,"
-                    + " uuid varchar(255) NOT NULL,"
-                    + " kills int NOT NULL,"
-                    + " deaths int NOT NULL,"
-                    + " victories int NOT NULL,"
-                    + " game varchar(20) NOT NULL);");
+                              + "(displayname varchar(30) NOT NULL,"
+                              + " uuid varchar(255) NOT NULL,"
+                              + " kills int NOT NULL,"
+                              + " deaths int NOT NULL,"
+                              + " victories int NOT NULL,"
+                              + " game varchar(20) NOT NULL);");
             statement.execute("CREATE TABLE IF NOT EXISTS tb_groups"
-                    + "(identification varchar(255) NOT NULL,"
-                    + " kills int NOT NULL,"
-                    + " deaths int NOT NULL,"
-                    + " victories int NOT NULL,"
-                    + " defeats int NOT NULL,"
-                    + " game varchar(20) NOT NULL);");
+                              + "(identification varchar(255) NOT NULL,"
+                              + " kills int NOT NULL,"
+                              + " deaths int NOT NULL,"
+                              + " victories int NOT NULL,"
+                              + " defeats int NOT NULL,"
+                              + " game varchar(20) NOT NULL);");
             statement.execute("CREATE TABLE IF NOT EXISTS tb_winners"
-                    + "(date varchar(10) NOT NULL,"
-                    + " killer varchar(255),"
-                    + " player_winners text,"
-                    + " winner_group varchar(255),"
-                    + " game varchar(20) NOT NULL);");
+                              + "(date varchar(10) NOT NULL,"
+                              + " killer varchar(255),"
+                              + " player_winners text,"
+                              + " winner_group varchar(255),"
+                              + " game varchar(20) NOT NULL);");
         } catch (SQLException ex) {
             plugin.debug("Error while creating the tables: " + ex.getMessage(), false);
         }
@@ -104,7 +118,7 @@ public class DatabaseManager {
             try {
                 Class.forName("com.mysql.jdbc.Driver");
                 connection = DriverManager.getConnection("jdbc:mysql://" + hostname + ":" + port + "/" + database +
-                        "?useSSL=false", username, password);
+                                                         "?useSSL=false", username, password);
             } catch (ClassNotFoundException ex) {
                 plugin.debug("MySQL driver not found!", false);
             }
@@ -201,7 +215,7 @@ public class DatabaseManager {
         HashSet<GameConfiguration> updated = new HashSet<>();
 
         String update = "UPDATE tb_groups SET kills=?, deaths=?, victories=?,"
-                + " defeats=? WHERE identification=? AND game=?;";
+                        + " defeats=? WHERE identification=? AND game=?;";
         try (PreparedStatement statement = getConnection().prepareStatement(update)) {
             for (GameConfiguration game : getGames()) {
                 String gameName = game.getName();
@@ -488,14 +502,31 @@ public class DatabaseManager {
 
     public void saveAll() {
         // Copying collections for async use, avoiding ConcurrentModificationException
-        final Map<String, GroupData> groups = new HashMap<>(getGroups());
-        final Set<Warrior> warriors = new HashSet<>(getWarriors());
-        final List<Winners> winners = new ArrayList<>(getWinners());
+        final Map<String, GroupData> groupMap = new HashMap<>(getGroups());
+        final Set<Warrior> warriorsSet = new HashSet<>(getWarriors());
+        final List<Winners> winnersList = new ArrayList<>(getWinners());
 
         Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            groups.forEach(this::update);
-            warriors.forEach(this::update);
-            winners.forEach(this::update);
+            for (Map.Entry<String, GroupData> data : groupMap.entrySet()) {
+                if (data.getValue().isModified()) {
+                    update(data.getKey(), data.getValue());
+                    data.getValue().setModified(false);
+                }
+            }
+
+            for (Warrior warrior : warriorsSet) {
+                if (warrior.isModified()) {
+                    update(warrior);
+                    warrior.setModified(false);
+                }
+            }
+
+            for (Winners winner : winnersList) {
+                if (winner.isModified()) {
+                    update(winner);
+                    winner.setModified(false);
+                }
+            }
         });
     }
 
