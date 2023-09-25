@@ -17,17 +17,34 @@ import java.util.TreeMap;
 public class Kit implements ConfigurationSerializable {
 
     public static final String NBT_TAG = "TitansBattle.Kit";
+    private static final String HELMET_KEY = "armor.helmet";
+    private static final String CHESTPLATE_KEY = "armor.chestplate";
+    private static final String LEGGINGS_KEY = "armor.leggings";
+    private static final String BOOTS_KEY = "armor.boots";
     private final ItemStack[] contents;
+    private final ItemStack helmet;
+    private final ItemStack chestplate;
+    private final ItemStack leggings;
+    private final ItemStack boots;
+
 
     public Kit(@NotNull PlayerInventory inventory) {
         ItemStack[] invContents = inventory.getContents();
         this.contents = new ItemStack[invContents.length];
+        this.helmet = clone(inventory.getHelmet());
+        this.chestplate = clone(inventory.getChestplate());
+        this.leggings = clone(inventory.getLeggings());
+        this.boots = clone(inventory.getBoots());
 
-        for (int i = 0; i < invContents.length; i++) {
-            ItemStack itemStack = invContents[i];
-            this.contents[i] = itemStack != null ? itemStack.clone() : null;
+        clone(invContents, contents);
+    }
+
+    private void clone(ItemStack[] source, ItemStack[] destination) {
+        for (int i = 0; i < source.length; i++) {
+            ItemStack itemStack = source[i];
+            destination[i] = itemStack != null ? itemStack.clone() : null;
         }
-        setNBTTag();
+        setNBTTag(destination);
     }
 
     public Kit(@NotNull Map<String, Object> data) {
@@ -40,13 +57,18 @@ public class Kit implements ConfigurationSerializable {
         }).max().orElse(0) + 1;
         contents = new ItemStack[size];
         for (Map.Entry<String, Object> entry : data.entrySet()) {
-            if (entry.getKey().equals("==")) {
-                continue;
+            try {
+                int index = Integer.parseInt(entry.getKey());
+                contents[index] = ((ItemStack) entry.getValue());
+            } catch (NumberFormatException ignore) {
             }
-            int index = Integer.parseInt(entry.getKey());
-            contents[index] = ((ItemStack) entry.getValue());
         }
-        setNBTTag();
+        this.helmet = getItem(data.get(HELMET_KEY));
+        this.chestplate = getItem(data.get(CHESTPLATE_KEY));
+        this.leggings = getItem(data.get(LEGGINGS_KEY));
+        this.boots = getItem(data.get(BOOTS_KEY));
+
+        setNBTTag(contents);
     }
 
     @Override
@@ -58,20 +80,33 @@ public class Kit implements ConfigurationSerializable {
                 data.put(String.valueOf(i), item);
             }
         }
+        data.put(HELMET_KEY, helmet);
+        data.put(CHESTPLATE_KEY, chestplate);
+        data.put(LEGGINGS_KEY, leggings);
+        data.put(BOOTS_KEY, boots);
         return data;
     }
 
     public ItemStack[] getContents() {
-        return contents.clone();
+        return contents;
     }
 
     public void set(@NotNull Player player) {
-        player.getInventory().setContents(contents);
+        PlayerInventory inventory = player.getInventory();
+        inventory.setContents(contents);
+        inventory.setHelmet(helmet);
+        inventory.setChestplate(chestplate);
+        inventory.setLeggings(leggings);
+        inventory.setBoots(boots);
     }
 
     public static boolean inventoryHasItems(@NotNull Player player) {
-        ItemStack[] contents = player.getInventory().getContents();
-        for (ItemStack item : contents) {
+        PlayerInventory inventory = player.getInventory();
+        return hasItems(inventory.getArmorContents()) || hasItems(inventory.getContents());
+    }
+
+    private static boolean hasItems(ItemStack[] items) {
+        for (ItemStack item : items) {
             if (item == null) {
                 continue;
             }
@@ -99,8 +134,20 @@ public class Kit implements ConfigurationSerializable {
         player.getInventory().setBoots(null);
     }
 
-    private void setNBTTag() {
-        for (ItemStack item : contents) {
+    private ItemStack getItem(Object object) {
+        return clone((ItemStack) object);
+    }
+
+    private ItemStack clone(ItemStack item) {
+        item = item.clone();
+        if (item != null && item.getType() != Material.AIR) {
+            new NBTItem(item, true).setBoolean(NBT_TAG, true);
+        }
+        return item;
+    }
+
+    private void setNBTTag(ItemStack[] items) {
+        for (ItemStack item : items) {
             if (item != null && item.getType() != Material.AIR) {
                 new NBTItem(item, true).setBoolean(NBT_TAG, true);
             }
