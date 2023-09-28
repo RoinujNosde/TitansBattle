@@ -478,18 +478,16 @@ public abstract class BaseGame {
 
     protected void sendRemainingOpponentsCount() {
         getPlayerParticipantsStream().forEach(p -> {
-            int remaining = getRemainingOpponents(p);
-            if (remaining <= 0) {
+            int remainingPlayers = getRemainingOpponents();
+            int remainingGroups = getRemainingOpponentGroups(p);
+            if (Math.min(remainingPlayers, remainingGroups) <= 0) {
                 return;
             }
-            MessageUtils.sendActionBar(p, MessageFormat.format(getLang("action-bar-remaining-opponents"), remaining));
+            MessageUtils.sendActionBar(p, MessageFormat.format(getLang("action-bar-remaining-opponents"), remainingPlayers, remainingGroups));
         });
     }
 
-    protected int getRemainingOpponents(@NotNull Player player) {
-        if (!getConfig().isGroupMode()) {
-            return getParticipants().size() - 1;
-        }
+    protected int getRemainingOpponentGroups(@NotNull Player player) {
         int opponents = 0;
         Warrior warrior = plugin.getDatabaseManager().getWarrior(player);
         for (Map.Entry<Group, Integer> entry : getGroupParticipants().entrySet()) {
@@ -500,6 +498,10 @@ public abstract class BaseGame {
             opponents += entry.getValue();
         }
         return opponents;
+    }
+
+    protected int getRemainingOpponents() {
+        return getParticipants().size() - 1;
     }
 
     protected void runCommandsBeforeBattle(@NotNull Collection<Warrior> warriors) {
