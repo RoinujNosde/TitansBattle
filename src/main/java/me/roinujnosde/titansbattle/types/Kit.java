@@ -93,11 +93,11 @@ public class Kit implements ConfigurationSerializable {
 
     public void set(@NotNull Player player) {
         PlayerInventory inventory = player.getInventory();
-        inventory.setContents(contents);
         inventory.setHelmet(helmet);
         inventory.setChestplate(chestplate);
         inventory.setLeggings(leggings);
         inventory.setBoots(boots);
+        inventory.setContents(contents);
     }
 
     public static boolean inventoryHasItems(@NotNull Player player) {
