@@ -135,12 +135,18 @@ public class Kit implements ConfigurationSerializable {
     }
 
     private ItemStack getItem(Object object) {
+        if (object == null) {
+            return new ItemStack(Material.AIR);
+        }
         return clone((ItemStack) object);
     }
 
     private ItemStack clone(ItemStack item) {
+        if (item == null) {
+            item = new ItemStack(Material.AIR);
+        }
         item = item.clone();
-        if (item != null && item.getType() != Material.AIR) {
+        if (item.getType() != Material.AIR) {
             new NBTItem(item, true).setBoolean(NBT_TAG, true);
         }
         return item;
