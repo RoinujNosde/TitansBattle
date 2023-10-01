@@ -113,7 +113,7 @@ not_enough_participants: "&b» Не достаточно игроков/груп
 challenge_game_started: "&b» Испытание началось! Посмотреть, используя /tb challenge watch. У игроков есть {0} секунд, чтобы подготовиться!"
 game_started: "&b» Игра началась! Посмотрите её, используя /tb watch. У игроков есть {0} секунд, чтобы приготовиться!"
 game_info: "&b» В игре участвуют {0} игроков и {1} групп! Группы: {2}."
-game_info_duels: "!!broadcast&b» Текущий дуэль:\n  &f{0} &bx &f{1}"
+game_info_duels: "!!broadcast&b» Текущая дуэль:\n  &f{0} &bx &f{1}"
 game_info_next_duels: "\n&bСледующие дуэли:\n{2}"
 game_info_duels_line: "  &b{0}. &f{1} &bx &f{2}\n"
 player_joined: "&b» {0} присоединился в игру!"
@@ -126,6 +126,7 @@ starting_game: "!!broadcast \n&b» Начало игры через {0} секу
 discord_game_starting: "» Обратный отсчет новой игры начался! \nВойдите на сервер, чтобы принять участие."
 discord_who_won: "&b» Игра окончена! Группа-победитель: {0}."
 discord_who_won_tournament: "» b» Игра окончена! Победители:\n  &b1# &f{0}\n  &b2# &f{1}\n  &b3# &f{2}."
+discord_who_won_killer: "» Игра окончена! Убийца: {0} Убийств: {1}."
 players-ranking:
   victories-title: "П"
   kills-title: "К"
