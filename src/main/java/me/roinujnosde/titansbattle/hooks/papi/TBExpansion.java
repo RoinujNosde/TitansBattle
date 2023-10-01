@@ -3,11 +3,11 @@ package me.roinujnosde.titansbattle.hooks.papi;
 import me.clip.placeholderapi.PlaceholderAPIPlugin;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.managers.DatabaseManager;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.types.Winners;
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.jetbrains.annotations.NotNull;
 
@@ -159,10 +159,14 @@ public class TBExpansion extends PlaceholderExpansion {
     }
 
     private @NotNull String getLastWinner(String game) {
-        Optional<Winners> winners = getLastWinnersMatching(w -> w.getPlayerWinners(game) != null);
+        Optional<Winners> winners = getLastWinnersMatching(w -> {
+            List<UUID> list = w.getPlayerWinners(game);
+            return list != null && !list.isEmpty();
+        });
+        DatabaseManager db = plugin.getDatabaseManager();
 
-        return winners.map(value -> value.getPlayerWinners(game).stream().map(Bukkit::getOfflinePlayer)
-                .map(OfflinePlayer::getName).collect(Collectors.joining(", "))).orElse("");
+        return winners.map(value -> value.getPlayerWinners(game).stream().map(db::getWarrior)
+                .map(Warrior::getName).collect(Collectors.joining(", "))).orElse("");
     }
 
     private @NotNull String getLastKiller(String game) {
@@ -171,7 +175,7 @@ public class TBExpansion extends PlaceholderExpansion {
             return "";
         }
         UUID killer = winners.get().getKiller(game);
-        return Bukkit.getOfflinePlayer(killer).getName();
+        return plugin.getDatabaseManager().getWarrior(killer).getName();
     }
 
     private @NotNull String getLastWinnerGroup(String game) {

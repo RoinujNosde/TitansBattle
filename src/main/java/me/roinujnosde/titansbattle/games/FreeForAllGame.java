@@ -87,11 +87,13 @@ public class FreeForAllGame extends Game {
         if (killer != null) {
             plugin.getGameManager().setKiller(getConfig(), killer, null);
             SoundUtils.playSound(VICTORY, plugin.getConfig(), killer.toOnlinePlayer());
+            discordAnnounce("discord_who_won_killer", killer.getName(), killsCount.get(killer));
             givePrizes(KILLER, null, Collections.singletonList(killer));
         }
         today.setWinners(gameName, Helper.warriorListToUuidList(winners));
         String winnerName = getConfig().isGroupMode() ? winnerGroup.getName() : winners.get(0).getName();
         broadcastKey("who_won", winnerName);
+        discordAnnounce("discord_who_won", winnerName);
         winners.forEach(w -> w.increaseVictories(gameName));
         givePrizes(FIRST, winnerGroup, winners);
     }
@@ -103,7 +105,7 @@ public class FreeForAllGame extends Game {
         }
         killer = findKiller();
         if (getConfig().isGroupMode()) {
-            winnerGroup = warrior.getGroup();
+            winnerGroup = getGroup(warrior);
             //noinspection ConstantConditions
             winners = getParticipants().stream().filter(p -> winnerGroup.isMember(p.getUniqueId())).collect(Collectors.toList());
         } else {

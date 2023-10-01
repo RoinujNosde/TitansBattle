@@ -24,7 +24,6 @@
 package me.roinujnosde.titansbattle.events;
 
 import me.roinujnosde.titansbattle.BaseGame;
-import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.types.Warrior;
 import org.bukkit.event.Event;
 import org.bukkit.event.HandlerList;
@@ -65,7 +64,6 @@ public class PlayerWinEvent extends Event {
      * @return an Unmodifiable List of the Winners
      */
     public List<Warrior> getPlayers() {
-        TitansBattle.getInstance().debug(players.toString());
         return Collections.unmodifiableList(players);
     }
 

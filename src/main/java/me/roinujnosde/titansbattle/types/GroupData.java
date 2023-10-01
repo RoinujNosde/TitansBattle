@@ -13,11 +13,13 @@ public class GroupData {
     private final Map<String, Integer> defeats;
     private final Map<String, Integer> kills;
     private final Map<String, Integer> deaths;
+    private boolean isModified;
 
     public GroupData() {
         this(null, null, null, null);
+        isModified = true;
     }
-    
+
     public GroupData(
             @Nullable Map<String, Integer> victories,
             @Nullable Map<String, Integer> defeats,
@@ -51,10 +53,12 @@ public class GroupData {
 
     public void increaseDefeats(@NotNull String game) {
         defeats.compute(game, (g, i) -> i == null ? 1 : i + 1);
+        isModified = true;
     }
 
     public void increaseVictories(@NotNull String game) {
         victories.compute(game, (g, i) -> i == null ? 1 : i + 1);
+        isModified = true;
     }
 
     public void setVictories(String game, int newVictories) {
@@ -63,13 +67,23 @@ public class GroupData {
 
     public void setKills(String game, int newKills) {
         kills.put(game, newKills);
+        isModified = true;
     }
 
     public void setDeaths(String game, int newDeaths) {
         deaths.put(game, newDeaths);
+        isModified = true;
     }
 
     public void setDefeats(String game, int newDefeats) {
         defeats.put(game, newDefeats);
+    }
+
+    public boolean isModified() {
+        return isModified;
+    }
+
+    public void setModified(boolean isModified) {
+        this.isModified = isModified;
     }
 }

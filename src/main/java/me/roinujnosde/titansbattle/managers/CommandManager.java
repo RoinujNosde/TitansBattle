@@ -75,6 +75,7 @@ public class CommandManager extends PaperCommandManager {
         registerContext(new ChallengeRequestContext(getPlugin()));
         registerContext(new ArenaConfigurationContext(getPlugin()));
         registerContext(new GameConfigurationContext(getPlugin()));
+        registerContext(new OnlinePlayerContext(getPlugin()));
     }
 
     private void registerReplacements() {

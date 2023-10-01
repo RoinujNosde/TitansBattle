@@ -9,11 +9,10 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.logging.Level;
 
 import static java.lang.String.format;
 
@@ -26,6 +25,11 @@ public class ItemsProtectionListener extends TBListener {
     @EventHandler(ignoreCancelled = true)
     public void on(InventoryCloseEvent event) {
         Bukkit.getScheduler().runTaskLater(plugin, () -> process(((Player) event.getPlayer())), 1L);
+    }
+    
+    @EventHandler
+    public void on(PlayerRespawnEvent event) {
+         process(event.getPlayer());
     }
 
     @EventHandler
@@ -45,8 +49,9 @@ public class ItemsProtectionListener extends TBListener {
                 continue;
             }
             if (new NBTItem(item).getBoolean(Kit.NBT_TAG)) {
-                plugin.getLogger().log(Level.INFO, format("Removed kit item from %s's inventory", player.getName()));
+                plugin.debug(format("Removing kit item from %s's inventory", player.getName()));
                 inventory.remove(item);
+                item.setAmount(0);
             }
         }
     }

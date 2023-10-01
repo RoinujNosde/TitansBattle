@@ -8,12 +8,15 @@ import me.roinujnosde.titansbattle.managers.GroupManager;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.types.Warrior;
+import me.roinujnosde.titansbattle.utils.MessageUtils;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -33,8 +36,6 @@ import static org.bukkit.ChatColor.*;
 
 public abstract class BaseGame {
 
-    private static final int MAX_ENTRANCES = 2;
-
     protected final TitansBattle plugin;
     protected final GroupManager groupManager;
     protected final GameManager gameManager;
@@ -43,6 +44,7 @@ public abstract class BaseGame {
     protected boolean lobby;
     protected boolean battle;
     protected final List<Warrior> participants = new ArrayList<>();
+    protected final Map<Warrior, Group> groups = new HashMap<>();
     protected final HashMap<Warrior, Integer> killsCount = new HashMap<>();
     protected final Set<Warrior> casualties = new HashSet<>();
     protected final Set<Warrior> casualtiesWatching = new HashSet<>();
@@ -118,8 +120,9 @@ public abstract class BaseGame {
         }
         SoundUtils.playSound(JOIN_GAME, plugin.getConfig(), player);
         participants.add(warrior);
+        groups.put(warrior, warrior.getGroup());
         setKit(warrior);
-        broadcastKey("player_joined", player.getName());
+        broadcastKey("player_joined", warrior.getName());
         player.sendMessage(getLang("objective"));
         if (participants.size() == getConfig().getMaximumPlayers() && lobbyTask != null) {
             lobbyTask.processEnd();
@@ -172,8 +175,17 @@ public abstract class BaseGame {
         if (getConfig().isUseKits()) {
             plugin.getConfigManager().getClearInventory().add(warrior.getUniqueId());
         }
+        if (!isLobby() && getCurrentFighters().contains(warrior)) {
+            //processInventoryOnExit(warrior);
+            //onDeath(warrior, getLastAttacker(warrior));
+            Player player = warrior.toOnlinePlayer();
+            if (player != null) {
+                player.setHealth(0);
+            }
+            return;
+        }
         casualties.add(warrior);
-        casualtiesWatching.add(warrior); //adding to this Collection, so they are not teleport on respawn
+        casualtiesWatching.add(warrior); //adding to this Collection, so they are not teleported on respawn
         plugin.getConfigManager().getRespawn().add(warrior.getUniqueId());
         plugin.getConfigManager().save();
         processPlayerExit(warrior);
@@ -186,12 +198,51 @@ public abstract class BaseGame {
         if (getConfig().isUseKits()) {
             Kit.clearInventory(warrior.toOnlinePlayer());
         }
-        casualties.add(warrior);
-        casualtiesWatching.add(warrior); //adding to this Collection, so they are not teleport on respawn
         Player player = Objects.requireNonNull(warrior.toOnlinePlayer());
+        if (!isLobby() && getCurrentFighters().contains(warrior)) {
+            //processInventoryOnExit(warrior);
+            //onDeath(warrior, getLastAttacker(warrior));
+            player.setHealth(0);
+            return;
+        }
         player.sendMessage(getLang("you-have-left"));
         SoundUtils.playSound(LEAVE_GAME, plugin.getConfig(), player);
         processPlayerExit(warrior);
+    }
+
+    protected @Nullable Warrior getLastAttacker(@NotNull Warrior victim) {
+        Player player = victim.toOnlinePlayer();
+        EntityDamageEvent event = player != null ? player.getLastDamageCause() : null;
+        if (event instanceof EntityDamageByEntityEvent) {
+            Entity attacker = ((EntityDamageByEntityEvent) event).getDamager();
+            if (attacker instanceof Player) {
+                return plugin.getDatabaseManager().getWarrior((Player) attacker);
+            }
+            if (attacker instanceof Projectile) {
+                return plugin.getDatabaseManager().getWarrior((Player) ((Projectile) attacker).getShooter());
+            }
+        }
+        return null;
+    }
+
+    protected void processInventoryOnExit(@NotNull Warrior warrior) {
+        Player player = warrior.toOnlinePlayer();
+        if (player == null) {
+            plugin.debug("processInventoryOnExit() -> null player");
+            return;
+        }
+        World world = player.getWorld();
+        if (shouldKeepInventoryOnDeath(warrior) || Boolean.parseBoolean(world.getGameRuleValue("keepInventory"))) {
+            return;
+        }
+        if (shouldClearDropsOnDeath(warrior)) {
+            return;
+        }
+        for (ItemStack item : player.getInventory().getContents()) {
+            if (item == null) continue;
+            world.dropItemNaturally(player.getLocation(), item.clone());
+        }
+        Kit.clearInventory(player);
     }
 
     public void onRespawn(@NotNull Warrior warrior) {
@@ -220,9 +271,13 @@ public abstract class BaseGame {
         }
         Map<Group, Integer> groups = new HashMap<>();
         for (Warrior w : participants) {
-            groups.compute(w.getGroup(), (g, i) -> i == null ? 1 : i + 1);
+            groups.compute(getGroup(w), (g, i) -> i == null ? 1 : i + 1);
         }
         return groups;
+    }
+
+    protected @Nullable Group getGroup(@NotNull Warrior warrior) {
+        return groups.get(warrior);
     }
 
     public Collection<Warrior> getCasualties() {
@@ -372,7 +427,7 @@ public abstract class BaseGame {
             Bukkit.getPluginManager().callEvent(event);
         }
         participants.remove(warrior);
-        Group group = warrior.getGroup();
+        Group group = getGroup(warrior);
         if (!isLobby()) {
             runCommandsAfterBattle(Collections.singletonList(warrior));
             processRemainingPlayers(warrior);
@@ -422,32 +477,31 @@ public abstract class BaseGame {
     }
 
     protected void sendRemainingOpponentsCount() {
-        try {
-            getPlayerParticipantsStream().forEach(p -> {
-                int remaining = getRemainingOpponents(p);
-                if (remaining <= 0) {
-                    return;
-                }
-                p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(MessageFormat.format(getLang("action-bar-remaining-opponents"), remaining)));
-            });
-        } catch (NoSuchMethodError ignored) {
-        }
+        getPlayerParticipantsStream().forEach(p -> {
+            int remainingPlayers = getRemainingOpponents();
+            int remainingGroups = getRemainingOpponentGroups(p);
+            if (Math.min(remainingPlayers, remainingGroups) <= 0) {
+                return;
+            }
+            MessageUtils.sendActionBar(p, MessageFormat.format(getLang("action-bar-remaining-opponents"), remainingPlayers, remainingGroups));
+        });
     }
 
-    protected int getRemainingOpponents(@NotNull Player player) {
-        if (!getConfig().isGroupMode()) {
-            return getParticipants().size() - 1;
-        }
+    protected int getRemainingOpponentGroups(@NotNull Player player) {
         int opponents = 0;
         Warrior warrior = plugin.getDatabaseManager().getWarrior(player);
         for (Map.Entry<Group, Integer> entry : getGroupParticipants().entrySet()) {
             Group group = entry.getKey();
-            if (group.equals(warrior.getGroup())) {
+            if (group.equals(getGroup(warrior))) {
                 continue;
             }
             opponents += entry.getValue();
         }
         return opponents;
+    }
+
+    protected int getRemainingOpponents() {
+        return getParticipants().size() - 1;
     }
 
     protected void runCommandsBeforeBattle(@NotNull Collection<Warrior> warriors) {
@@ -487,32 +541,25 @@ public abstract class BaseGame {
     }
 
     protected void teleportToArena(List<Warrior> warriors) {
-        Location entrance1 = getConfig().getArenaEntrance(1);
-        Location entrance2 = getConfig().getArenaEntrance(2);
-        if (entrance2 == null) {
-            teleport(warriors, entrance1);
+        List<Location> arenaEntrances = new ArrayList<>(getConfig().getArenaEntrances().values());
+        if (arenaEntrances.size() == 1) {
+            teleport(warriors, arenaEntrances.get(0));
             return;
         }
-        if (getConfig().isGroupMode()) {
-            List<Group> groups = warriors.stream().map(Warrior::getGroup).distinct().collect(Collectors.toList());
-            if (groups.size() != MAX_ENTRANCES) {
-                teleport(warriors, entrance1);
-                return;
-            }
-            for (Warrior warrior : warriors) {
-                if (groups.get(0).equals(warrior.getGroup())) {
-                    teleport(warrior, entrance1);
-                } else {
-                    teleport(warrior, entrance2);
-                }
+
+        if (config.isGroupMode()) {
+            List<Group> groups = warriors.stream().map(this::getGroup).distinct().collect(Collectors.toList());
+
+            for (int i = 0; i < groups.size(); i++) {
+                Set<Warrior> groupWarriors = Objects.requireNonNull(plugin.getGroupManager()).getWarriors(groups.get(i));
+                groupWarriors.retainAll(warriors);
+
+                teleport(groupWarriors, arenaEntrances.get(i % arenaEntrances.size()));
             }
         } else {
-            if (warriors.size() != MAX_ENTRANCES) {
-                teleport(warriors, entrance1);
-                return;
+            for (int i = 0; i < warriors.size(); i++) {
+                teleport(warriors.get(i), arenaEntrances.get(i % arenaEntrances.size()));
             }
-            teleport(warriors.get(0), entrance1);
-            teleport(warriors.get(1), entrance2);
         }
     }
 
