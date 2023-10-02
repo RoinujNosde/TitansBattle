@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 @CommandAlias("%titansbattle|tb")
 @Subcommand("%ranking|ranking")
@@ -62,11 +63,11 @@ public class RankingCommand extends BaseCommand {
 
     private <T> void showRanking(CommandSender sender,
                                  String gameName,
-                                 List<T> data,
+                                 List<T> list,
                                  BiFunction<List<T>, String, String> titleFunction,
-                                 TriFunction<String, List<T>, Integer, String> lineFunction,
+                                 Function<LineElement<T>, String> lineFunction,
                                  int page) {
-        if (data.isEmpty()) {
+        if (list.isEmpty()) {
             sender.sendMessage(plugin.getLang("no-data-found"));
             return;
         }
@@ -75,16 +76,21 @@ public class RankingCommand extends BaseCommand {
         int first = (page - 1) * pageLimit;
         int last = first + pageLimit;
 
-        if (data.size() <= first) {
+        if (list.size() <= first) {
             sender.sendMessage(plugin.getLang("inexistent-page"));
             return;
         }
-        data = data.subList(first, Math.min(last, data.size()));
+        list = list.subList(first, Math.min(last, list.size()));
 
-        sender.sendMessage(titleFunction.apply(data, gameName));
+        sender.sendMessage(titleFunction.apply(list, gameName));
 
-        for (int i = 0; i < data.size(); i++) {
-            sender.sendMessage(lineFunction.apply(gameName, data, i));
+        for (int i = 0; i < list.size(); i++) {
+            LineElement<T> element = new LineElement<>();
+            element.gameName = gameName;
+            element.list = list;
+            element.data = list.get(i);
+            element.pos = String.format("% 2d", (page - 1) * configManager.getPageLimitRanking() + i);
+            sender.sendMessage(lineFunction.apply(element));
         }
     }
 
@@ -259,17 +265,19 @@ public class RankingCommand extends BaseCommand {
                 .replace("%d-space", Helper.getSpaces(getDeathsSize(warriors, game) - getDeathsTitle().length()));
     }
 
-    private String makeGroupLine(final String game, List<Group> groups, int index) {
+    private String makeGroupLine(LineElement<Group> lineElement) {
         String line = plugin.getLang("groups-ranking.line");
 
-        Group g = groups.get(index);
+        List<Group> groups = lineElement.list;
+        Group g = lineElement.data;
+        String game = lineElement.gameName;
         String name = g.getName();
 
         final int victories = g.getData().getVictories(game);
         final int kills = g.getData().getKills(game);
         final int deaths = g.getData().getDeaths(game);
         final int defeats = g.getData().getDefeats(game);
-        return line.replace("%position", String.valueOf(index + 1))
+        return line.replace("%position", lineElement.pos)
                 .replace("%name", name)
                 .replace("%n-space", Helper.getSpaces(getNameSize(groups) - name.length()))
                 .replace("%v-space", Helper.getSpaces(getGroupsVictoriesSize(groups, game) -
@@ -286,16 +294,19 @@ public class RankingCommand extends BaseCommand {
                 .replace("%defeats", String.valueOf(defeats));
     }
 
-    private String makeWarriorLine(String game, List<Warrior> warriors, int index) {
+    private String makeWarriorLine(LineElement<Warrior> lineElement) {
         String line = plugin.getLang("players-ranking.line");
 
-        Warrior w = warriors.get(index);
+        List<Warrior> warriors = lineElement.list;
+        Warrior w = lineElement.data;
+        String game = lineElement.gameName;
+
         String name = w.getName();
         int victories = w.getVictories(game);
         int kills = w.getKills(game);
         int deaths = w.getDeaths(game);
 
-        return line.replace("%position", String.valueOf(index + 1))
+        return line.replace("%position", lineElement.pos)
                 .replace("%nick", name)
                 .replace("%n-space", Helper.getSpaces(getNickSize(warriors) - name.length()))
                 .replace("%v-space", Helper.getSpaces(getVictoriesSize(warriors, game) - Helper.getLength(victories)))
@@ -306,10 +317,11 @@ public class RankingCommand extends BaseCommand {
                 .replace("%deaths", String.valueOf(deaths));
     }
 
-    @FunctionalInterface
-    interface TriFunction<A, B, C, R> {
-
-        R apply(A a, B b, C c);
-
+    static class LineElement<T> {
+        String gameName;
+        List<T> list;
+        T data;
+        String pos;
     }
+
 }
