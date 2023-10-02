@@ -20,7 +20,6 @@ import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.types.Winners;
 import me.roinujnosde.titansbattle.utils.Helper;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -53,7 +52,7 @@ public class TBCommands extends BaseCommand {
     @CommandPermission("titansbattle.start")
     @CommandCompletion("@games")
     @Description("{@@command.description.start}")
-    public void start(CommandSender sender, @Values("@games") GameConfiguration game) {
+    public void start(CommandSender sender, @Values("@games") @Conditions("ready") GameConfiguration game) {
         java.util.Optional<Game> currentGame = gameManager.getCurrentGame();
         if (currentGame.isPresent()) {
             sender.sendMessage(plugin.getLang("starting-or-started", currentGame.orElse(null)));

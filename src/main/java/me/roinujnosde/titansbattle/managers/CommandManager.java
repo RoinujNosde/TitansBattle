@@ -95,7 +95,8 @@ public class CommandManager extends PaperCommandManager {
         registerCondition(new HappeningCondition(getPlugin()));
         registerCondition(new EmptyInventoryCondition(getPlugin()));
         registerCondition(new CanChallengeCondition(getPlugin()));
-        registerCondition(new ReadyCondition(getPlugin()));
+        registerCondition(new ArenaReadyCondition(getPlugin()));
+        registerCondition(new GameReadyCondition(getPlugin()));
         registerCondition(new InvitedCondition(getPlugin()));
         registerCondition(new OtherPlayerCondition(getPlugin()));
         registerCondition(new OtherGroupCondition(getPlugin()));

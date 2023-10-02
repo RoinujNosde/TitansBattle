@@ -7,9 +7,9 @@ import me.roinujnosde.titansbattle.challenges.Challenge;
 import me.roinujnosde.titansbattle.challenges.ChallengeRequest;
 import org.jetbrains.annotations.NotNull;
 
-public class ReadyCondition extends AbstractParameterCondition<ArenaConfiguration> {
+public class ArenaReadyCondition extends AbstractParameterCondition<ArenaConfiguration> {
 
-    public ReadyCondition(TitansBattle plugin) {
+    public ArenaReadyCondition(TitansBattle plugin) {
         super(plugin);
     }
 
