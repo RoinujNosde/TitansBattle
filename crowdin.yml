@@ -1,7 +1,8 @@
-pull_request_title: "feat(lang): new Crowdin updates"
-pull_request_labels: ["l10n"]
-commit_message: "feat(lang): new translations for %language%"
-append_commit_message: false
+pull_request_title: 'feat(lang): new Crowdin updates'
+pull_request_labels:
+  - l10n
+commit_message: 'feat(lang): new translations for %language%'
+append_commit_message: 
 files:
   - source: src/main/resources/language-en.yml
     translation: /src/main/resources/language-%locale_with_underscore%.%file_extension%
