@@ -25,7 +25,6 @@ public class RankingCommand extends BaseCommand {
     private ConfigManager configManager;
     @Dependency
     private DatabaseManager databaseManager;
-    private final int limit = configManager.getPageLimitRanking();
 
     @Subcommand("%groups|groups")
     @CommandPermission("titansbattle.ranking")
@@ -72,8 +71,9 @@ public class RankingCommand extends BaseCommand {
             return;
         }
 
-        int first = (page - 1) * limit;
-        int last = first + limit;
+        int pageLimit = configManager.getPageLimitRanking();
+        int first = (page - 1) * pageLimit;
+        int last = first + pageLimit;
 
         if (data.size() <= first) {
             sender.sendMessage(plugin.getLang("inexistent-page"));
