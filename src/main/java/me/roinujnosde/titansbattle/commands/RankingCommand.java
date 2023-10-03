@@ -89,7 +89,7 @@ public class RankingCommand extends BaseCommand {
             element.gameName = gameName;
             element.list = list;
             element.data = list.get(i);
-            element.pos = String.format("% 2d", (page - 1) * configManager.getPageLimitRanking() + i + 1);
+            element.pos = String.format("%2d", (page - 1) * configManager.getPageLimitRanking() + i + 1);
             sender.sendMessage(lineFunction.apply(element));
         }
     }
