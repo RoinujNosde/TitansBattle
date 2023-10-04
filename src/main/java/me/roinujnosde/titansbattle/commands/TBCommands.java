@@ -212,12 +212,11 @@ public class TBCommands extends BaseCommand {
 
         Game game = currentGame.get();
         if (game.getConfig().isGroupMode()) {
+            sender.sendMessage(plugin.getLang("status_group", game));
             game.getGroupParticipants().forEach((group, warriors) ->
-                    sender.sendMessage(MessageFormat.format(plugin.getLang("status_group", game),
-                            group.getId().toUpperCase(), warriors)));
+                    sender.sendMessage(plugin.getLang("status_group_line", game, group.getId().toUpperCase(), warriors)));
         } else {
-            sender.sendMessage(MessageFormat.format(plugin.getLang("status", game),
-                    game.getParticipants().size()));
+            sender.sendMessage(plugin.getLang("status", game, game.getParticipants().size()));
         }
     }
 
