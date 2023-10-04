@@ -14,7 +14,6 @@ command.description.join: "Присоединиться к текущей игр
 command.description.exit: "Выйти из игры"
 command.description.help: "Показать список команд"
 command.description.ranking.groups: "Показать рейтинг групп"
-command.description.ranking.player: "Показать рейтинг игроков"
 command.description.winners: "Показать победителей"
 command.description.watch: "Телепортироваться в комнату просмотра"
 command.description.challenge.player: "Вызвать игрока на дуэль"
