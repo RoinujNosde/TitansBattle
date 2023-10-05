@@ -8,9 +8,8 @@ import me.roinujnosde.titansbattle.managers.GroupManager;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.types.Warrior;
+import me.roinujnosde.titansbattle.utils.MessageUtils;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
-import net.md_5.bungee.api.ChatMessageType;
-import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
@@ -478,22 +477,17 @@ public abstract class BaseGame {
     }
 
     protected void sendRemainingOpponentsCount() {
-        try {
-            getPlayerParticipantsStream().forEach(p -> {
-                int remaining = getRemainingOpponents(p);
-                if (remaining <= 0) {
-                    return;
-                }
-                p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(MessageFormat.format(getLang("action-bar-remaining-opponents"), remaining)));
-            });
-        } catch (NoSuchMethodError ignored) {
-        }
+        getPlayerParticipantsStream().forEach(p -> {
+            int remainingPlayers = getRemainingOpponents();
+            int remainingGroups = getRemainingOpponentGroups(p);
+            if (Math.min(remainingPlayers, remainingGroups) <= 0) {
+                return;
+            }
+            MessageUtils.sendActionBar(p, MessageFormat.format(getLang("action-bar-remaining-opponents"), remainingPlayers, remainingGroups));
+        });
     }
 
-    protected int getRemainingOpponents(@NotNull Player player) {
-        if (!getConfig().isGroupMode()) {
-            return getParticipants().size() - 1;
-        }
+    protected int getRemainingOpponentGroups(@NotNull Player player) {
         int opponents = 0;
         Warrior warrior = plugin.getDatabaseManager().getWarrior(player);
         for (Map.Entry<Group, Integer> entry : getGroupParticipants().entrySet()) {
@@ -504,6 +498,10 @@ public abstract class BaseGame {
             opponents += entry.getValue();
         }
         return opponents;
+    }
+
+    protected int getRemainingOpponents() {
+        return getParticipants().size() - 1;
     }
 
     protected void runCommandsBeforeBattle(@NotNull Collection<Warrior> warriors) {
@@ -576,6 +574,8 @@ public abstract class BaseGame {
                 ItemMeta itemMeta = itemInHand.getItemMeta();
                 if (itemMeta != null && itemMeta.hasDisplayName()) {
                     weaponName = itemMeta.getDisplayName();
+                } else {
+                    weaponName = itemInHand.getType().name().replace("_", " ").toLowerCase();
                 }
             }
             broadcastKey("killed_by", victim.getName(), killsCount.getOrDefault(victim, 0), killer.getName(), killsCount.get(killer), weaponName);

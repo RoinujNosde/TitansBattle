@@ -6,6 +6,7 @@ import co.aikar.commands.PaperCommandManager;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.commands.ChallengeCommand;
 import me.roinujnosde.titansbattle.commands.ConfigCommands;
+import me.roinujnosde.titansbattle.commands.RankingCommand;
 import me.roinujnosde.titansbattle.commands.TBCommands;
 import me.roinujnosde.titansbattle.commands.completions.*;
 import me.roinujnosde.titansbattle.commands.conditions.*;
@@ -95,7 +96,8 @@ public class CommandManager extends PaperCommandManager {
         registerCondition(new HappeningCondition(getPlugin()));
         registerCondition(new EmptyInventoryCondition(getPlugin()));
         registerCondition(new CanChallengeCondition(getPlugin()));
-        registerCondition(new ReadyCondition(getPlugin()));
+        registerCondition(new ArenaReadyCondition(getPlugin()));
+        registerCondition(new GameReadyCondition(getPlugin()));
         registerCondition(new InvitedCondition(getPlugin()));
         registerCondition(new OtherPlayerCondition(getPlugin()));
         registerCondition(new OtherGroupCondition(getPlugin()));
@@ -105,6 +107,7 @@ public class CommandManager extends PaperCommandManager {
         registerCommand(new TBCommands());
         registerCommand(new ChallengeCommand());
         registerCommand(new ConfigCommands());
+        registerCommand(new RankingCommand());
     }
 
     private <T> void registerContext(AbstractIssuerOnlyContextResolver<T> resolver) {
