@@ -575,7 +575,7 @@ public abstract class BaseGame {
                 if (itemMeta != null && itemMeta.hasDisplayName()) {
                     weaponName = itemMeta.getDisplayName();
                 } else {
-                    weaponName = itemInHand.getType().name().replace("_", "").toLowerCase();
+                    weaponName = itemInHand.getType().name().replace("_", " ").toLowerCase();
                 }
             }
             broadcastKey("killed_by", victim.getName(), killsCount.getOrDefault(victim, 0), killer.getName(), killsCount.get(killer), weaponName);
