@@ -3,7 +3,6 @@ package me.roinujnosde.titansbattle.listeners;
 import me.roinujnosde.titansbattle.BaseGame;
 import me.roinujnosde.titansbattle.BaseGameConfiguration;
 import me.roinujnosde.titansbattle.TitansBattle;
-import me.roinujnosde.titansbattle.commands.TBCommands;
 import me.roinujnosde.titansbattle.events.PlayerJoinGameEvent;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Kit;
@@ -27,9 +26,6 @@ public class JoinGameListener extends TBListener {
     @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
     public void gameHappening(PlayerJoinGameEvent event) {
         BaseGame game = event.getGame();
-        if (TBCommands.isInsertCalled) {
-            return;
-        }
         if (!game.isLobby()) {
             cancelWithMessage(event, "game_is_happening");
         }
