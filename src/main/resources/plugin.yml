@@ -38,6 +38,7 @@ permissions:
       titansbattle.challenge.group: true
       titansbattle.challenge.player: true
       titansbattle.challenge.accept: true
+      titansbattle.status: true
   titansbattle.challenge.accept:
     default: false
   titansbattle.challenge.player:
@@ -75,4 +76,6 @@ permissions:
   titansbattle.ranking:
     default: false
   titansbattle.setwinner:
+    default: false
+  titansbattle.status:
     default: false
