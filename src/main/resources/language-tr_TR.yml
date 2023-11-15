@@ -1,1 +1,11 @@
 ---
+command.description.create: "Oyun dosyası oluştur"
+command.description.edit.prize: "Oyun ödüllerini düzenle"
+command.description.setprize: "Envanterdeki eşyaları ödül olarak belirle"
+command.description.edit.game: "Oyunun ayarlarını düzenle"
+command.description.start: "Oyunu başlat"
+command.description.kick: "Klandan bir oyuncuyu atar"
+command.description.cancel: "Oyunu iptal et"
+command.description.setdestination.general: "Oyunlar içi genel çıkışı ayarlar"
+command.description.setdestination.game: "Oyun için hedef belirle"
+command.description.reload: "Eklentiyi ve yapılandırmayı yeniden yükle"
