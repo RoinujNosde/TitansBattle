@@ -46,8 +46,7 @@
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>3.2.4</version>
                 <configuration>
-                    <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml
-                    </dependencyReducedPomLocation>
+                    <dependencyReducedPomLocation>${project.build.directory}/dependency-reduced-pom.xml</dependencyReducedPomLocation>
                     <relocations>
                         <relocation>
                             <pattern>com.google.gson</pattern>
@@ -77,14 +76,6 @@
                         <goals>
                             <goal>shade</goal>
                         </goals>
-                        <configuration>
-                            <artifactSet>
-                                <excludes>
-                                    <exclude>classworlds:classworlds</exclude>
-                                    <exclude>org.jetbrains:annotations</exclude>
-                                </excludes>
-                            </artifactSet>
-                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -124,6 +115,11 @@
             <id>codemc-repo</id>
             <url>https://repo.codemc.io/repository/maven-public/</url>
         </repository>
+        <repository>
+            <id>maven_central</id>
+            <name>Maven Central</name>
+            <url>https://repo.maven.apache.org/maven2/</url>
+        </repository>
     </repositories>
     <dependencies>
         <dependency>
@@ -146,7 +142,7 @@
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>
-            <version>23.0.0</version>
+            <version>24.1.0</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
@@ -170,6 +166,11 @@
             <artifactId>bstats-bukkit</artifactId>
             <version>3.0.2</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
+            <version>6.3.2.RELEASE</version>
         </dependency>
     </dependencies>
     <name>TitansBattle</name>
