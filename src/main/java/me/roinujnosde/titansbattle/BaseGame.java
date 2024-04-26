@@ -3,6 +3,7 @@ package me.roinujnosde.titansbattle;
 import me.roinujnosde.titansbattle.events.*;
 import me.roinujnosde.titansbattle.exceptions.CommandNotSupportedException;
 import me.roinujnosde.titansbattle.hooks.papi.PlaceholderHook;
+import me.roinujnosde.titansbattle.managers.CommandManager;
 import me.roinujnosde.titansbattle.managers.GameManager;
 import me.roinujnosde.titansbattle.managers.GroupManager;
 import me.roinujnosde.titansbattle.types.Group;
@@ -523,10 +524,10 @@ public abstract class BaseGame {
                     continue;
                 }
                 if (!command.contains("%player%")) { // Runs the command once when %player% is not used
-                    Bukkit.dispatchCommand(Bukkit.getConsoleSender(), hook.parse((OfflinePlayer) null, command));
+                    CommandManager.dispatchCommand(Bukkit.getConsoleSender(), hook.parse((OfflinePlayer) null, command));
                     break;
                 }
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), hook.parse(warrior, command,
+                CommandManager.dispatchCommand(Bukkit.getConsoleSender(), hook.parse(warrior, command,
                         "%player%", warrior.getName()));
             }
         }
