@@ -1,6 +1,7 @@
 package me.roinujnosde.titansbattle.types;
 
 import me.roinujnosde.titansbattle.TitansBattle;
+import me.roinujnosde.titansbattle.managers.CommandManager;
 import me.roinujnosde.titansbattle.serialization.ConfigUtils;
 import me.roinujnosde.titansbattle.serialization.Path;
 import org.bukkit.Bukkit;
@@ -109,7 +110,7 @@ public class Prizes implements ConfigurationSerializable {
             for (String command : commands) {
                 command = plugin.getPlaceholderHook().parse(player, command,
                         "%player%", player.getName(), "%some_number%", Double.toString(someNumber));
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+                CommandManager.dispatchCommand(Bukkit.getConsoleSender(), command);
             }
         }
     }
