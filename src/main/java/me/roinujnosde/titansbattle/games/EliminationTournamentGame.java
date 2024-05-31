@@ -55,7 +55,7 @@ public class EliminationTournamentGame extends Game {
     private List<Warrior> getDuelLosers(@NotNull Warrior defeated) {
         Group group = getGroup(defeated);
         if (group != null && getConfig().isGroupMode()) {
-            return casualties.stream().filter(p -> group.isMember(p.getUniqueId())).collect(Collectors.toList());
+            return casualties.stream().filter(p -> isMember(group, p)).collect(Collectors.toList());
         }
         return Collections.singletonList(defeated);
     }
@@ -64,7 +64,7 @@ public class EliminationTournamentGame extends Game {
         List<Warrior> list = new ArrayList<>();
         if (getConfig().isGroupMode()) {
             Group winnerGroup = Objects.requireNonNull(groupDuelists.get(0).getOther(getGroup(defeated)));
-            list = getParticipants().stream().filter(p -> winnerGroup.isMember(p.getUniqueId()))
+            list = getParticipants().stream().filter(p -> isMember(winnerGroup, p))
                     .collect(Collectors.toList());
         } else {
             Warrior other = playerDuelists.get(0).getOther(defeated);
@@ -257,7 +257,7 @@ public class EliminationTournamentGame extends Game {
             break;
         }
         for (Group group : toKick) {
-            kickExcessive(participants.stream().filter(group::isMember).collect(Collectors.toSet()));
+            kickExcessive(participants.stream().filter(p -> isMember(group, p)).collect(Collectors.toSet()));
         }
     }
 
@@ -370,7 +370,7 @@ public class EliminationTournamentGame extends Game {
             List<Group> duelists = groupDuelists.get(0).getDuelists();
             List<Warrior> warriors = getParticipants().stream().filter(player -> {
                 for (Group g : duelists) {
-                    if (g.isMember(player.getUniqueId())) {
+                    if (isMember(g, player)) {
                         return true;
                     }
                 }
@@ -416,7 +416,7 @@ public class EliminationTournamentGame extends Game {
             firstPlaceWinners.forEach(Kit::clearInventory);
         }
         if (getConfig().isGroupMode() && firstGroup != null) {
-            casualties.stream().filter(firstGroup::isMember).forEach(firstPlaceWinners::add);
+            casualties.stream().filter(p -> isMember(firstGroup, p)).forEach(firstPlaceWinners::add);
             firstPlaceWinners = firstPlaceWinners.stream().distinct().collect(Collectors.toList());
             todayWinners.setWinnerGroup(getConfig().getName(), firstGroup.getName());
             GroupWinEvent event = new GroupWinEvent(firstGroup);
@@ -488,4 +488,9 @@ public class EliminationTournamentGame extends Game {
     private <D> String[] duelistsToNameArray(int index, List<Duel<D>> list, Function<D, String> getName) {
         return list.get(index).getDuelists().stream().map(getName).toArray(String[]::new);
     }
+
+    private boolean isMember(Group group, Warrior warrior) {
+        return group.equals(getGroup(warrior));
+    }
+
 }

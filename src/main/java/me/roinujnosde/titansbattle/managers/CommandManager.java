@@ -12,10 +12,14 @@ import me.roinujnosde.titansbattle.commands.completions.*;
 import me.roinujnosde.titansbattle.commands.conditions.*;
 import me.roinujnosde.titansbattle.commands.contexts.*;
 import me.roinujnosde.titansbattle.dao.ConfigurationDao;
+import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Locale;
 import java.util.Set;
+import java.util.logging.Level;
 
 public class CommandManager extends PaperCommandManager {
 
@@ -34,6 +38,14 @@ public class CommandManager extends PaperCommandManager {
     @Override
     public TitansBattle getPlugin() {
         return (TitansBattle) plugin;
+    }
+
+    public static void dispatchCommand(@NotNull CommandSender sender, @NotNull String commandLine) {
+        try {
+            Bukkit.dispatchCommand(sender, commandLine);
+        } catch (Exception exception) {
+            TitansBattle.getInstance().getLogger().log(Level.SEVERE, String.format("Error executing command: %s", commandLine), exception);
+        }
     }
 
     private void setDefaultLocale() {
