@@ -27,7 +27,6 @@ public class Kit implements ConfigurationSerializable {
     private final ItemStack leggings;
     private final ItemStack boots;
 
-
     public Kit(@NotNull PlayerInventory inventory) {
         ItemStack[] invContents = inventory.getContents();
         this.contents = new ItemStack[invContents.length];
@@ -141,7 +140,8 @@ public class Kit implements ConfigurationSerializable {
     private ItemStack clone(ItemStack item) {
         if (item != null && item.getType() != Material.AIR) {
             item = item.clone();
-            new NBTItem(item, true).setBoolean(NBT_TAG, true);
+            NBTItem nbtItem = new NBTItem(item);
+            nbtItem.setBoolean(NBT_TAG, true);
         }
         return item;
     }
@@ -149,7 +149,8 @@ public class Kit implements ConfigurationSerializable {
     private void setNBTTag(ItemStack[] items) {
         for (ItemStack item : items) {
             if (item != null && item.getType() != Material.AIR) {
-                new NBTItem(item, true).setBoolean(NBT_TAG, true);
+                NBTItem nbtItem = new NBTItem(item);
+                nbtItem.setBoolean(NBT_TAG, true);
             }
         }
     }
