@@ -1,6 +1,7 @@
 package me.roinujnosde.titansbattle.listeners;
 
-import de.tr7zw.changeme.nbtapi.NBTItem;
+import de.tr7zw.changeme.nbtapi.NBT;
+import de.tr7zw.changeme.nbtapi.iface.ReadWriteItemNBT;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.types.Kit;
 import org.bukkit.Bukkit;
@@ -26,10 +27,10 @@ public class ItemsProtectionListener extends TBListener {
     public void on(InventoryCloseEvent event) {
         Bukkit.getScheduler().runTaskLater(plugin, () -> process(((Player) event.getPlayer())), 1L);
     }
-    
+
     @EventHandler
     public void on(PlayerRespawnEvent event) {
-         process(event.getPlayer());
+        process(event.getPlayer());
     }
 
     @EventHandler
@@ -48,12 +49,13 @@ public class ItemsProtectionListener extends TBListener {
             if (item == null || item.getType() == Material.AIR) {
                 continue;
             }
-            if (new NBTItem(item).getBoolean(Kit.NBT_TAG)) {
-                plugin.debug(format("Removing kit item from %s's inventory", player.getName()));
-                inventory.remove(item);
-                item.setAmount(0);
-            }
+            NBT.modify(item, (ReadWriteItemNBT nbt) -> {
+                if (nbt.getBoolean(Kit.NBT_TAG)) {
+                    plugin.debug(format("Removing kit item from %s's inventory", player.getName()));
+                    inventory.remove(item);
+                    item.setAmount(0);
+                }
+            });
         }
     }
-
 }
