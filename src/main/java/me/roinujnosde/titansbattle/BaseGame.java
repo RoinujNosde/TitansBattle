@@ -305,7 +305,12 @@ public abstract class BaseGame {
         }
         message = MessageFormat.format(message, args);
         if (message.startsWith("!!broadcast")) {
-            Bukkit.broadcastMessage(message.replace("!!broadcast", ""));
+            String broadcastMessage = message.replace("!!broadcast", "");
+            if (plugin.isRedisEnabled()) {
+                plugin.getRedisManager().getCommands().publish("titansbattle-broadcasts", broadcastMessage);
+            } else {
+                Bukkit.broadcastMessage(broadcastMessage);
+            }
         } else {
             for (Warrior warrior : getParticipants()) {
                 warrior.sendMessage(message);
