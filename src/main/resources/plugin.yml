@@ -2,7 +2,7 @@ main: "me.roinujnosde.titansbattle.TitansBattle"
 name: "TitansBattle"
 author: "RoinujNosde"
 version: "${project.version}-${git.commit.id.describe-short}"
-api-version: 1.13
+api-version: 1.21
 softdepend:
   - "SimpleClans"
   - "Factions"
