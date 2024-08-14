@@ -14,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 
 @SerializableAs("kit")
 public class Kit implements ConfigurationSerializable {
@@ -141,10 +142,7 @@ public class Kit implements ConfigurationSerializable {
     }
 
     private void applyNBTTag(ItemStack item) {
-        NBT.modify(item, (ReadWriteItemNBT nbt) -> {
-            nbt.setBoolean(NBT_TAG, true);
-            return null;
-    });
+        NBT.modify(item, (Consumer<ReadWriteItemNBT>) nbtItem -> nbtItem.setBoolean(NBT_TAG, true));
     }
 
     private ItemStack clone(ItemStack item) {
