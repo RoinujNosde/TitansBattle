@@ -69,7 +69,7 @@ public class DatabaseManager {
     private Connection connection;
 
     private final Map<String, GroupData> groups = new HashMap<>();
-    private final Set<Warrior> warriors = new HashSet<>();
+    private final Map<UUID, Warrior> warriors = new HashMap<>();
     private final List<Winners> winners = new ArrayList<>();
 
     private enum CountType {
@@ -315,24 +315,17 @@ public class DatabaseManager {
 
     @NotNull
     public Warrior getWarrior(@NotNull OfflinePlayer player) {
-        UUID uuid = player.getUniqueId();
-        for (Warrior warrior : warriors) {
-            if (warrior.toPlayer().getUniqueId().equals(uuid)) {
-                if (player instanceof Player) {
-                    warrior.setOnlinePlayer((Player) player);
-                }
-                return warrior;
-            }
-        }
-
-        Warrior warrior = new Warrior(player, plugin::getGroupManager);
-        warriors.add(warrior);
-        return warrior;
+        return getWarrior(player.getUniqueId());
     }
 
     @NotNull
     public Warrior getWarrior(@NotNull UUID uuid) {
-        return getWarrior(Bukkit.getOfflinePlayer(uuid));
+        OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(uuid);
+        Warrior warrior = warriors.computeIfAbsent(uuid, (id) -> new Warrior(offlinePlayer, plugin::getGroupManager));
+        if (offlinePlayer instanceof Player) {
+            warrior.setOnlinePlayer((Player) offlinePlayer);
+        }
+        return warrior;
     }
 
     private void loopThroughGroups() {
@@ -390,7 +383,7 @@ public class DatabaseManager {
 
                 Warrior warrior = new Warrior(player, plugin::getGroupManager, playerData.get(CountType.KILLS),
                         playerData.get(CountType.DEATHS), playerData.get(CountType.VICTORIES));
-                warriors.add(warrior);
+                warriors.put(warrior.getUniqueId(), warrior);
             }
 
 
@@ -562,7 +555,7 @@ public class DatabaseManager {
     }
 
     public Set<Warrior> getWarriors() {
-        return Collections.unmodifiableSet(warriors);
+        return new HashSet<>(warriors.values());
     }
 
     public Map<String, GroupData> getGroups() {
