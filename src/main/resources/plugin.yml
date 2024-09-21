@@ -31,7 +31,7 @@ permissions:
     children:
       titansbattle.join: true
       titansbattle.exit: true
-      titansbattle.watchroom: true
+      titansbattle.watch: true
       titansbattle.help: true
       titansbattle.winners: true
       titansbattle.ranking: true
@@ -49,7 +49,7 @@ permissions:
     default: false
   titansbattle.exit:
     default: false
-  titansbattle.watchroom:
+  titansbattle.watch:
     default: false
   titansbattle.help:
     default: false
