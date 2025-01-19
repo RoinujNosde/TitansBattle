@@ -21,17 +21,15 @@ import java.util.stream.Collectors;
 import static me.roinujnosde.titansbattle.BaseGameConfiguration.Prize.*;
 
 public class EliminationTournamentGame extends Game {
+
     private final List<Duel<Warrior>> playerDuelists = new ArrayList<>();
     private final List<Duel<Group>> groupDuelists = new ArrayList<>();
     private final List<Warrior> waitingThirdPlace = new ArrayList<>();
+    private boolean thirdPlaceBattle = false;
 
     private @NotNull List<Warrior> firstPlaceWinners = new ArrayList<>();
     private @Nullable List<Warrior> secondPlaceWinners;
     private @Nullable List<Warrior> thirdPlaceWinners;
-
-    private boolean nextToWinIsFirstWinner = false;
-    private boolean nextToLoseIsThirdWinner = false;
-    private boolean battleForThirdPlace = false;
 
     public EliminationTournamentGame(TitansBattle plugin, GameConfiguration config) {
         super(plugin, config);
@@ -47,9 +45,10 @@ public class EliminationTournamentGame extends Game {
 
     private boolean isCurrentDuelist(@NotNull Warrior warrior) {
         if (!getConfig().isGroupMode()) {
-            return playerDuelists.size() != 0 && playerDuelists.get(0).isDuelist(warrior);
+            return getFirstWarriorDuel().map(d -> d.isDuelist(warrior)).orElse(false);
+        } else {
+            return getFirstGroupDuel().map(d -> d.isDuelist(getGroup(warrior))).orElse(false);
         }
-        return groupDuelists.size() != 0 && groupDuelists.get(0).isDuelist(getGroup(warrior));
     }
 
     private List<Warrior> getDuelLosers(@NotNull Warrior defeated) {
@@ -63,11 +62,11 @@ public class EliminationTournamentGame extends Game {
     private List<Warrior> getDuelWinners(@NotNull Warrior defeated) {
         List<Warrior> list = new ArrayList<>();
         if (getConfig().isGroupMode()) {
-            Group winnerGroup = Objects.requireNonNull(groupDuelists.get(0).getOther(getGroup(defeated)));
+            Group winnerGroup = Objects.requireNonNull(getFirstGroupDuel().get().getOther(getGroup(defeated)));
             list = getParticipants().stream().filter(p -> isMember(winnerGroup, p))
                     .collect(Collectors.toList());
         } else {
-            Warrior other = playerDuelists.get(0).getOther(defeated);
+            Warrior other = getFirstWarriorDuel().get().getOther(defeated);
             list.add(other);
         }
         return list;
@@ -81,63 +80,67 @@ public class EliminationTournamentGame extends Game {
     private void removeDuelist(@NotNull Warrior warrior) {
         if (getConfig().isGroupMode()) {
             if (lost(warrior)) {
-                groupDuelists.removeIf(duel -> duel.isDuelist(getGroup(warrior)));
+                Group group = getGroup(warrior);
+                groupDuelists.forEach(d -> d.isDuelist(group));
+                groupDuelists.removeIf(d -> d.getDuelists().isEmpty());
             }
-            return;
+        } else {
+            playerDuelists.forEach(d -> d.remove(warrior));
+            playerDuelists.removeIf(d -> d.getDuelists().isEmpty());
         }
-        playerDuelists.removeIf(duel -> duel.isDuelist(warrior));
     }
 
     @Override
     protected void processRemainingPlayers(@NotNull Warrior warrior) {
-        List<Warrior> duelLosers = getDuelLosers(warrior);
-        if (!isCurrentDuelist(warrior)) {
-            processNotCurrentDuelistLeaving(warrior, duelLosers);
-            return;
+        Player player = warrior.toOnlinePlayer();
+        if (player != null) {
+            Bukkit.getScheduler().runTaskLater(plugin, () -> player.spigot().respawn(), 1L);
         }
-        if (isSemiFinals(false) && !battleForThirdPlace) {
-            processLeavingDuringSemiFinals(warrior);
-        }
+
         if (lost(warrior)) {
-            processLoss(warrior, duelLosers);
-        }
-    }
-
-    private void processLoss(@NotNull Warrior warrior, List<Warrior> duelLosers) {
-        battle = false;
-        List<Warrior> duelWinners = getDuelWinners(warrior);
-        heal(duelWinners);
-        if (nextToLoseIsThirdWinner) {
-            thirdPlaceWinners = duelLosers;
-        }
-        if (!battleForThirdPlace) {
-            for (Warrior dw : duelWinners) {
-                setKit(dw);
-            }
-            teleport(duelWinners, getConfig().getLobby());
-        } else {
-            processThirdPlaceBattle(duelWinners);
-        }
-        if (nextToWinIsFirstWinner) {
-            firstPlaceWinners = duelWinners;
-        } else if (getPlayerOrGroupCount() == 1) {
-            firstPlaceWinners = duelWinners;
-            secondPlaceWinners = duelLosers;
-        } else {
+            battle = false;
+            List<Warrior> duelWinners = getDuelWinners(warrior);
+            heal(duelWinners);
             runCommandsAfterBattle(duelWinners);
-        }
-        //delaying the next duel, so there is time for other players to respawn
-        Bukkit.getScheduler().runTaskLater(plugin, this::startNextDuel, 20L);
-    }
 
-    private void processThirdPlaceBattle(List<Warrior> duelWinners) {
-        battleForThirdPlace = false;
-        thirdPlaceWinners = duelWinners;
-        teleport(duelWinners, getConfig().getWatchroom());
-        participants.removeIf(thirdPlaceWinners::contains);
-        if (getConfig().isUseKits()) {
-            thirdPlaceWinners.forEach(Kit::clearInventory);
+            if (isCurrentDuelist(warrior)) {
+                //third place battle needs to go first, getDuelsCount would also return 1
+                if (thirdPlaceBattle) {
+                    thirdPlaceWinners = duelWinners;
+                    thirdPlaceBattle = false;
+                    teleport(duelWinners, getConfig().getWatchroom());
+                    participants.removeIf(thirdPlaceWinners::contains);
+                    if (getConfig().isUseKits()) {
+                        thirdPlaceWinners.forEach(Kit::clearInventory);
+                    }
+                } else if (getDuelsCount() == 1) {
+                    firstPlaceWinners = duelWinners;
+                    secondPlaceWinners = getDuelLosers(warrior);
+                } else {
+                    //not third place or final battle, winners will fight again
+                    for (Warrior dw : duelWinners) {
+                        setKit(dw);
+                    }
+                    teleport(duelWinners, getConfig().getLobby());
+                }
+            }
+
+            //delaying the next duel, so there is time for other players to respawn
+            Bukkit.getScheduler().runTaskLater(plugin, this::startNextDuel, 20L);
         }
+
+        //died during semi-finals, goes for third place
+        if (getDuelsCount() == 2) {
+            waitingThirdPlace.add(warrior);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                //disconnected
+                if (warrior.toOnlinePlayer() == null) {
+                    waitingThirdPlace.remove(warrior);
+                }
+            }, 5L);
+        }
+
+        removeDuelist(warrior);
     }
 
     private void heal(List<Warrior> warriors) {
@@ -146,34 +149,6 @@ public class EliminationTournamentGame extends Game {
             player.setFoodLevel(20);
             player.setFireTicks(0);
         });
-    }
-
-    private void processLeavingDuringSemiFinals(@NotNull Warrior warrior) {
-        Player player = warrior.toOnlinePlayer();
-        if (player == null) return;
-
-        waitingThirdPlace.add(warrior);
-        Bukkit.getScheduler().runTaskLater(plugin, () -> player.spigot().respawn(), 1L);
-    }
-
-    private void processNotCurrentDuelistLeaving(@NotNull Warrior warrior, List<Warrior> duelLosers) {
-        removeDuelist(warrior);
-        if (getPlayerOrGroupCount() == 2 && getWaitingThirdPlaceCount() == 1) {
-            thirdPlaceWinners = new ArrayList<>(waitingThirdPlace);
-            waitingThirdPlace.clear();
-        }
-        if (getPlayerOrGroupCount() == 3) {
-            if (!waitingThirdPlace.remove(warrior)) {
-                if (lost(warrior)) {
-                    secondPlaceWinners = duelLosers;
-                    nextToWinIsFirstWinner = true;
-                }
-                return;
-            }
-            if (getWaitingThirdPlaceCount() == 0) {
-                nextToLoseIsThirdWinner = true;
-            }
-        }
     }
 
     private boolean lost(@NotNull Warrior warrior) {
@@ -200,15 +175,7 @@ public class EliminationTournamentGame extends Game {
         if (!isCurrentDuelist(warrior)) {
             return false;
         }
-        return isSemiFinals(true) && !battleForThirdPlace;
-    }
-
-    private boolean isSemiFinals(boolean deathEvent) {
-        // during the DeathEvent, the size of the participants list is unaltered, but after that, it is reduced by 1,
-        // so the offset is needed to counterbalance
-        int offset = deathEvent ? 0 : 1;
-        return (getWaitingThirdPlaceCount() == 0 && getPlayerOrGroupCount() == 4 - offset) ||
-                (getWaitingThirdPlaceCount() == 1 && getPlayerOrGroupCount() == 3 - offset);
+        return getDuelsCount() == 2;
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -299,42 +266,71 @@ public class EliminationTournamentGame extends Game {
                 generateDuelist(waitingThirdPlace, playerDuelists);
             }
             waitingThirdPlace.clear();
-            battleForThirdPlace = true;
-            return;
-        }
-        if (getPlayerOrGroupCount() == 2) {
-            broadcastKey("final_battle");
-        }
-        if (!getConfig().isGroupMode()) {
-            generateDuelist(participants, playerDuelists);
+            thirdPlaceBattle = true;
         } else {
-            ArrayList<Group> groups = new ArrayList<>(getGroupParticipants().keySet());
-            generateDuelist(groups, groupDuelists);
+            if (getConfig().isGroupMode()) {
+                generateDuelist(new ArrayList<>(getGroupParticipants().keySet()), groupDuelists);
+            } else {
+                generateDuelist(participants, playerDuelists);
+            }
+            if (getDuelsCount() == 1) {
+                if (getWaitingThirdPlaceCount() == 1) {
+                    thirdPlaceWinners = new ArrayList<>(waitingThirdPlace);
+                    waitingThirdPlace.clear();
+                }
+                broadcastKey("final_battle");
+            }
         }
     }
 
     private <T> void generateDuelist(List<T> list, List<Duel<T>> duelList) {
-        if (duelList.size() >= 1) {
-            duelList.remove(0);
-        }
-        if (duelList.size() < 1) {
-            Collections.shuffle(list);
-            duelList.clear();
-            for (int i = 0; i + 1 < list.size(); i = i + 2) {
-                duelList.add(new Duel<>(list.get(i), list.get(i + 1)));
+        Collections.shuffle(list);
+        duelList.clear();
+        for (int i = 0; i < list.size(); i = i + 2) {
+            if (i + 1 >= list.size()) {
+                //odd number of players
+                duelList.add(new Duel<>(list.get(i), null));
+                break;
             }
+            duelList.add(new Duel<>(list.get(i), list.get(i + 1)));
         }
     }
 
     private void startNextDuel() {
         if (getPlayerOrGroupCount() <= 1) {
+            //opponents probably disconnected before the battle
+            if (firstPlaceWinners.isEmpty()) {
+                firstPlaceWinners.addAll(participants);
+            }
             finish(false);
             return;
         }
-        generateDuelists();
-        teleportNextDuelists();
-        informOtherDuelists();
-        startPreparation();
+        if (isNextDuelReady()) {
+            teleportNextDuelists();
+            informOtherDuelists();
+            startPreparation();
+        } else {
+            generateDuelists();
+            startNextDuel();
+        }
+    }
+
+    private int getDuelsCount() {
+        List<? extends Duel<?>> duels = getConfig().isGroupMode() ? groupDuelists : playerDuelists;
+        return duels.size();
+    }
+
+    private boolean isNextDuelReady() {
+        List<? extends Duel<?>> duels = getConfig().isGroupMode() ? groupDuelists : playerDuelists;
+        return duels.stream().anyMatch(Duel::isValid);
+    }
+
+    private Optional<Duel<Warrior>> getFirstWarriorDuel() {
+        return playerDuelists.stream().filter(Duel::isValid).findFirst();
+    }
+
+    private Optional<Duel<Group>> getFirstGroupDuel() {
+        return groupDuelists.stream().filter(Duel::isValid).findFirst();
     }
 
     private int getPlayerOrGroupCount() {
@@ -364,20 +360,7 @@ public class EliminationTournamentGame extends Game {
     }
 
     private void teleportNextDuelists() {
-        if (!getConfig().isGroupMode()) {
-            teleportToArena(playerDuelists.get(0).getDuelists());
-        } else {
-            List<Group> duelists = groupDuelists.get(0).getDuelists();
-            List<Warrior> warriors = getParticipants().stream().filter(player -> {
-                for (Group g : duelists) {
-                    if (isMember(g, player)) {
-                        return true;
-                    }
-                }
-                return false;
-            }).collect(Collectors.toList());
-            teleportToArena(warriors);
-        }
+        teleportToArena(new ArrayList<>(getCurrentFighters()));
     }
 
     private @Nullable Group getAnyGroup(@Nullable List<Warrior> warriors) {
@@ -400,7 +383,7 @@ public class EliminationTournamentGame extends Game {
             if (group != null) {
                 name = group.getName();
             }
-        } else if (warriors != null && warriors.size() > 0) {
+        } else if (warriors != null && !warriors.isEmpty()) {
             name = warriors.get(0).getName();
         }
         return name;
@@ -457,10 +440,10 @@ public class EliminationTournamentGame extends Game {
         String[] firstDuel;
         StringBuilder builder = new StringBuilder();
         if (getConfig().isGroupMode()) {
-            firstDuel = duelistsToNameArray(0, groupDuelists, Group::getName);
+            firstDuel = duelToNameArray(getFirstGroupDuel(), Group::getName);
             populateDuelsMessage(builder, groupDuelists, Group::getName);
         } else {
-            firstDuel = duelistsToNameArray(0, playerDuelists, Warrior::getName);
+            firstDuel = duelToNameArray(getFirstWarriorDuel(), Warrior::getName);
             populateDuelsMessage(builder, playerDuelists, Warrior::getName);
         }
         if (isMultipleDuels()) {
@@ -474,19 +457,25 @@ public class EliminationTournamentGame extends Game {
         String nextDuelsLineMessage = getLang("game_info_duels_line");
         if (list.size() > 1) {
             for (int i = 1; i < list.size(); i++) {
-                @NotNull String[] name = duelistsToNameArray(i, list, getName);
+                Duel<D> duel = list.get(i);
+                if (!duel.isValid()) continue;
+
+                @NotNull String[] name = duelToNameArray(Optional.of(duel), getName);
                 builder.append(MessageFormat.format(nextDuelsLineMessage, i, name[0], name[1]));
             }
         }
     }
 
     private boolean isMultipleDuels() {
-        List<?> duels = getConfig().isGroupMode() ? groupDuelists : playerDuelists;
-        return duels.size() > 1;
+        List<? extends Duel<?>> duels = getConfig().isGroupMode() ? groupDuelists : playerDuelists;
+        return duels.stream().filter(Duel::isValid).count() > 1;
     }
 
-    private <D> String[] duelistsToNameArray(int index, List<Duel<D>> list, Function<D, String> getName) {
-        return list.get(index).getDuelists().stream().map(getName).toArray(String[]::new);
+    private <D> String[] duelToNameArray(Optional<Duel<D>> duel, Function<D, String> getName) {
+        if (!duel.isPresent()) {
+            return new String[]{"", ""};
+        }
+        return duel.get().getDuelists().stream().filter(Objects::nonNull).map(getName).toArray(String[]::new);
     }
 
     private boolean isMember(Group group, Warrior warrior) {

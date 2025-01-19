@@ -1,19 +1,25 @@
 package me.roinujnosde.titansbattle.games;
 
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 public class Duel<T> {
-    private final List<T> duelists;
+    private final List<T> duelists = new ArrayList<>();
 
     public Duel(T duelist1, T duelist2) {
-        this.duelists = Arrays.asList(duelist1, duelist2);
+        add(duelist1);
+        add(duelist2);
     }
 
-    @Contract("null -> false")
+    private void add(T duelist) {
+        if (duelist != null) {
+            duelists.add(duelist);
+        }
+    }
+
     public boolean isDuelist(@Nullable T t) {
         for (T duelist : duelists) {
             if (duelist.equals(t)) {
@@ -31,6 +37,14 @@ public class Duel<T> {
             }
         }
         return null;
+    }
+
+    public void remove(T t) {
+        duelists.remove(t);
+    }
+
+    public boolean isValid() {
+        return duelists.size() == 2;
     }
 
     public List<T> getDuelists() {
