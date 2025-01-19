@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Future;
-import java.util.function.Consumer;
 
 public class FakeBukkitScheduler implements BukkitScheduler {
 
@@ -104,6 +103,11 @@ public class FakeBukkitScheduler implements BukkitScheduler {
     }
 
     @Override
+    public void cancelAllTasks() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public boolean isCurrentlyRunning(int i) {
         throw new UnsupportedOperationException();
     }
@@ -132,22 +136,12 @@ public class FakeBukkitScheduler implements BukkitScheduler {
     }
 
     @Override
-    public void runTask(@NotNull Plugin plugin, @NotNull Consumer<? super BukkitTask> consumer) throws IllegalArgumentException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public @NotNull BukkitTask runTask(@NotNull Plugin plugin, @NotNull BukkitRunnable bukkitRunnable) throws IllegalArgumentException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public @NotNull BukkitTask runTaskAsynchronously(@NotNull Plugin plugin, @NotNull Runnable runnable) throws IllegalArgumentException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void runTaskAsynchronously(@NotNull Plugin plugin, @NotNull Consumer<? super BukkitTask> consumer) throws IllegalArgumentException {
         throw new UnsupportedOperationException();
     }
 
@@ -165,22 +159,12 @@ public class FakeBukkitScheduler implements BukkitScheduler {
     }
 
     @Override
-    public void runTaskLater(@NotNull Plugin plugin, @NotNull Consumer<? super BukkitTask> consumer, long l) throws IllegalArgumentException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public @NotNull BukkitTask runTaskLater(@NotNull Plugin plugin, @NotNull BukkitRunnable bukkitRunnable, long l) throws IllegalArgumentException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public @NotNull BukkitTask runTaskLaterAsynchronously(@NotNull Plugin plugin, @NotNull Runnable runnable, long l) throws IllegalArgumentException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void runTaskLaterAsynchronously(@NotNull Plugin plugin, @NotNull Consumer<? super BukkitTask> consumer, long l) throws IllegalArgumentException {
         throw new UnsupportedOperationException();
     }
 
@@ -198,22 +182,12 @@ public class FakeBukkitScheduler implements BukkitScheduler {
     }
 
     @Override
-    public void runTaskTimer(@NotNull Plugin plugin, @NotNull Consumer<? super BukkitTask> consumer, long l, long l1) throws IllegalArgumentException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public @NotNull BukkitTask runTaskTimer(@NotNull Plugin plugin, @NotNull BukkitRunnable bukkitRunnable, long l, long l1) throws IllegalArgumentException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public @NotNull BukkitTask runTaskTimerAsynchronously(@NotNull Plugin plugin, @NotNull Runnable runnable, long l, long l1) throws IllegalArgumentException {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public void runTaskTimerAsynchronously(@NotNull Plugin plugin, @NotNull Consumer<? super BukkitTask> consumer, long l, long l1) throws IllegalArgumentException {
         throw new UnsupportedOperationException();
     }
 

@@ -11,9 +11,9 @@ public class FakeBukkitTask implements BukkitTask {
     private final Runnable runnable;
     private final boolean sync;
     private boolean cancelled;
-    private boolean repeating;
+    private final boolean repeating;
     private long scheduledTick;
-    private long period;
+    private final long period;
 
     public FakeBukkitTask(int taskId, Plugin plugin, Runnable runnable, boolean sync, boolean repeating, long scheduledTick, long period) {
         this.taskId = taskId;
@@ -44,7 +44,6 @@ public class FakeBukkitTask implements BukkitTask {
         return sync;
     }
 
-    @Override
     public boolean isCancelled() {
         return cancelled;
     }
