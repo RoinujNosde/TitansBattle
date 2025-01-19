@@ -4,6 +4,7 @@ import me.roinujnosde.titansbattle.BaseGame;
 import me.roinujnosde.titansbattle.BaseGameConfiguration;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.events.PlayerJoinGameEvent;
+import me.roinujnosde.titansbattle.types.GameConfiguration;
 import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Kit;
 import me.roinujnosde.titansbattle.types.Warrior;
@@ -159,6 +160,19 @@ public class JoinGameListener extends TBListener {
             }
             cancelWithMessage(event, "item_not_allowed", item.getType());
         } catch (NoSuchMethodError ignored) {
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    public void permissionCheck(PlayerJoinGameEvent event) {
+        BaseGameConfiguration config = event.getGame().getConfig();
+        if (config instanceof GameConfiguration) {
+            String permission = ((GameConfiguration) config).getPermission();
+            if (permission != null && !permission.isEmpty()) {
+                if (!event.getPlayer().hasPermission(permission)) {
+                    cancelWithMessage(event, "no-permission-game");
+                }
+            }
         }
     }
 
