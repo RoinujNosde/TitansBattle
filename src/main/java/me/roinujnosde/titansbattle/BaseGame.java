@@ -126,8 +126,10 @@ public abstract class BaseGame {
         participants.add(warrior);
         groups.put(warrior, warrior.getGroup());
         setKit(warrior);
+        healAndClearEffects(warrior);
         broadcastKey("player_joined", warrior.getName());
         player.sendMessage(getLang("objective"));
+        
         if (participants.size() == getConfig().getMaximumPlayers() && lobbyTask != null) {
             lobbyTask.processEnd();
         }
@@ -316,15 +318,14 @@ public abstract class BaseGame {
         }
     }
 
-    protected void prepareParticipants() {
-        getPlayerParticipantsStream().forEach(player -> {
-            player.setHealth(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
-            player.setFoodLevel(20);
-    
-            for (PotionEffect effect : player.getActivePotionEffects()) {
-                player.removePotionEffect(effect.getType());
-            }
-        });
+    protected void healAndClearEffects(Warrior warrior) {
+        Player player = warrior.toOnlinePlayer();
+        player.setHealth(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
+        player.setFoodLevel(20);
+
+        for (PotionEffect effect : player.getActivePotionEffects()) {
+            player.removePotionEffect(effect.getType());
+        }
     }
 
     @Override

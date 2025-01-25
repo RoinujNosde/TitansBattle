@@ -189,7 +189,6 @@ public class EliminationTournamentGame extends Game {
         if (getConfig().isPowerOfTwo() && !isPowerOfTwo(getPlayerOrGroupCount())) {
             kickExcessiveParticipants();
         }
-        prepareParticipants();
         startNextDuel();
         broadcast(getGameInfoMessage());
     }
