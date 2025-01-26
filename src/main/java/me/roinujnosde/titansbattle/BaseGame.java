@@ -59,7 +59,7 @@ public abstract class BaseGame {
         this.gameManager = plugin.getGameManager();
         this.config = config;
         if (getConfig().isGroupMode() && groupManager == null) {
-            throw new IllegalStateException("gameManager cannot be null in a group mode game");
+            throw new IllegalStateException("groupManager cannot be null in a group mode game");
         }
     }
 
