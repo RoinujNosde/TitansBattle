@@ -13,7 +13,6 @@ import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.utils.MessageUtils;
 import me.roinujnosde.titansbattle.utils.SoundUtils;
 import org.bukkit.*;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -34,7 +33,6 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static me.roinujnosde.titansbattle.BaseGameConfiguration.Prize;
 import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.*;
 import static org.bukkit.ChatColor.*;
 
@@ -318,10 +316,17 @@ public abstract class BaseGame {
         }
     }
 
-    protected void healAndClearEffects(Warrior warrior) {
+    protected void healAndClearEffects(@NotNull Collection<Warrior> warriors) {
+        warriors.forEach(this::healAndClearEffects);
+    }
+
+    protected void healAndClearEffects(@NotNull Warrior warrior) {
         Player player = warrior.toOnlinePlayer();
-        player.setHealth(player.getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue());
+        if (player == null) return;
+
+        player.setHealth(player.getMaxHealth());
         player.setFoodLevel(20);
+        player.setFireTicks(0);
 
         for (PotionEffect effect : player.getActivePotionEffects()) {
             player.removePotionEffect(effect.getType());

@@ -1230,7 +1230,7 @@ public class FakePlayer implements Player {
     @NotNull
     @Override
     public Collection<PotionEffect> getActivePotionEffects() {
-        return null;
+        return Collections.emptySet();
     }
 
     @Override
@@ -1512,6 +1512,6 @@ public class FakePlayer implements Player {
 
     @Override
     public AttributeInstance getAttribute(Attribute attribute) {
-        return null;
+        return mock(AttributeInstance.class);
     }
 }
