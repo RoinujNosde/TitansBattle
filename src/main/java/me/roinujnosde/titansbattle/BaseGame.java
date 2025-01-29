@@ -1,5 +1,6 @@
 package me.roinujnosde.titansbattle;
 
+import me.roinujnosde.titansbattle.BaseGameConfiguration.Prize;
 import me.roinujnosde.titansbattle.events.*;
 import me.roinujnosde.titansbattle.exceptions.CommandNotSupportedException;
 import me.roinujnosde.titansbattle.hooks.papi.PlaceholderHook;
@@ -20,6 +21,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +33,6 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static me.roinujnosde.titansbattle.BaseGameConfiguration.Prize;
 import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.*;
 import static org.bukkit.ChatColor.*;
 
@@ -123,8 +124,10 @@ public abstract class BaseGame {
         participants.add(warrior);
         groups.put(warrior, warrior.getGroup());
         setKit(warrior);
+        healAndClearEffects(warrior);
         broadcastKey("player_joined", warrior.getName());
         player.sendMessage(getLang("objective"));
+        
         if (participants.size() == getConfig().getMaximumPlayers() && lobbyTask != null) {
             lobbyTask.processEnd();
         }
@@ -310,6 +313,23 @@ public abstract class BaseGame {
             for (Warrior warrior : getParticipants()) {
                 warrior.sendMessage(message);
             }
+        }
+    }
+
+    protected void healAndClearEffects(@NotNull Collection<Warrior> warriors) {
+        warriors.forEach(this::healAndClearEffects);
+    }
+
+    protected void healAndClearEffects(@NotNull Warrior warrior) {
+        Player player = warrior.toOnlinePlayer();
+        if (player == null) return;
+
+        player.setHealth(player.getMaxHealth());
+        player.setFoodLevel(20);
+        player.setFireTicks(0);
+
+        for (PotionEffect effect : player.getActivePotionEffects()) {
+            player.removePotionEffect(effect.getType());
         }
     }
 

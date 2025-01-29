@@ -100,7 +100,7 @@ public class EliminationTournamentGame extends Game {
         if (lost(warrior)) {
             battle = false;
             List<Warrior> duelWinners = getDuelWinners(warrior);
-            heal(duelWinners);
+            healAndClearEffects(duelWinners);
             runCommandsAfterBattle(duelWinners);
 
             if (isCurrentDuelist(warrior)) {
@@ -141,14 +141,6 @@ public class EliminationTournamentGame extends Game {
         }
 
         removeDuelist(warrior);
-    }
-
-    private void heal(List<Warrior> warriors) {
-        warriors.stream().map(Warrior::toOnlinePlayer).filter(Objects::nonNull).forEach(player -> {
-            player.setHealth(player.getMaxHealth());
-            player.setFoodLevel(20);
-            player.setFireTicks(0);
-        });
     }
 
     private boolean lost(@NotNull Warrior warrior) {
