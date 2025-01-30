@@ -7,9 +7,11 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.NotNull;
@@ -26,10 +28,10 @@ public class ItemsProtectionListener extends TBListener {
     public void on(InventoryCloseEvent event) {
         Bukkit.getScheduler().runTaskLater(plugin, () -> process(((Player) event.getPlayer())), 1L);
     }
-    
+
     @EventHandler
     public void on(PlayerRespawnEvent event) {
-         process(event.getPlayer());
+        process(event.getPlayer());
     }
 
     @EventHandler
@@ -56,4 +58,31 @@ public class ItemsProtectionListener extends TBListener {
         }
     }
 
+    @EventHandler
+    public void onCraftItem(CraftItemEvent event) {
+        CraftingInventory inventory = event.getInventory();
+        ItemStack result = inventory.getResult();
+
+        for (ItemStack item : inventory.getMatrix()) {
+            if (item != null && hasKitTag(item)) {
+                applyNBTTag(result);
+                return;
+            }
+        }
+    }
+
+    private boolean hasKitTag(ItemStack item) {
+        if (item == null || item.getType() == Material.AIR) {
+            return false;
+        }
+        return new NBTItem(item).getBoolean(Kit.NBT_TAG);
+    }
+
+    private void applyNBTTag(ItemStack item) {
+        if (item != null && item.getType() != Material.AIR) {
+            NBTItem nbtItem = new NBTItem(item);
+            nbtItem.setBoolean(Kit.NBT_TAG, true);
+            nbtItem.applyNBT(item);
+        }
+    }
 }

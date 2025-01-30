@@ -30,7 +30,6 @@ public class ListenerManager {
         registerListener(new PlayerTeleportListener(plugin));
         registerListener(new BlockUpdateListener(plugin));
         registerListener(new JoinGameListener(plugin));
-        registerListener(new CraftingListener(plugin));
         plugin.getLogger().info("Registering battle listeners...");
     }
 
