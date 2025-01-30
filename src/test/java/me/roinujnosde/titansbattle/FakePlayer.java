@@ -36,8 +36,12 @@ public class FakePlayer implements Player {
     private final String name;
 
     public FakePlayer() {
-        uuid = UUID.randomUUID();
+        this(UUID.randomUUID());
+    }
+
+    public FakePlayer(UUID uuid) {
         name = Material.values()[(int) (Math.random() * Material.values().length)].name();
+        this.uuid = uuid;
     }
 
     @Override
