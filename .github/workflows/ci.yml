@@ -24,7 +24,7 @@ jobs:
       - name: Rename Artifact
         run: mv target/TitansBattle*.jar target/TitansBattle.jar
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: TitansBattle
           path: target/TitansBattle.jar
