@@ -606,11 +606,6 @@ public abstract class BaseGame {
     protected void startPreparation() {
         addTask(new PreparationTimeTask().runTaskLater(plugin, getConfig().getPreparationTime() * 20));
         addTask(new CountdownTitleTask(getCurrentFighters(), getConfig().getPreparationTime()).runTaskTimer(plugin, 0L, 20L));
-        if (getConfig().isWorldBorder()) {
-            long borderInterval = getConfig().getBorderInterval() * 20L;
-            WorldBorder worldBorder = getConfig().getBorderCenter().getWorld().getWorldBorder();
-            addTask(new BorderTask(worldBorder).runTaskTimer(plugin, borderInterval, borderInterval));
-        }
     }
 
     public class LobbyAnnouncementTask extends BukkitRunnable {
@@ -687,6 +682,12 @@ public abstract class BaseGame {
             broadcastKey("preparation_over");
             runCommandsBeforeBattle(getCurrentFighters());
             battle = true;
+            
+            if (getConfig().isWorldBorder()) {
+                long borderInterval = getConfig().getBorderInterval() * 20L;
+                WorldBorder worldBorder = getConfig().getBorderCenter().getWorld().getWorldBorder();
+                addTask(new BorderTask(worldBorder).runTaskTimer(plugin, borderInterval, borderInterval));
+            }
         }
     }
 
