@@ -2,7 +2,17 @@ package me.roinujnosde.titansbattle.commands;
 
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.CommandHelp;
-import co.aikar.commands.annotation.*;
+import co.aikar.commands.annotation.CatchUnknown;
+import co.aikar.commands.annotation.CommandAlias;
+import co.aikar.commands.annotation.CommandCompletion;
+import co.aikar.commands.annotation.CommandPermission;
+import co.aikar.commands.annotation.Conditions;
+import co.aikar.commands.annotation.Default;
+import co.aikar.commands.annotation.Dependency;
+import co.aikar.commands.annotation.Description;
+import co.aikar.commands.annotation.Optional;
+import co.aikar.commands.annotation.Subcommand;
+import co.aikar.commands.annotation.Values;
 import co.aikar.commands.bukkit.contexts.OnlinePlayer;
 import me.roinujnosde.titansbattle.BaseGameConfiguration;
 import me.roinujnosde.titansbattle.TitansBattle;
@@ -186,6 +196,26 @@ public class TBCommands extends BaseCommand {
         Location watchroom = config.getWatchroom();
         sender.teleport(watchroom);
         SoundUtils.playSound(SoundUtils.Type.WATCH, plugin.getConfig(), sender);
+    }
+
+    @Subcommand("%status|status")
+    @CommandPermission("titansbattle.status")
+    @Conditions("happening")
+    @Description("{@@command.description.status}")
+    public void status(Player sender) {
+        plugin.debug(String.format("%s used /tb status", sender.getName()));
+        java.util.Optional<Game> currentGame = gameManager.getCurrentGame();
+        if (!currentGame.isPresent()) {
+            sender.sendMessage(plugin.getLang("not-starting-or-started"));
+            return;
+        }
+
+        Game game = currentGame.get();
+        if (game.getConfig().isGroupMode()) {
+            sender.sendMessage(plugin.getLang("game_status_group", game, Helper.buildStringFrom(game.getGroupParticipants())));
+        } else {
+            sender.sendMessage(plugin.getLang("game_status", game, game.getParticipants().size()));
+        }
     }
 
 }

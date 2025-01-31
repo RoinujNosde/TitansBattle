@@ -4,6 +4,7 @@ import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
+import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.types.Winners;
 import org.bukkit.Bukkit;
@@ -16,7 +17,14 @@ import org.bukkit.projectiles.ProjectileSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class Helper {
@@ -318,6 +326,17 @@ public class Helper {
                 sb.append(", ");
                 sb.append(s);
             }
+        }
+        return sb.toString();
+    }
+
+    public static @NotNull String buildStringFrom(@NotNull Map<Group, Integer> groupIntegerMap) {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<Group, Integer> entry : groupIntegerMap.entrySet()) {
+            sb.append(entry.getKey().getId().toUpperCase())
+                    .append("(")
+                    .append(entry.getValue())
+                    .append(") ");
         }
         return sb.toString();
     }
