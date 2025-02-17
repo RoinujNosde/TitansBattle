@@ -97,32 +97,30 @@ public class EliminationTournamentGame extends Game {
             Bukkit.getScheduler().runTaskLater(plugin, () -> player.spigot().respawn(), 1L);
         }
 
-        if (lost(warrior)) {
+        if (lost(warrior) && isCurrentDuelist(warrior)) {
             battle = false;
             List<Warrior> duelWinners = getDuelWinners(warrior);
             healAndClearEffects(duelWinners);
             runCommandsAfterBattle(duelWinners);
 
-            if (isCurrentDuelist(warrior)) {
-                //third place battle needs to go first, getDuelsCount would also return 1
-                if (thirdPlaceBattle) {
-                    thirdPlaceWinners = duelWinners;
-                    thirdPlaceBattle = false;
-                    teleport(duelWinners, getConfig().getWatchroom());
-                    participants.removeIf(thirdPlaceWinners::contains);
-                    if (getConfig().isUseKits()) {
-                        thirdPlaceWinners.forEach(Kit::clearInventory);
-                    }
-                } else if (getDuelsCount() == 1) {
-                    firstPlaceWinners = duelWinners;
-                    secondPlaceWinners = getDuelLosers(warrior);
-                } else {
-                    //not third place or final battle, winners will fight again
-                    for (Warrior dw : duelWinners) {
-                        setKit(dw);
-                    }
-                    teleport(duelWinners, getConfig().getLobby());
+            //third place battle needs to go first, getDuelsCount would also return 1
+            if (thirdPlaceBattle) {
+                thirdPlaceWinners = duelWinners;
+                thirdPlaceBattle = false;
+                teleport(duelWinners, getConfig().getWatchroom());
+                participants.removeIf(thirdPlaceWinners::contains);
+                if (getConfig().isUseKits()) {
+                    thirdPlaceWinners.forEach(Kit::clearInventory);
                 }
+            } else if (getDuelsCount() == 1) {
+                firstPlaceWinners = duelWinners;
+                secondPlaceWinners = getDuelLosers(warrior);
+            } else {
+                //not third place or final battle, winners will fight again
+                for (Warrior dw : duelWinners) {
+                    setKit(dw);
+                }
+                teleport(duelWinners, getConfig().getLobby());
             }
 
             //died during semi-finals, goes for third place
