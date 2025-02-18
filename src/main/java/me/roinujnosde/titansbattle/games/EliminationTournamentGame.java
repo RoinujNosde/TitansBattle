@@ -98,12 +98,12 @@ public class EliminationTournamentGame extends Game {
         }
 
         if (lost(warrior)) {
-            battle = false;
-            List<Warrior> duelWinners = getDuelWinners(warrior);
-            healAndClearEffects(duelWinners);
-            runCommandsAfterBattle(duelWinners);
-
             if (isCurrentDuelist(warrior)) {
+                battle = false;
+                List<Warrior> duelWinners = getDuelWinners(warrior);
+                healAndClearEffects(duelWinners);
+                runCommandsAfterBattle(duelWinners);
+
                 //third place battle needs to go first, getDuelsCount would also return 1
                 if (thirdPlaceBattle) {
                     thirdPlaceWinners = duelWinners;
@@ -123,6 +123,9 @@ public class EliminationTournamentGame extends Game {
                     }
                     teleport(duelWinners, getConfig().getLobby());
                 }
+
+                //delaying the next duel, so there is time for other players to respawn
+                Bukkit.getScheduler().runTaskLater(plugin, this::startNextDuel, 20L);
             }
 
             //died during semi-finals, goes for third place
@@ -139,9 +142,6 @@ public class EliminationTournamentGame extends Game {
                     waitingThirdPlace.removeIf(w -> w.toOnlinePlayer() == null);
                 }, 5L);
             }
-
-            //delaying the next duel, so there is time for other players to respawn
-            Bukkit.getScheduler().runTaskLater(plugin, this::startNextDuel, 20L);
         }
 
         removeDuelist(warrior);
