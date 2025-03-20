@@ -128,20 +128,15 @@ public class EliminationTournamentGame extends Game {
                 Bukkit.getScheduler().runTaskLater(plugin, this::startNextDuel, 20L);
             }
 
-            //died during semi-finals, goes for third place
-            if (getDuelsCount() == 2) {
-                if (config.isGroupMode()) {
-                    Group group = getGroup(warrior);
-                    //noinspection DataFlowIssue
-                    casualties.stream().filter(p -> isMember(group, p)).forEach(waitingThirdPlace::add);
-                } else {
-                    waitingThirdPlace.add(warrior);
-                }
-                Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                    //disconnected
-                    waitingThirdPlace.removeIf(w -> w.toOnlinePlayer() == null);
-                }, 5L);
-            }
+        }
+
+        //died during semi-finals, goes for third place
+        if (getDuelsCount() == 2 && !thirdPlaceBattle) {
+            waitingThirdPlace.add(warrior);
+            Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                //disconnected
+                waitingThirdPlace.removeIf(w -> w.toOnlinePlayer() == null);
+            }, 5L);
         }
 
         removeDuelist(warrior);
