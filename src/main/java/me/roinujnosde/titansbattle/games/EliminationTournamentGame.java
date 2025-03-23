@@ -82,11 +82,9 @@ public class EliminationTournamentGame extends Game {
             if (lost(warrior)) {
                 Group group = getGroup(warrior);
                 groupDuelists.forEach(d -> d.remove(group));
-                groupDuelists.removeIf(d -> d.getDuelists().isEmpty());
             }
         } else {
             playerDuelists.forEach(d -> d.remove(warrior));
-            playerDuelists.removeIf(d -> d.getDuelists().isEmpty());
         }
     }
 
@@ -128,15 +126,21 @@ public class EliminationTournamentGame extends Game {
                 Bukkit.getScheduler().runTaskLater(plugin, this::startNextDuel, 20L);
             }
 
-        }
+            //died during semi-finals, goes for third place
+            if (getDuelsCount() == 2) {
+                if (getConfig().isGroupMode()) {
+                    Group group = getGroup(warrior);
+                    //noinspection DataFlowIssue
+                    casualties.stream().filter(p -> isMember(group, p)).forEach(waitingThirdPlace::add);
+                } else {
+                    waitingThirdPlace.add(warrior);
+                }
+                Bukkit.getScheduler().runTaskLater(plugin, () -> {
+                    //disconnected
+                    waitingThirdPlace.removeIf(w -> w.toOnlinePlayer() == null);
+                }, 5L);
+            }
 
-        //died during semi-finals, goes for third place
-        if (getDuelsCount() == 2 && !thirdPlaceBattle) {
-            waitingThirdPlace.add(warrior);
-            Bukkit.getScheduler().runTaskLater(plugin, () -> {
-                //disconnected
-                waitingThirdPlace.removeIf(w -> w.toOnlinePlayer() == null);
-            }, 5L);
         }
 
         removeDuelist(warrior);
@@ -154,7 +158,6 @@ public class EliminationTournamentGame extends Game {
         if (waitingThirdPlace.contains(warrior)) {
             Player player = warrior.toOnlinePlayer();
             if (player == null) return;
-            setKit(warrior);
             teleport(warrior, getConfig().getLobby());
         } else {
             super.onRespawn(warrior);
@@ -256,6 +259,7 @@ public class EliminationTournamentGame extends Game {
             } else {
                 generateDuelist(waitingThirdPlace, playerDuelists);
             }
+            participants.forEach(this::setKit);
             waitingThirdPlace.clear();
             thirdPlaceBattle = true;
         } else {
