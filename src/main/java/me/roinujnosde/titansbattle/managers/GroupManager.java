@@ -30,7 +30,7 @@ public abstract class GroupManager {
     protected final Function<String, GroupData> idToData;
     protected final TitansBattle plugin;
 
-    public GroupManager(@NotNull TitansBattle plugin) {
+    protected GroupManager(@NotNull TitansBattle plugin) {
         this.plugin = plugin;
         this.idToData = plugin.getDatabaseManager()::getGroupData;
     }
@@ -76,7 +76,9 @@ public abstract class GroupManager {
      * @return the built String
      */
     public @NotNull String buildStringFrom(@NotNull Collection<Group> groups) {
-        return Helper.buildStringFrom(groups.stream().filter(Objects::nonNull).map(Group::getName)
+        return Helper.buildStringFrom(groups.stream()
+                .filter(Objects::nonNull)
+                .map(Group::getName)
                 .collect(Collectors.toList()));
     }
 
