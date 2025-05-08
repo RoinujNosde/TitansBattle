@@ -44,6 +44,7 @@ public class GameConfiguration extends BaseGameConfiguration {
     private Boolean killerQuitMessage = false;
     @Path("message.winner.quit")
     private Boolean winnerQuitMessage = false;
+    private String permission = "";
 
     public GameConfiguration() {
         this(Collections.emptyMap());
@@ -128,6 +129,10 @@ public class GameConfiguration extends BaseGameConfiguration {
 
     public String getWinnerPrefix() {
         return winnerPrefix;
+    }
+
+    public String getPermission() {
+        return permission;
     }
 
     @Override

@@ -13,10 +13,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: 'Set up JDK 8'
+      - name: 'Set up JDK 11'
         uses: actions/setup-java@v3
         with:
-          java-version: '8'
+          java-version: '11'
           distribution: 'adopt'
           cache: 'maven'
       - name: Build with Maven
@@ -24,7 +24,7 @@ jobs:
       - name: Rename Artifact
         run: mv target/TitansBattle*.jar target/TitansBattle.jar
       - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: TitansBattle
           path: target/TitansBattle.jar

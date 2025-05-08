@@ -7,8 +7,10 @@ import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Locale;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class SoundUtils {
@@ -38,11 +40,24 @@ public class SoundUtils {
         if (soundName.isEmpty()) return;
         Sound sound = null;
         try {
-             sound = Sound.valueOf(soundName.toUpperCase(Locale.ROOT));
+             sound = getSound(soundName.toUpperCase(Locale.ROOT));
         } catch (IllegalArgumentException e) {
             LOGGER.warning(String.format("Invalid sound: %s", soundName));
         }
+        if (sound == null) {
+            return;
+        }
         player.playSound(player.getLocation(), sound, 1F, 1F);
+    }
+
+    private static Sound getSound(String name) {
+        try {
+            Method valueOf = Sound.class.getMethod("valueOf", String.class);
+            return (Sound) valueOf.invoke(null, name);
+        } catch (ReflectiveOperationException ex) {
+            LOGGER.log(Level.SEVERE, "Error getting sound object", ex);
+            return null;
+        }
     }
 
     public enum Type {

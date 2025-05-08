@@ -1,15 +1,16 @@
 package me.roinujnosde.titansbattle.listeners;
 
-import de.tr7zw.changeme.nbtapi.NBTItem;
 import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.types.Kit;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.NotNull;
@@ -24,20 +25,20 @@ public class ItemsProtectionListener extends TBListener {
 
     @EventHandler(ignoreCancelled = true)
     public void on(InventoryCloseEvent event) {
-        Bukkit.getScheduler().runTaskLater(plugin, () -> process(((Player) event.getPlayer())), 1L);
+        Bukkit.getScheduler().runTaskLater(plugin, () -> clearItems(((Player) event.getPlayer())), 1L);
     }
-    
+
     @EventHandler
     public void on(PlayerRespawnEvent event) {
-         process(event.getPlayer());
+        clearItems(event.getPlayer());
     }
 
     @EventHandler
     public void on(PlayerJoinEvent event) {
-        process(event.getPlayer());
+        clearItems(event.getPlayer());
     }
 
-    private void process(@NotNull Player player) {
+    private void clearItems(@NotNull Player player) {
         // Player is in a game, it's possible (and normal) that they have a kit
         if (plugin.getBaseGameFrom(player) != null) {
             return;
@@ -48,10 +49,23 @@ public class ItemsProtectionListener extends TBListener {
             if (item == null || item.getType() == Material.AIR) {
                 continue;
             }
-            if (new NBTItem(item).getBoolean(Kit.NBT_TAG)) {
+            if (Kit.isKitItem(item)) {
                 plugin.debug(format("Removing kit item from %s's inventory", player.getName()));
                 inventory.remove(item);
-                item.setAmount(0);
+                item.setAmount(0); //needed for some Minecraft versions
+            }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void on(CraftItemEvent event) {
+        CraftingInventory inventory = event.getInventory();
+        ItemStack result = inventory.getResult();
+
+        for (ItemStack item : inventory.getMatrix()) {
+            if (item != null && Kit.isKitItem(item)) {
+                Kit.applyNBTTag(result);
+                return;
             }
         }
     }

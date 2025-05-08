@@ -1,8 +1,6 @@
 package me.roinujnosde.titansbattle.types;
 
 import de.tr7zw.changeme.nbtapi.NBT;
-import de.tr7zw.changeme.nbtapi.iface.ReadWriteItemNBT;
-
 import org.bukkit.Material;
 import org.bukkit.configuration.serialization.ConfigurationSerializable;
 import org.bukkit.configuration.serialization.SerializableAs;
@@ -14,7 +12,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 import java.util.TreeMap;
-import java.util.function.Consumer;
 
 @SerializableAs("kit")
 public class Kit implements ConfigurationSerializable {
@@ -141,8 +138,20 @@ public class Kit implements ConfigurationSerializable {
         return clone((ItemStack) object);
     }
 
-    private void applyNBTTag(ItemStack item) {
-        NBT.modify(item, (Consumer<ReadWriteItemNBT>) nbtItem -> nbtItem.setBoolean(NBT_TAG, true));
+    public static void applyNBTTag(@NotNull ItemStack item) {
+        if (item.getType() == Material.AIR) {
+            return;
+        }
+        NBT.modify(item, nbtItem -> {
+            nbtItem.setBoolean(NBT_TAG, true);
+        });
+    }
+
+    public static boolean isKitItem(@NotNull ItemStack item) {
+        if (item.getType() == Material.AIR) {
+            return false;
+        }
+        return NBT.get(item, n -> (boolean) n.getBoolean(Kit.NBT_TAG));
     }
 
     private ItemStack clone(ItemStack item) {

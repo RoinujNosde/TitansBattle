@@ -1,5 +1,6 @@
 package me.roinujnosde.titansbattle;
 
+import me.roinujnosde.titansbattle.BaseGameConfiguration.Prize;
 import me.roinujnosde.titansbattle.events.*;
 import me.roinujnosde.titansbattle.exceptions.CommandNotSupportedException;
 import me.roinujnosde.titansbattle.hooks.papi.PlaceholderHook;
@@ -20,6 +21,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.jetbrains.annotations.NotNull;
@@ -31,7 +33,6 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static me.roinujnosde.titansbattle.BaseGameConfiguration.Prize;
 import static me.roinujnosde.titansbattle.utils.SoundUtils.Type.*;
 import static org.bukkit.ChatColor.*;
 
@@ -59,7 +60,7 @@ public abstract class BaseGame {
         this.gameManager = plugin.getGameManager();
         this.config = config;
         if (getConfig().isGroupMode() && groupManager == null) {
-            throw new IllegalStateException("gameManager cannot be null in a group mode game");
+            throw new IllegalStateException("groupManager cannot be null in a group mode game");
         }
     }
 
@@ -123,8 +124,10 @@ public abstract class BaseGame {
         participants.add(warrior);
         groups.put(warrior, warrior.getGroup());
         setKit(warrior);
+        healAndClearEffects(warrior);
         broadcastKey("player_joined", warrior.getName());
         player.sendMessage(getLang("objective"));
+        
         if (participants.size() == getConfig().getMaximumPlayers() && lobbyTask != null) {
             lobbyTask.processEnd();
         }
@@ -310,6 +313,23 @@ public abstract class BaseGame {
             for (Warrior warrior : getParticipants()) {
                 warrior.sendMessage(message);
             }
+        }
+    }
+
+    protected void healAndClearEffects(@NotNull Collection<Warrior> warriors) {
+        warriors.forEach(this::healAndClearEffects);
+    }
+
+    protected void healAndClearEffects(@NotNull Warrior warrior) {
+        Player player = warrior.toOnlinePlayer();
+        if (player == null) return;
+
+        player.setHealth(player.getMaxHealth());
+        player.setFoodLevel(20);
+        player.setFireTicks(0);
+
+        for (PotionEffect effect : player.getActivePotionEffects()) {
+            player.removePotionEffect(effect.getType());
         }
     }
 
@@ -586,11 +606,6 @@ public abstract class BaseGame {
     protected void startPreparation() {
         addTask(new PreparationTimeTask().runTaskLater(plugin, getConfig().getPreparationTime() * 20));
         addTask(new CountdownTitleTask(getCurrentFighters(), getConfig().getPreparationTime()).runTaskTimer(plugin, 0L, 20L));
-        if (getConfig().isWorldBorder()) {
-            long borderInterval = getConfig().getBorderInterval() * 20L;
-            WorldBorder worldBorder = getConfig().getBorderCenter().getWorld().getWorldBorder();
-            addTask(new BorderTask(worldBorder).runTaskTimer(plugin, borderInterval, borderInterval));
-        }
     }
 
     public class LobbyAnnouncementTask extends BukkitRunnable {
@@ -648,13 +663,19 @@ public abstract class BaseGame {
 
             if (getConfig().getBorderFinalSize() > newSize) {
                 this.cancel();
-                return;
+                shrinkSize = currentSize - getConfig().getBorderFinalSize();
+                if (shrinkSize <= 0) {
+                    return;
+                }
+                newSize = getConfig().getBorderFinalSize();
             }
-            worldBorder.setSize(newSize, shrinkSize);
+
             getPlayerParticipantsStream().forEach(player -> {
                 player.sendTitle(getLang("border.title"), getLang("border.subtitle"));
                 SoundUtils.playSound(BORDER, getConfig().getFileConfiguration(), player);
             });
+
+            worldBorder.setSize(newSize, shrinkSize);
             currentSize = newSize;
         }
 
@@ -667,6 +688,12 @@ public abstract class BaseGame {
             broadcastKey("preparation_over");
             runCommandsBeforeBattle(getCurrentFighters());
             battle = true;
+            
+            if (getConfig().isWorldBorder()) {
+                long borderInterval = getConfig().getBorderInterval() * 20L;
+                WorldBorder worldBorder = getConfig().getBorderCenter().getWorld().getWorldBorder();
+                addTask(new BorderTask(worldBorder).runTaskTimer(plugin, borderInterval, borderInterval));
+            }
         }
     }
 
