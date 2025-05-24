@@ -668,13 +668,19 @@ public abstract class BaseGame {
 
             if (getConfig().getBorderFinalSize() > newSize) {
                 this.cancel();
-                return;
+                shrinkSize = currentSize - getConfig().getBorderFinalSize();
+                if (shrinkSize <= 0) {
+                    return;
+                }
+                newSize = getConfig().getBorderFinalSize();
             }
-            worldBorder.setSize(newSize, shrinkSize);
+
             getPlayerParticipantsStream().forEach(player -> {
                 player.sendTitle(getLang("border.title"), getLang("border.subtitle"));
                 SoundUtils.playSound(BORDER, getConfig().getFileConfiguration(), player);
             });
+
+            worldBorder.setSize(newSize, shrinkSize);
             currentSize = newSize;
         }
 
