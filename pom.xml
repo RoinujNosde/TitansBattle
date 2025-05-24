@@ -192,6 +192,11 @@
             <version>5.14.2</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.lettuce</groupId>
+            <artifactId>lettuce-core</artifactId>
+            <version>6.5.3.RELEASE</version>
+        </dependency>
     </dependencies>
     <name>TitansBattle</name>
 
