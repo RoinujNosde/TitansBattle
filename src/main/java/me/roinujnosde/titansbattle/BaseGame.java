@@ -127,7 +127,7 @@ public abstract class BaseGame {
         healAndClearEffects(warrior);
         broadcastKey("player_joined", warrior.getName());
         player.sendMessage(getLang("objective"));
-        
+
         if (participants.size() == getConfig().getMaximumPlayers() && lobbyTask != null) {
             lobbyTask.processEnd();
         }
@@ -308,7 +308,12 @@ public abstract class BaseGame {
         }
         message = MessageFormat.format(message, args);
         if (message.startsWith("!!broadcast")) {
-            Bukkit.broadcastMessage(message.replace("!!broadcast", ""));
+            String broadcastMessage = message.replace("!!broadcast", "");
+            if (plugin.isRedisEnabled()) {
+                plugin.getRedisManager().getCommands().publish("titansbattle-broadcasts", broadcastMessage);
+            } else {
+                Bukkit.broadcastMessage(broadcastMessage);
+            }
         } else {
             for (Warrior warrior : getParticipants()) {
                 warrior.sendMessage(message);
@@ -688,7 +693,7 @@ public abstract class BaseGame {
             broadcastKey("preparation_over");
             runCommandsBeforeBattle(getCurrentFighters());
             battle = true;
-            
+
             if (getConfig().isWorldBorder()) {
                 long borderInterval = getConfig().getBorderInterval() * 20L;
                 WorldBorder worldBorder = getConfig().getBorderCenter().getWorld().getWorldBorder();
