@@ -45,6 +45,7 @@ public abstract class BaseGame {
     protected BaseGameConfiguration config;
     protected boolean lobby;
     protected boolean battle;
+    protected long battleStartTime;
     protected final List<Warrior> participants = new ArrayList<>();
     protected final Map<Warrior, Group> groups = new HashMap<>();
     protected final HashMap<Warrior, Integer> killsCount = new HashMap<>();
@@ -166,6 +167,10 @@ public abstract class BaseGame {
 
     public @NotNull BaseGameConfiguration getConfig() {
         return config;
+    }
+
+    public long getBattleStartTime() {
+        return battleStartTime;
     }
 
     public boolean isParticipant(@NotNull Warrior warrior) {
@@ -688,6 +693,7 @@ public abstract class BaseGame {
             broadcastKey("preparation_over");
             runCommandsBeforeBattle(getCurrentFighters());
             battle = true;
+            battleStartTime = System.currentTimeMillis();
             
             if (getConfig().isWorldBorder()) {
                 long borderInterval = getConfig().getBorderInterval() * 20L;

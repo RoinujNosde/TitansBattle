@@ -51,6 +51,7 @@ commands:
     info: "info"
     setwinner: "setwinner"
     config: "config"
+    status: "status"
 
 #Sounds used in games, to disable one leave it ""
 sounds:
@@ -65,6 +66,24 @@ sounds:
 
 #Date format used on /tb winners command
 date-format: "dd/MM/yyyy"
+
+# Time format used for event timers (duration-based, not clock time).
+# Supported tokens:
+# {dd} = days (00+)
+# {HH} = total hours (can exceed 24)
+# {hh} = hour part within the day (00-23)
+# {mm} = minute part (00-59)
+# {ss} = second part (00-59)
+# {m}  = total minutes
+# {s}  = total seconds
+#
+# Examples:
+#  - "02:15:30"        -> "{HH}:{mm}:{ss}"
+#  - "1d 01:00:00"     -> "{dd}d {hh}:{mm}:{ss}"
+#  - "150 minutes"     -> "{m} minutes"
+#
+# If the remaining time is inexistent or negative, "N/A" will be shown.
+time-format: "{HH}:{mm}:{ss}"
 
 #Set how many lines should be displayed on those commands
 page-limit:

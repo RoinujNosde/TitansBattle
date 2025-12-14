@@ -116,6 +116,8 @@ game_info: "!!broadcast&b» Tem {0} jogadores e {1} grupos participando! Grupos:
 game_info_duels: "!!broadcast&b» Duelo atual:\n  &f{0} &bx &f{1}"
 game_info_next_duels: "\n&bPróximos duelos:\n{2}"
 game_info_duels_line: "  &b{0}. &f{1} &bx &f{2}\n"
+game_status: "&b» Status do Jogo: {0} jogadores vivos | Tempo decorrido: {1}/{2} | Restante: {3}"
+game_status_group: "&b» Status do Jogo: {0} | Tempo decorrido: {1}/{2} | Restante: {3}"
 player_joined: "&b» {0} entrou no jogo!"
 items_to_receive: "&b» Você ainda tem {0} stacks de itens para receber, limpe seu inventário e não desconecte!"
 clear-your-inventory: "&b» Limpe seu inventário antes de entrar neste jogo!"
