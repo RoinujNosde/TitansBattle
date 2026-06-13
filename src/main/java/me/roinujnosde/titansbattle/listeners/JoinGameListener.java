@@ -176,6 +176,36 @@ public class JoinGameListener extends TBListener {
         }
     }
 
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+    public void ipLimitCheck(PlayerJoinGameEvent event) {
+        int ipLimit = plugin.getConfigManager().getIpLimit();
+        if (ipLimit <= 0) {
+            return; // feature disabled
+        }
+
+        Player player = event.getPlayer();
+        if (player.hasPermission("titansbattle.bypass.iplimit")) {
+            return; // exempt from restriction
+        }
+
+        if (player.getAddress() == null) {
+            return; // safety check
+        }
+
+        String joiningIp = player.getAddress().getAddress().getHostAddress();
+        BaseGame game = event.getGame();
+
+        long count = game.getParticipants().stream()
+                .map(Warrior::toOnlinePlayer)
+                .filter(p -> p != null && p.getAddress() != null)
+                .filter(p -> joiningIp.equals(p.getAddress().getAddress().getHostAddress()))
+                .count();
+
+        if (count >= ipLimit) {
+            cancelWithMessage(event, "ip-limit-reached", ipLimit);
+        }
+    }
+
     private void cancelWithMessage(PlayerJoinGameEvent event, String key, Object... args) {
         Player player = event.getPlayer();
         String message = event.getGame().getLang(key, args);
