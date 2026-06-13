@@ -70,7 +70,13 @@ date-format: "dd/MM/yyyy"
 page-limit:
     help: 7
     ranking: 10
-    
+
+#Maximum number of accounts from the same IP that can join the same game simultaneously.
+#Set to 0 to disable the restriction (unlimited).
+#Players with the permission 'titansbattle.bypass.iplimit' are exempt from this limit.
+#Examples: 1 = only one account per IP, 2 = two accounts per IP allowed
+ip-limit: 0
+
 #List here commands that the plugin will not block in battle phase
 allowed_commands: ["/tb exit", "/tb winners"]
 #Commands that NO ONE will be able to use, not even players who didn't join the game
