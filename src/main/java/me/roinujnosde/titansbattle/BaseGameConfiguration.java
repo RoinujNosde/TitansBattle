@@ -51,6 +51,8 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
     protected Integer announcementStartingTimes = 5;
     @Path("announcement.starting.interval")
     protected Integer announcementStartingInterval = 20;
+    @Path("announcement.discord.pre_start.interval")
+    protected Integer announcementDiscordPreStartInterval = 0;
 
     @Path("destination.watchroom")
     protected Location watchroom;
@@ -191,6 +193,14 @@ public abstract class BaseGameConfiguration implements ConfigurationSerializable
 
     public Integer getAnnouncementStartingTimes() {
         return announcementStartingTimes;
+    }
+
+    /**
+     * Returns the number of seconds before the in-game lobby starts during which
+     * a Discord-only early announcement is sent. 0 means no pre-start delay.
+     */
+    public Integer getAnnouncementDiscordPreStartInterval() {
+        return announcementDiscordPreStartInterval;
     }
 
     public Location getWatchroom() {
