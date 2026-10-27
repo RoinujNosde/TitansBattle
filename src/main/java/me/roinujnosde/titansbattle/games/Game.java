@@ -58,9 +58,27 @@ public abstract class Game extends BaseGame {
 
     @Override
     public void start() {
-        super.start();
-        discordAnnounce("discord_game_starting");
+        int preStartSeconds = getConfig().getAnnouncementDiscordPreStartInterval();
+
+        // Always register as the current game immediately to prevent double-starts
         gameManager.setCurrentGame(this);
+
+        if (preStartSeconds > 0) {
+            // Send early Discord-only announcement with time in minutes
+            double minutesDouble = preStartSeconds / 60.0;
+            long minutes = Math.round(minutesDouble);
+            discordAnnounce("discord_game_starting_early", minutes);
+
+            // Delay the actual in-game lobby start
+            plugin.getServer().getScheduler().runTaskLater(plugin, () -> {
+                if (gameManager.getCurrentGame().map(g -> g.equals(this)).orElse(false)) {
+                    super.start();
+                }
+            }, preStartSeconds * 20L);
+        } else {
+            discordAnnounce("discord_game_starting");
+            super.start();
+        }
     }
 
     @Override
