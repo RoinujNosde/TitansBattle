@@ -201,3 +201,11 @@ public final class ConfigManager {
         return config.getString("date-format");
     }
 }
+
+    /**
+     * Gets the maximum number of accounts from the same IP allowed in a game simultaneously.
+     * Returns 0 if the restriction is disabled.
+     */
+    public int getIpLimit() {
+        return config.getInt("ip-limit", 0);
+    }
