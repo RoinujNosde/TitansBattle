@@ -1,1 +1,9 @@
 ---
+command.description.create: "Crear una carpeta de juegos"
+command.description.edit.prize: "Edita los premios de un juego"
+command.description.setprize: "Establece tu inventario como premio para una partida"
+command.description.edit.game: "Edita los premios de un juego"
+command.description.start: "Comenzar una partida"
+command.description.kick: "Expulsa a un jugador de una partida"
+command.description.cancel: "Cancela una partida"
+command.description.setdestination.general: "Establece la salida general de juegos"
