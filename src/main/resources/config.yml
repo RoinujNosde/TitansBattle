@@ -11,6 +11,12 @@ sql:
         username: "titansbattle"
         password: ""
 
+redis:
+  use-redis: false
+  host: 'localhost'
+  port: 6379
+  password: ''
+
 #Language used in plugin's message
 language: en
 

@@ -64,6 +64,7 @@ public final class TitansBattle extends JavaPlugin {
     private ListenerManager listenerManager;
     private ConfigurationDao configurationDao;
     private PlaceholderHook placeholderHook;
+    private RedisManager redisManager;
 
     @Override
     public void onEnable() {
@@ -91,6 +92,28 @@ public final class TitansBattle extends JavaPlugin {
         taskManager.setupScheduler();
         placeholderHook = new PlaceholderHook(this);
         new Metrics(this, 14875);
+
+        setupRedis();
+        if (isRedisEnabled()) {
+            redisManager.registerPubSubListener();
+        }
+    }
+    public boolean isRedisEnabled() {
+        return redisManager != null;
+    }
+    private void setupRedis() {
+        FileConfiguration config = getConfig();
+        boolean useRedis = config.getBoolean("redis.use-redis", false);
+        if (useRedis) {
+            String host = config.getString("redis.host", "localhost");
+            int port = config.getInt("redis.port", 6379);
+            String password = config.getString("redis.password", "");
+            String redisUri = String.format("redis://%s:%s", host, port);
+            if (!password.isEmpty()) {
+                redisUri = String.format("redis://:%s@%s:%d", password, host, port);
+            }
+            redisManager = new RedisManager(this, redisUri);
+        }
     }
 
     public @Nullable BaseGame getBaseGameFrom(@NotNull Player player) {
@@ -121,6 +144,13 @@ public final class TitansBattle extends JavaPlugin {
         challengeManager.getChallenges().forEach(c -> c.cancel(Bukkit.getConsoleSender()));
         gameManager.getCurrentGame().ifPresent(g -> g.cancel(Bukkit.getConsoleSender()));
         databaseManager.close();
+
+        if (redisManager != null) {
+            redisManager.closeConnection();
+        }
+    }
+    public RedisManager getRedisManager() {
+        return redisManager;
     }
 
     public static TitansBattle getInstance() {
