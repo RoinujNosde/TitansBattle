@@ -50,6 +50,9 @@ public class SimpleClansGroupManager extends GroupManager {
 
     @Override
     public @NotNull String buildStringFrom(@NotNull Collection<Group> groups) {
-        return Helper.buildStringFrom(groups.stream().map(Group::getId).collect(Collectors.toList()));
+        return Helper.buildStringFrom(groups.stream()
+                .map(Group::getId)
+                .map(String::toUpperCase)
+                .collect(Collectors.toList()));
     }
 }

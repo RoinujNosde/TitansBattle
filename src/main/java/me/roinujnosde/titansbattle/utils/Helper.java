@@ -4,6 +4,7 @@ import me.roinujnosde.titansbattle.TitansBattle;
 import me.roinujnosde.titansbattle.dao.ConfigurationDao;
 import me.roinujnosde.titansbattle.games.Game;
 import me.roinujnosde.titansbattle.types.GameConfiguration;
+import me.roinujnosde.titansbattle.types.Group;
 import me.roinujnosde.titansbattle.types.Warrior;
 import me.roinujnosde.titansbattle.types.Winners;
 import org.bukkit.Bukkit;
@@ -16,7 +17,15 @@ import org.bukkit.projectiles.ProjectileSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class Helper {
@@ -322,6 +331,17 @@ public class Helper {
         return sb.toString();
     }
 
+    public static @NotNull String buildStringFrom(@NotNull Map<Group, Integer> groupIntegerMap) {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<Group, Integer> entry : groupIntegerMap.entrySet()) {
+            sb.append(entry.getKey().getId().toUpperCase())
+                    .append("(")
+                    .append(entry.getValue())
+                    .append(") ");
+        }
+        return sb.toString();
+    }
+
     /**
      * Gets a String filled with the specified quantity of spaces
      *
@@ -375,5 +395,61 @@ public class Helper {
             treeMap.putAll(map);
         }
         return treeMap;
+    }
+
+    /**
+     * Formats a duration (in seconds) into a human-readable string using a custom pattern.
+     * <p>
+     * This method is intended for static timers such as:
+     * <ul>
+     *   <li>Event duration</li>
+     *   <li>Elapsed time</li>
+     *   <li>Remaining time until an event ends</li>
+     * </ul>
+     * <p>
+     * It does <b>not</b> represent a time of day. The formatting is based on a total duration
+     * and supports values greater than 24 hours without wrapping.
+     * <p>
+     * If {@code totalSeconds} is less than {@code 0}, the method returns {@code "N/A"}.
+     *
+     * <h3>Supported format tokens</h3>
+     * <ul>
+     *   <li><b>{dd}</b> – Days (2 digits, zero-padded)</li>
+     *   <li><b>{HH}</b> – Total hours (zero-padded, can exceed 24)</li>
+     *   <li><b>{hh}</b> – Hour part within the current day (00–23)</li>
+     *   <li><b>{mm}</b> – Minute part within the current hour (00–59)</li>
+     *   <li><b>{ss}</b> – Second part within the current minute (00–59)</li>
+     *   <li><b>{m}</b> – Total minutes (no padding)</li>
+     *   <li><b>{s}</b> – Total seconds (no padding)</li>
+     * </ul>
+     *
+     * @param totalSeconds the total duration in seconds
+     * @param pattern the format pattern using the supported tokens
+     * @return the formatted duration string, or {@code "N/A"} if {@code totalSeconds < 0}
+     */
+    public static @NotNull String formatTime(final long totalSeconds, final String pattern) {
+        if (totalSeconds < 0) {
+            return "N/A";
+        }
+
+        final Duration d = Duration.ofSeconds(totalSeconds);
+
+        final long days = d.toDays();
+        final long hours = d.toHours();      // total hours
+        final long minutes = d.toMinutes();  // total minutes
+        final long seconds = d.getSeconds(); // total seconds
+
+        final long hPart = (seconds % 86_400) / 3_600;
+        final long mPart = (seconds % 3_600) / 60;
+        final long sPart = seconds % 60;
+
+        return pattern
+                .replace("{dd}", String.format("%02d", days))
+                .replace("{HH}", String.format("%02d", hours))
+                .replace("{hh}", String.format("%02d", hPart))
+                .replace("{mm}", String.format("%02d", mPart))
+                .replace("{ss}", String.format("%02d", sPart))
+                .replace("{m}", Long.toString(minutes))
+                .replace("{s}", Long.toString(seconds));
     }
 }
